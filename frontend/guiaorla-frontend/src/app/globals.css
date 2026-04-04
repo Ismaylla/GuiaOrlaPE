@@ -17,8 +17,8 @@
   --color-base-tela: #F6F6F6;
   --color-footer: #D8D8D8;
 
-  /* Nota: Cores "Linear" (Gradientes) nós faremos direto no código 
-     usando essas cores base acima! */
+  /*fonte*/
+  --font-sans: var(--font-poppins)
 }
 body {
   /* Gradiente de fundo EXATO do Figma */
@@ -32,8 +32,4 @@ body {
   width: 100vw;
   overflow: hidden; /* Remove as barras de rolagem indesejadas */
   
-  /* Nota sobre a fonte Poppins: Para usar Poppins de verdade, 
-     precisamos configurá-la no layout.tsx. Por enquanto, 
-     usei sans-serif como fallback. */
-  font-family: sans-serif; 
 }

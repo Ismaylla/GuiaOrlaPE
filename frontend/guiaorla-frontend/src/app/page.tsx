@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function SplashScreen() {
   return (
@@ -26,24 +27,27 @@ export default function SplashScreen() {
             Descubra o melhor da orla, pertinho de você!
           </p>
 
-          {/* Container de Botões: EMPILHA no mobile (col), LADO A LADO no desktop (row) */}
+          {/* Container de Botões */}
           <div className="flex flex-col md:flex-row gap-6 md:gap-[30px] items-center justify-center mt-6 w-full">
             
-            {/* Botão Sou Turista */}
-            <button className="flex items-center justify-center h-[50px] w-full max-w-[280px] rounded-[50px] font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95" 
-                    style={{ 
-                      background: 'linear-gradient(180deg, #1398D4 0%, #0A4F6E 80%)'
-                    }}>
+            {/* Botão Sou Turista (Ainda sem link, apenas visual) */}
+            <button 
+              className="flex items-center justify-center h-[50px] w-full max-w-[280px] rounded-[50px] font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95" 
+              style={{ background: 'linear-gradient(180deg, #1398D4 0%, #0A4F6E 80%)' }}
+            >
               Sou Turista
             </button>
             
-            {/* Botão Sou Empreendedor */}
-            <button className="flex items-center justify-center h-[50px] w-full max-w-[280px] rounded-[50px] font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
-                    style={{ 
-                      background: 'linear-gradient(180deg, #FF904B 0%, #D66017 80%)'
-                    }}>
-              Sou Empreendedor
-            </button>
+            {/* Botão Sou Empreendedor (Com Link funcional) */}
+            <Link href="/login-empreendedor" className="flex w-full max-w-[280px] justify-center no-underline">
+              <button 
+                className="flex items-center justify-center h-[50px] w-full rounded-[50px] font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                style={{ background: 'linear-gradient(180deg, #FF904B 0%, #D66017 80%)' }}
+              >
+                Sou Empreendedor
+              </button>
+            </Link>
+
           </div>
         </div>
       </div>
