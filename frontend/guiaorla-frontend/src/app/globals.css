@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  /* Tons de Azul */
+  --color-azul-base: #C9E1EB;      
+  --color-azul-claro: #2385B1;     
+  --color-azul-primario: #0A4F6E;  
+  
+  /* Tons de Laranja */
+  --color-laranja-base: #FFDFCC;   
+  --color-laranja-secundario: #FF7620;
+  
+  /* Tons de Verde */
+  --color-verde-simples: #1FAF38; 
+  
+  /* Estrutura */
+  --color-base-tela: #F6F6F6;
+  --color-footer: #D8D8D8;
+
+  /* Nota: Cores "Linear" (Gradientes) nós faremos direto no código 
+     usando essas cores base acima! */
+}
+
+body {
+  background-color: var(--color-base-tela);
+  color: #171717;
+  margin: 0;
+  padding: 0;
+}
