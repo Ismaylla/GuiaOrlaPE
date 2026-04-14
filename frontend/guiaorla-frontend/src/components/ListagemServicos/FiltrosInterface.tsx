@@ -1,4 +1,4 @@
-// src/components/ListagemServicos/FiltrosInterface.tsx
+
 "use client";
 
 interface FiltrosProps {
@@ -20,10 +20,10 @@ export const FiltrosInterface = ({ filtros, setFiltros, fecharModal, contexto }:
     };
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2"> {/* Reduzi gap de 3 para 2 */}
             <div>
-                <h4 className="text-[#0A4F6E] font-bold text-sm mb-4 uppercase tracking-wide">💰 Preços</h4>
-                <div className="flex flex-col gap-3 mb-6">
+                <h4 className="text-[#0A4F6E] font-bold text-sm mb-2 uppercase tracking-wide">💰 Preços</h4>
+                <div className="flex flex-col gap-2 mb-4"> {/* Reduzi gap de 3 para 2 e mb de 6 para 4 */}
                     {[
                         { id: 'ate50', label: 'Até R$ 50' },
                         { id: '50a300', label: 'R$ 50 a R$ 300' },
@@ -33,7 +33,7 @@ export const FiltrosInterface = ({ filtros, setFiltros, fecharModal, contexto }:
                             <input 
                                 key={`${contexto}-${opcao.id}-${filtros.faixaPreco}`}
                                 type="radio" 
-                                name={`faixaPreco-${contexto}`} // Nome único por contexto (modal ou aside)
+                                name={`faixaPreco-${contexto}`}
                                 value={opcao.id}
                                 checked={filtros.faixaPreco === opcao.id}
                                 onClick={() => handleRadioChange(opcao.id)}
@@ -45,14 +45,14 @@ export const FiltrosInterface = ({ filtros, setFiltros, fecharModal, contexto }:
                     ))}
                 </div>
 
-                <div className="flex items-center gap-1.5 flex-nowrap">
+                <div className="flex items-center gap-1.5 flex-nowrap mb-4"> {/* Adicionei mb-4 */}
                     <div className="relative flex-1 min-w-0">
                         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 font-bold hidden sm:inline">R$</span>
                         <input 
                             type="number" placeholder="De" 
                             value={filtros.precoMinManual}
                             onChange={(e) => setFiltros((prev: any) => ({...prev, precoMinManual: e.target.value, faixaPreco: ""}))}
-                            className="w-full h-10 pl-2 sm:pl-7 pr-1 rounded-lg border border-gray-200 text-xs focus:border-[#FF7620] outline-none"
+                            className="w-full h-9 pl-2 sm:pl-7 pr-1 rounded-lg border border-gray-200 text-xs focus:border-[#FF7620] outline-none"
                         />
                     </div>
                     <span className="text-gray-400 text-[10px] font-bold uppercase shrink-0">até</span>
@@ -62,20 +62,21 @@ export const FiltrosInterface = ({ filtros, setFiltros, fecharModal, contexto }:
                             type="number" placeholder="Até" 
                             value={filtros.precoMaxManual}
                             onChange={(e) => setFiltros((prev: any) => ({...prev, precoMaxManual: e.target.value, faixaPreco: ""}))}
-                            className="w-full h-10 pl-2 sm:pl-7 pr-1 rounded-lg border border-gray-200 text-xs focus:border-[#FF7620] outline-none"
+                            className="w-full h-9 pl-2 sm:pl-7 pr-1 rounded-lg border border-gray-200 text-xs focus:border-[#FF7620] outline-none"
                         />
                     </div>
                     <button 
                         onClick={() => fecharModal?.()}
-                        className="h-10 px-2 bg-gray-100 hover:bg-[#FF7620] hover:text-white text-gray-500 font-bold text-[10px] rounded-lg transition-all shrink-0">
+                        className="h-9 px-2 bg-gray-100 hover:bg-[#FF7620] hover:text-white text-gray-500 font-bold text-[10px] rounded-lg transition-all shrink-0">
                         Ir
                     </button>
                 </div>
             </div>
 
-            <div>
-                <h4 className="text-[#0A4F6E] font-bold text-sm mb-4 uppercase tracking-wide">Comodidades</h4>
-                <div className="flex flex-col gap-4">
+            {/* Ajuste do gap aqui para subir o bloco de comodidades */}
+            <div className="mt-1">
+                <h4 className="text-[#0A4F6E] font-bold text-sm mb-2 uppercase tracking-wide">Comodidades</h4>
+                <div className="flex flex-col gap-2.5"> {/* Reduzi gap de 4 para 2.5 */}
                     {[
                         { id: 'cartao', label: '💳 Aceita Pix/Cartão' },
                         { id: 'petFriendly', label: '🐾 Pet Friendly' },

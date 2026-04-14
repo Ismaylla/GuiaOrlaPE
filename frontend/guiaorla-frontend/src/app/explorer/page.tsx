@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
@@ -114,10 +115,12 @@ export default function ExplorarServicos() {
                             <button className="bg-white text-[#0A4F6E] px-4 py-2 rounded-lg font-bold shadow-md">Ver no mapa</button>
                         </div>
                     </div>
-                    <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                        <h3 className="text-[#0A4F6E] font-bold text-lg mb-6 border-b pb-2">Refinar busca:</h3>
+                    {/* Reduzi o padding de p-5 para p-4 e o mb de 6 para 2 no título */}
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-[#0A4F6E] font-bold text-lg mb-2 border-b pb-2">Refinar busca:</h3>
                         <FiltrosInterface filtros={filtros} setFiltros={setFiltros} contexto="aside" />
-                        <button className="w-full mt-8 py-3 bg-[#0A4F6E] text-white rounded-lg font-bold hover:bg-[#083d55] transition-colors shadow-sm">Aplicar filtros</button>
+                        {/* Reduzi a margem do botão de mt-8 para mt-4 */}
+                        <button className="w-full mt-4 py-3 bg-[#0A4F6E] text-white rounded-lg font-bold hover:bg-[#083d55] transition-colors shadow-sm">Aplicar filtros</button>
                     </div>
                 </aside>
 
@@ -151,8 +154,7 @@ export default function ExplorarServicos() {
 
                     {/* SEÇÃO LISTAGEM GERAL */}
                     <section>
-        
-                <h2 className="text-[#0A4F6E] text-xl font-bold mb-10 italic text-center">Todos os estabelecimentos</h2>
+                        <h2 className="text-[#0A4F6E] text-xl font-bold mb-10 italic text-center">Todos os estabelecimentos</h2>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-12 px-2 md:px-0">
                             {SERVICOS_MOCK.map((item) => (
                                 <CardServico key={item.id} item={item} variante="horizontal" />
