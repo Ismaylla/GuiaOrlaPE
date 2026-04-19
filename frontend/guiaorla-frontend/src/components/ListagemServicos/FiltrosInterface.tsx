@@ -1,4 +1,3 @@
-
 "use client";
 
 interface FiltrosProps {
@@ -9,7 +8,7 @@ interface FiltrosProps {
 }
 
 export const FiltrosInterface = ({ filtros, setFiltros, fecharModal, contexto }: FiltrosProps) => {
-    
+
     const handleRadioChange = (id: string) => {
         setFiltros((prev: any) => ({
             ...prev,
@@ -20,74 +19,74 @@ export const FiltrosInterface = ({ filtros, setFiltros, fecharModal, contexto }:
     };
 
     return (
-        <div className="flex flex-col gap-2"> {/* Reduzi gap de 3 para 2 */}
+        <div className="flex flex-col gap-1.5">
             <div>
-                <h4 className="text-[#0A4F6E] font-bold text-sm mb-2 uppercase tracking-wide">💰 Preços</h4>
-                <div className="flex flex-col gap-2 mb-4"> {/* Reduzi gap de 3 para 2 e mb de 6 para 4 */}
+                <h4 className="text-[#0A4F6E] font-bold text-[11px] mb-1 uppercase tracking-wider">💰 Preços</h4>
+                <div className="flex flex-col gap-1 mb-2">
                     {[
                         { id: 'ate50', label: 'Até R$ 50' },
                         { id: '50a300', label: 'R$ 50 a R$ 300' },
                         { id: 'mais300', label: 'Mais de R$ 300' }
                     ].map((opcao) => (
-                        <label key={opcao.id} className="flex items-center gap-3 cursor-pointer group">
-                            <input 
+                        <label key={opcao.id} className="flex items-center gap-2 cursor-pointer group">
+                            <input
                                 key={`${contexto}-${opcao.id}-${filtros.faixaPreco}`}
-                                type="radio" 
+                                type="radio"
                                 name={`faixaPreco-${contexto}`}
                                 value={opcao.id}
                                 checked={filtros.faixaPreco === opcao.id}
                                 onClick={() => handleRadioChange(opcao.id)}
                                 readOnly
-                                className="w-4 h-4 border-gray-300 text-[#FF7620] focus:ring-[#FF7620] cursor-pointer" 
+                                className="w-3.5 h-3.5 border-gray-300 text-[#FF7620] focus:ring-[#FF7620] cursor-pointer"
                             />
-                            <span className="text-sm text-gray-600 group-hover:text-[#0A4F6E] transition-colors">{opcao.label}</span>
+                            <span className="text-[12px] text-gray-600 group-hover:text-[#0A4F6E]">{opcao.label}</span>
                         </label>
                     ))}
                 </div>
 
-                <div className="flex items-center gap-1.5 flex-nowrap mb-4"> {/* Adicionei mb-4 */}
+                <div className="flex items-center gap-1 flex-nowrap mb-3">
                     <div className="relative flex-1 min-w-0">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 font-bold hidden sm:inline">R$</span>
-                        <input 
-                            type="number" placeholder="De" 
+                        <input
+                            type="number" placeholder="De R$"
                             value={filtros.precoMinManual}
-                            onChange={(e) => setFiltros((prev: any) => ({...prev, precoMinManual: e.target.value, faixaPreco: ""}))}
-                            className="w-full h-9 pl-2 sm:pl-7 pr-1 rounded-lg border border-gray-200 text-xs focus:border-[#FF7620] outline-none"
+                            onChange={(e) => setFiltros((prev: any) => ({ ...prev, precoMinManual: e.target.value, faixaPreco: "" }))}
+                            className="w-full h-8 pl-2 pr-1 rounded-md border border-gray-200 text-[11px] focus:border-[#FF7620] outline-none"
                         />
                     </div>
-                    <span className="text-gray-400 text-[10px] font-bold uppercase shrink-0">até</span>
+                    <span className="text-gray-400 text-[10px] font-bold">a</span>
                     <div className="relative flex-1 min-w-0">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 font-bold hidden sm:inline">R$</span>
-                        <input 
-                            type="number" placeholder="Até" 
+                        <input
+                            type="number" placeholder="Até R$"
                             value={filtros.precoMaxManual}
-                            onChange={(e) => setFiltros((prev: any) => ({...prev, precoMaxManual: e.target.value, faixaPreco: ""}))}
-                            className="w-full h-9 pl-2 sm:pl-7 pr-1 rounded-lg border border-gray-200 text-xs focus:border-[#FF7620] outline-none"
+                            onChange={(e) => setFiltros((prev: any) => ({ ...prev, precoMaxManual: e.target.value, faixaPreco: "" }))}
+                            className="w-full h-8 pl-2 pr-1 rounded-md border border-gray-200 text-[11px] focus:border-[#FF7620] outline-none"
                         />
                     </div>
-                    <button 
+                    <button
                         onClick={() => fecharModal?.()}
-                        className="h-9 px-2 bg-gray-100 hover:bg-[#FF7620] hover:text-white text-gray-500 font-bold text-[10px] rounded-lg transition-all shrink-0">
+                        className="h-8 px-2 bg-gray-100 hover:bg-[#FF7620] hover:text-white text-gray-500 font-bold text-[10px] rounded-md transition-all">
                         Ir
                     </button>
                 </div>
             </div>
 
-            {/* Ajuste do gap aqui para subir o bloco de comodidades */}
             <div className="mt-1">
-                <h4 className="text-[#0A4F6E] font-bold text-sm mb-2 uppercase tracking-wide">Comodidades</h4>
-                <div className="flex flex-col gap-2.5"> {/* Reduzi gap de 4 para 2.5 */}
+                <h4 className="text-[#0A4F6E] font-bold text-[11px] mb-1 uppercase tracking-wider">Comodidades</h4>
+                <div className="flex flex-col gap-1.5">
                     {[
-                        { id: 'cartao', label: '💳 Aceita Pix/Cartão' },
+                        { id: 'cartao', label: '💳 Pix/Cartão' }, // Texto abreviado
+                        { id: 'chuveiro', label: '🚿 Chuveirão' },
+                        { id: 'estacionamento', label: '🚗 Estacionamento' },
+                        { id: 'cadeira', label: '⛱️ Cadeira' },
                         { id: 'petFriendly', label: '🐾 Pet Friendly' },
                         { id: 'acessibilidade', label: '♿ Acessibilidade' },
-                        { id: 'melhoresAvaliados', label: '⭐ Melhores Avaliados' }
+                        { id: 'melhoresAvaliados', label: '⭐ Melhores' }
                     ].map((f) => (
-                        <label key={f.id} className="flex items-center gap-3 cursor-pointer group">
+                        <label key={f.id} className="flex items-center gap-2 cursor-pointer group">
                             <input type="checkbox" checked={filtros[f.id]}
                                 onChange={() => setFiltros((prev: any) => ({ ...prev, [f.id]: !prev[f.id] }))}
-                                className="w-4 h-4 rounded border-gray-300 text-[#FF7620] focus:ring-[#FF7620]" />
-                            <span className="text-sm text-gray-700 group-hover:text-[#0A4F6E] transition-colors">{f.label}</span>
+                                className="w-3.5 h-3.5 rounded border-gray-300 text-[#FF7620] focus:ring-[#FF7620]" />
+                            <span className="text-[12px] text-gray-700 group-hover:text-[#0A4F6E]">{f.label}</span>
                         </label>
                     ))}
                 </div>

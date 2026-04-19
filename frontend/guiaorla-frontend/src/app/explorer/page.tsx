@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
@@ -21,15 +20,18 @@ export default function ExplorarServicos() {
     const [categoriaAtiva, setCategoriaAtiva] = useState("Barracas e Ambulantes");
     const [scrolled, setScrolled] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    
+
     const navRef = useRef<HTMLDivElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const [filtros, setFiltros] = useState({
         precoMinManual: "",
         precoMaxManual: "",
-        faixaPreco: "", 
+        faixaPreco: "",
         cartao: true,
+        chuveiro: false,        // NOVO
+        estacionamento: false,  // NOVO
+        cadeira: false,         // NOVO
         petFriendly: false,
         acessibilidade: false,
         melhoresAvaliados: false
@@ -71,7 +73,7 @@ export default function ExplorarServicos() {
     return (
         <main className="min-h-screen bg-[#f6f6f6] font-sans pb-20">
             {/* COMPONENTE HEADER */}
-            <HeaderListagem 
+            <HeaderListagem
                 scrolled={scrolled}
                 categoriaAtiva={categoriaAtiva}
                 setCategoriaAtiva={setCategoriaAtiva}
@@ -107,20 +109,22 @@ export default function ExplorarServicos() {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-[280px_minmax(0,1fr)] gap-8 mt-4 relative">
-                {/* ASIDE DE FILTROS DESKTOP */}
-                <aside className="hidden md:flex flex-col gap-3 md:sticky md:top-20 h-fit self-start min-w-[280px]">
+                {/* ASIDE DE FILTROS DESKTOP - Padding reduzido e margens menores */}
+                <aside className="hidden md:flex flex-col gap-3 md:sticky md:top-20 h-fit self-start min-w-[260px]">
                     <div className="w-full h-40 rounded-xl overflow-hidden relative border border-gray-200 shadow-sm cursor-pointer group">
                         <Image src="/images/map-placeholder.png" alt="Mapa" fill className="object-cover group-hover:scale-110 transition-transform" />
                         <div className="absolute inset-0 bg-[#0A4F6E]/20 flex items-center justify-center">
-                            <button className="bg-white text-[#0A4F6E] px-4 py-2 rounded-lg font-bold shadow-md">Ver no mapa</button>
+                            <button className="bg-white text-[#0A4F6E] px-4 py-2 rounded-lg text-sm font-bold shadow-md">Ver no mapa</button>
                         </div>
                     </div>
-                    {/* Reduzi o padding de p-5 para p-4 e o mb de 6 para 2 no título */}
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <h3 className="text-[#0A4F6E] font-bold text-lg mb-2 border-b pb-2">Refinar busca:</h3>
+
+                    {/* P-3 (era 5) e botão mt-3 (era 8) */}
+                    <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-[#0A4F6E] font-bold text-base mb-3 border-b pb-1">Refinar busca:</h3>
                         <FiltrosInterface filtros={filtros} setFiltros={setFiltros} contexto="aside" />
-                        {/* Reduzi a margem do botão de mt-8 para mt-4 */}
-                        <button className="w-full mt-4 py-3 bg-[#0A4F6E] text-white rounded-lg font-bold hover:bg-[#083d55] transition-colors shadow-sm">Aplicar filtros</button>
+                        <button className="w-full mt-3 py-2.5 bg-[#0A4F6E] text-white rounded-lg font-bold hover:bg-[#083d55] transition-colors shadow-sm text-sm">
+                            Aplicar filtros
+                        </button>
                     </div>
                 </aside>
 
