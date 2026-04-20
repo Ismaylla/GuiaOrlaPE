@@ -103,7 +103,7 @@ export default function ExplorarServicos() {
                         <input type="text" placeholder="Para qual praia vamos hoje?" className="w-full h-12 pl-6 pr-4 rounded-xl bg-white border border-gray-300 text-[#0A4F6E] transition-all duration-300 focus:outline-none focus:ring-0 focus:shadow-lg focus:shadow-[#0A4F6E]/10" />
                     </div>
                     <div className="shrink-0 cursor-pointer active:scale-90 transition-transform">
-                        <Image src="/icons/Perfil.svg" alt="Perfil" width={35} height={35} />
+                        <Image src="/icons/PerfilAzul.svg" alt="Perfil" width={35} height={35} />
                     </div>
                 </div>
             </div>
