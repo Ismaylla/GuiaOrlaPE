@@ -1,35 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  /* Tons de Azul */
   --color-azul-base: #C9E1EB;      
   --color-azul-claro: #2385B1;     
   --color-azul-primario: #0A4F6E;  
-  
-  /* Tons de Laranja */
   --color-laranja-base: #FFDFCC;   
   --color-laranja-secundario: #FF7620;
-  
-  /* Tons de Verde */
   --color-verde-simples: #1FAF38; 
-  
-  /* Estrutura */
   --color-base-tela: #F6F6F6;
   --color-footer: #D8D8D8;
-
-  /*fonte*/
-  --font-sans: var(--font-poppins)
+  --font-sans: var(--font-poppins);
 }
+
+@utility scrollbar-hide {
+  &::-webkit-scrollbar { display: none; }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 body {
-  /* Gradiente de fundo EXATO do Figma */
-  background: linear-gradient(180deg, #ECF9FF 0%, #E2F2FA 57%, #C1DBE7 72%, #9CC2D2 82%, #10668C 100%);
+  background-color: #f6f6f6;
   color: #171717;
   margin: 0;
   padding: 0;
-  
-  /* Garante que o corpo ocupe a tela toda e não role */
   min-height: 100vh;
-  width: 100vw;
-  overflow: hidden; /* Remove as barras de rolagem indesejadas */
-  
+  overflow-x: hidden; /* Garante que nada escape para os lados */
 }
