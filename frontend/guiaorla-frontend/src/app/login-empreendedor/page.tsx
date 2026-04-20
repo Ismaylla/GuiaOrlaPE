@@ -1,6 +1,8 @@
 
+
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -11,6 +13,7 @@ import { BotaoFormulario } from "@/components/Formulario/BotaoFormulario";
 export default function LoginEmpreendedor() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const router = useRouter();
 
   return (
     <LayoutAuth>
@@ -60,12 +63,14 @@ export default function LoginEmpreendedor() {
       <div className="flex flex-col items-center gap-3 mt-10 w-full">
         <BotaoFormulario 
           texto="ENTRAR" 
-          larguraMax="240px" 
+          larguraMax="240px"
+          variante="laranja"
+          onClick={() => router.push("/empreendedor/explorer")}
         />
         
         <Link 
           href="/cadastro-empreendedor" 
-          className="text-[15px] font-medium text-[#0A4F6E] hover:underline decoration-2 underline-offset-4"
+          className="text-[15px] font-medium text-[#FF7620] hover:underline decoration-2 underline-offset-4"
         >
           Criar conta
         </Link>

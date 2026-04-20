@@ -1,9 +1,8 @@
-// src/components/ListagemServicos/CardServico.tsx
+
 "use client";
 import { useState } from "react";
 import Image from "next/image";
 
-// Definindo o que um Serviço precisa ter (ajuda muito no futuro backend)
 interface ServicoProps {
     item: {
         id: number;
@@ -15,24 +14,31 @@ interface ServicoProps {
         aberto: boolean;
         aceitaCard: boolean;
     };
-    variante: "vertical" | "horizontal"; // Define o layout do card
+    variante: "vertical" | "horizontal";
+    isEmpreendedor?: boolean; // Adicionei isso
 }
 
-function DescricaoExpansivel({ texto }: { texto: string }) {
+function DescricaoExpansivel({ texto, isEmpreendedor }: { texto: string, isEmpreendedor: boolean }) {
     const [expandido, setExpandido] = useState(false);
     const isLongo = texto.length > 60;
+    const color = isEmpreendedor ? "text-[#FF7620]" : "text-[#1398D4]";
+    
     return (
         <div className="cursor-pointer" onClick={() => isLongo && setExpandido(!expandido)}>
             <p className={`text-gray-500 text-[10px] md:text-xs leading-tight text-left transition-all duration-300 ${expandido ? "" : "line-clamp-2"}`}>
                 {texto}
-                {isLongo && !expandido && <span className="text-[#1398D4] font-bold ml-1">...</span>}
+                {isLongo && !expandido && <span className={`${color} font-bold ml-1`}>...</span>}
             </p>
         </div>
     );
 }
 
-export const CardServico = ({ item, variante }: ServicoProps) => {
-    // LAYOUT VERTICAL (Carrossel)
+export const CardServico = ({ item, variante, isEmpreendedor = false }: ServicoProps) => {
+    const mainColor = isEmpreendedor ? "#FF7620" : "#1398D4";
+    const darkColor = isEmpreendedor ? "#D66017" : "#0A4F6E";
+    const textTitleColor = isEmpreendedor ? "text-[#FF7620]" : "text-[#0A4F6E]";
+    const notaBg = isEmpreendedor ? "bg-[#FF7620]" : "bg-[#1398D4]";
+
     if (variante === "vertical") {
         return (
             <div className="group bg-white rounded-3xl shrink-0 w-[230px] md:w-[220px] shadow-sm border border-gray-100 overflow-hidden snap-center flex flex-col h-auto hover:shadow-lg transition-all duration-300 ease-out">
@@ -45,20 +51,19 @@ export const CardServico = ({ item, variante }: ServicoProps) => {
                 </div>
                 <div className="p-4 flex flex-col flex-1 pointer-events-auto">
                     <div className="flex justify-between items-start mb-2 gap-2">
-                        <h3 className="font-bold text-[#0A4F6E] text-xs md:text-sm leading-tight text-left line-clamp-2">{item.nome}</h3>
-                        <div className="bg-[#1398D4] text-white px-2 py-0.5 font-bold text-[10px] md:text-xs shadow-sm shrink-0" style={{ borderRadius: '12px 0px 12px 0px' }}>{item.nota}</div>
+                        <h3 className={`font-bold ${textTitleColor} text-xs md:text-sm leading-tight text-left line-clamp-2`}>{item.nome}</h3>
+                        <div className={`${notaBg} text-white px-2 py-0.5 font-bold text-[10px] md:text-xs shadow-sm shrink-0`} style={{ borderRadius: '12px 0px 12px 0px' }}>{item.nota}</div>
                     </div>
-                    <div className="mb-4"><DescricaoExpansivel texto={item.desc} /></div>
+                    <div className="mb-4"><DescricaoExpansivel texto={item.desc} isEmpreendedor={isEmpreendedor} /></div>
                     <div className="flex flex-col gap-2 mt-auto w-full">
                         <button className="w-full py-1.5 text-white rounded-full font-bold text-[10px] shadow-md transition-transform active:scale-95" style={{ background: 'linear-gradient(180deg, #27CB43 0%, #0F9326 80%)' }}>VER NO MAPA</button>
-                        <button className="w-full py-1.5 text-white rounded-full font-bold text-[10px] shadow-md transition-transform active:scale-95" style={{ background: 'linear-gradient(180deg, #1398D4 0%, #0A4F6E 80%)' }}>VER PERFIL</button>
+                        <button className="w-full py-1.5 text-white rounded-full font-bold text-[10px] shadow-md transition-transform active:scale-95" style={{ background: `linear-gradient(180deg, ${mainColor} 0%, ${darkColor} 80%)` }}>VER PERFIL</button>
                     </div>
                 </div>
             </div>
         );
     }
 
-    // LAYOUT HORIZONTAL (Listagem Geral)
     return (
         <div className="group relative">
             <div className="bg-white p-3 md:p-4 rounded-3xl border border-gray-100 shadow-sm flex gap-4 h-full hover:shadow-lg transition-shadow items-start">
@@ -72,14 +77,14 @@ export const CardServico = ({ item, variante }: ServicoProps) => {
                 <div className="flex-1 flex flex-col justify-between py-1 min-h-full">
                     <div className="flex flex-col">
                         <div className="flex justify-between items-start mb-2 gap-2">
-                            <h3 className="text-[#0A4F6E] font-bold text-sm md:text-base leading-tight text-left">{item.nome}</h3>
-                            <div className="bg-[#1398D4] text-white px-2 py-1 font-bold text-xs shadow-sm shrink-0" style={{ borderRadius: '15px 0px 15px 0px' }}>{item.nota}</div>
+                            <h3 className={`${textTitleColor} font-bold text-sm md:text-base leading-tight text-left`}>{item.nome}</h3>
+                            <div className={`${notaBg} text-white px-2 py-1 font-bold text-xs shadow-sm shrink-0`} style={{ borderRadius: '15px 0px 15px 0px' }}>{item.nota}</div>
                         </div>
-                        <DescricaoExpansivel texto={item.desc} />
+                        <DescricaoExpansivel texto={item.desc} isEmpreendedor={isEmpreendedor} />
                     </div>
                     <div className="flex flex-col gap-1.5 mt-4">
                         <button className="w-full py-1.5 text-white rounded-full font-bold text-[10px] shadow-md transition-transform active:scale-95" style={{ background: 'linear-gradient(180deg, #27CB43 0%, #0F9326 80%)' }}>MAPA</button>
-                        <button className="w-full py-1.5 text-white rounded-full font-bold text-[10px] shadow-md transition-transform active:scale-95" style={{ background: 'linear-gradient(180deg, #1398D4 0%, #0A4F6E 80%)' }}>VER MAIS</button>
+                        <button className="w-full py-1.5 text-white rounded-full font-bold text-[10px] shadow-md transition-transform active:scale-95" style={{ background: `linear-gradient(180deg, ${mainColor} 0%, ${darkColor} 80%)` }}>VER MAIS</button>
                     </div>
                 </div>
             </div>
