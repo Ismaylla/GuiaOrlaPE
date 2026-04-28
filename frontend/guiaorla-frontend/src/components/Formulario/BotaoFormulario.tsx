@@ -1,10 +1,11 @@
+
 "use client";
 
 interface BotaoProps {
   texto: string;
   onClick?: () => void;
   variante?: "azul" | "laranja";
-  larguraMax?: string; // Ex: "240px" ou "320px"
+  larguraMax?: string;
 }
 
 export const BotaoFormulario = ({ 

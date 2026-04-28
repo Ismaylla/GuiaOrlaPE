@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // Importação necessária
 import { Eye, EyeOff, ChevronDown } from "lucide-react";
 
 import { LayoutAuth } from "@/components/Formulario/LayoutAuth";
@@ -13,6 +14,7 @@ import { BotaoVoltar } from "@/components/Formulario/BotaoVoltar";
 export default function CadastroEmpreendedor() {
     const [step, setStep] = useState(1);
     const [selectedService, setSelectedService] = useState("Selecione...");
+    const router = useRouter(); // Inicialização do router
 
     const nextStep = () => setStep((prev) => prev + 1);
     const prevStep = () => setStep((prev) => (prev > 1 ? prev - 1 : 1));
@@ -67,34 +69,34 @@ export default function CadastroEmpreendedor() {
                         </div>
                     )}
 
-                   {/* PASSO 3: FOTO E TERMOS (Versão Azul) */}
-{step === 3 && (
-    <div className="flex flex-col items-center gap-6 animate-in fade-in slide-in-from-right duration-500 w-full">
-        <h3 className="text-[22px] font-medium text-[#0A4F6E] leading-tight text-center">Adicione uma foto do seu negócio</h3>
-        
-        <div className="relative w-full h-[200px] rounded-2xl bg-white border-2 border-dashed border-[#1398D4] flex flex-col items-center justify-center gap-3 cursor-pointer">
-            <Image src="/icons/CamUpload.svg" alt="Upload" width={60} height={60} />
-            <p className="text-[#1398D4] font-semibold text-[14px] underline">Faça Upload da imagem aqui</p>
-            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" />
-        </div>
+                    {/* PASSO 3: FOTO E TERMOS (Versão Azul) */}
+                    {step === 3 && (
+                        <div className="flex flex-col items-center gap-6 animate-in fade-in slide-in-from-right duration-500 w-full">
+                            <h3 className="text-[22px] font-medium text-[#0A4F6E] leading-tight text-center">Adicione uma foto do seu negócio</h3>
+                            
+                            <div className="relative w-full h-[200px] rounded-2xl bg-white border-2 border-dashed border-[#1398D4] flex flex-col items-center justify-center gap-3 cursor-pointer">
+                                <Image src="/icons/CamUpload.svg" alt="Upload" width={60} height={60} />
+                                <p className="text-[#1398D4] font-semibold text-[14px] underline">Faça Upload da imagem aqui</p>
+                                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" />
+                            </div>
 
-        <div className="flex flex-col items-center gap-4">
-            <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" className="h-6 w-6 rounded border-2 border-[#0A4F6E] checked:bg-[#0A4F6E]" />
-                <span className="text-[#0A4F6E] text-[15px] font-medium">Li e aceito os Termos de Uso</span>
-            </label>
-            <Link href="/termos" className="text-[#1398D4] font-bold text-[15px] underline">Termos de Uso</Link>
-        </div>
-    </div>
-)}
+                            <div className="flex flex-col items-center gap-4">
+                                <label className="flex items-center gap-3 cursor-pointer">
+                                    <input type="checkbox" className="h-6 w-6 rounded border-2 border-[#0A4F6E] checked:bg-[#0A4F6E]" />
+                                    <span className="text-[#0A4F6E] text-[15px] font-medium">Li e aceito os Termos de Uso</span>
+                                </label>
+                                <Link href="/termos" className="text-[#1398D4] font-bold text-[15px] underline">Termos de Uso</Link>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {/* BOTÃO FINAL COM VARIANTE LARANJA */}
+                {/* BOTÃO FINAL COM ROTA PARA LOGIN */}
                 <div className="flex justify-center mt-4">
                     <BotaoFormulario 
                         variante="laranja"
                         texto={step === 3 ? "FINALIZAR CADASTRO" : "PRÓXIMO"} 
-                        onClick={step === 3 ? () => console.log("Fim") : nextStep} 
+                        onClick={step === 3 ? () => router.push("/login-empreendedor") : nextStep} 
                     />
                 </div>
             </div>

@@ -64,7 +64,7 @@ export default function LoginEmpreendedor() {
         <BotaoFormulario 
           texto="ENTRAR" 
           larguraMax="240px"
-          variante="laranja"
+          variante="azul"
           onClick={() => router.push("/empreendedor/explorer")}
         />
         
