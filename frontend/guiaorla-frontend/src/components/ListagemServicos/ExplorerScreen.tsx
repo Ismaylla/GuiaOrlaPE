@@ -6,6 +6,7 @@ import Image from "next/image";
 import { FiltrosInterface } from "@/components/ListagemServicos/FiltrosInterface";
 import { CardServico } from "@/components/ListagemServicos/CardServico";
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
+import { ModalVerMais } from "@/components/ListagemServicos/ModalVerMais";
 
 const SERVICOS_MOCK = [
     { id: 1, nome: "Raio de Sol: Cocos e Frutas", categoria: "Barracas e Ambulantes", nota: 4.8, desc: "Beira-mar de Gaibu (Próximo ao Posto 4). Coco gelado na hora | Frutas da estação", img: "/images/coco.jpg", aberto: true, aceitaCard: true },
@@ -25,6 +26,9 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
     const [categoriaAtiva, setCategoriaAtiva] = useState("");
     const [scrolled, setScrolled] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    
+    // ESTADO PARA O MODAL (Somente um serviço por vez)
+    const [servicoSelecionado, setServicoSelecionado] = useState<any>(null);
 
     const navRef = useRef<HTMLDivElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -46,6 +50,15 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
+    // Bloquear scroll do body quando o modal estiver aberto para melhor UX
+    useEffect(() => {
+        if (servicoSelecionado) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "auto";
+        }
+    }, [servicoSelecionado]);
 
     const handleMouseDown = (ref: React.RefObject<HTMLDivElement | null>) => (e: React.MouseEvent) => {
         if (!ref.current || ref.current.scrollWidth <= ref.current.clientWidth) return;
@@ -89,7 +102,16 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
 
             <div className="h-20"></div>
 
-            {/* MODAL DE FILTROS */}
+            {/* MODAL VER MAIS: Aparece apenas quando servicoSelecionado não é null */}
+            {servicoSelecionado && (
+                <ModalVerMais 
+                    item={servicoSelecionado}
+                    isEmpreendedor={isEmpreendedor}
+                    onClose={() => setServicoSelecionado(null)} 
+                />
+            )}
+
+            {/* MODAL DE FILTROS MOBILE */}
             <div className={`fixed inset-0 z-[100] md:hidden transition-all duration-300 ${isFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
                 <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isFilterOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsFilterOpen(false)}></div>
                 <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] p-8 shadow-2xl transition-all duration-300 ${isFilterOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}>
@@ -102,7 +124,7 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
 
             <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-[260px_1fr] gap-8 mt-6 relative">
                 <aside className="hidden md:flex flex-col gap-2 sticky top-24 h-fit self-start">
-                    <div className="w-full h-38 rounded-xl overflow-hidden relative border border-gray-200 shadow-sm cursor-pointer group">
+                    <div className="w-full h-38 rounded-xl overflow-hidden relative border border-gray-200 shadow-sm group">
                         <Image src="/images/map-placeholder.png" alt="Mapa" fill className="object-cover group-hover:scale-110 transition-transform" />
                         <div className="absolute inset-0 bg-[#0A4F6E]/20 flex items-center justify-center">
                             <button className="bg-white text-[#0A4F6E] px-4 py-2 rounded-lg text-sm font-bold shadow-md">Ver no mapa</button>
@@ -130,7 +152,13 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                                     className="flex overflow-x-auto gap-4 md:gap-5 w-full pb-8 scrollbar-hide snap-x items-start cursor-grab active:cursor-grabbing"
                                 >
                                     {SERVICOS_MOCK.map((item) => (
-                                        <CardServico key={item.id} item={item} variante="vertical" isEmpreendedor={isEmpreendedor} />
+                                        <CardServico 
+                                            key={item.id} 
+                                            item={item} 
+                                            variante="vertical" 
+                                            isEmpreendedor={isEmpreendedor} 
+                                            onOpenModal={(item) => setServicoSelecionado(item)}
+                                        />
                                     ))}
                                 </div>
                                 <button onClick={() => scroll("right")} className="absolute right-0 top-[40%] -translate-y-1/2 z-20 hover:scale-110 transition-transform rotate-180 hidden md:block">
@@ -151,7 +179,13 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                         {temDados ? (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
                                 {SERVICOS_MOCK.map((item) => (
-                                    <CardServico key={item.id} item={item} variante="horizontal" isEmpreendedor={isEmpreendedor} />
+                                    <CardServico 
+                                        key={item.id} 
+                                        item={item} 
+                                        variante="horizontal" 
+                                        isEmpreendedor={isEmpreendedor} 
+                                        onOpenModal={(item) => setServicoSelecionado(item)}
+                                    />
                                 ))}
                             </div>
                         ) : (

@@ -45,17 +45,16 @@ export const HeaderListagem = ({
       <div className="max-w-7xl w-full mx-auto flex items-center justify-between gap-3">
         
         {/* LADO ESQUERDO: Logo e Busca */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-1 lg:flex-none">
           {!isSearchOpen && (
             <Link href={isEmpreendedor ? "/empreendedor/explorer" : "/explorer"} className="shrink-0 w-20 sm:w-24">
               <Image src="/icons/LogoBranca.svg" alt="Logo" width={90} height={30} className="object-contain" />
             </Link>
           )}
 
-          {/* BUSCA INTERATIVA */}
-          <div className="relative flex items-center">
+          <div className="relative flex items-center flex-1 sm:flex-none">
             {isSearchOpen ? (
-              <div className="flex items-center bg-white rounded-md h-9 w-[130px] xs:w-[160px] sm:w-[320px] animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center bg-white rounded-md h-9 w-full sm:w-[280px] md:w-[320px] animate-in fade-in zoom-in-95 duration-200">
                 <input 
                   ref={searchInputRef}
                   type="text" 
@@ -68,19 +67,17 @@ export const HeaderListagem = ({
               </div>
             ) : (
               <>
-                {/* Desktop */}
-                <div className="hidden sm:flex items-center bg-white rounded-md shadow-sm h-10 overflow-hidden w-[320px]">
+                <div className="hidden sm:flex items-center bg-white rounded-md shadow-sm h-10 overflow-hidden w-full min-w-[180px] max-w-[320px] transition-all duration-300">
                   <input 
                     type="text" 
                     placeholder="Onde vamos hoje?" 
-                    className="flex-1 bg-transparent px-4 h-full text-sm focus:outline-none text-[#0A4F6E]"
+                    className="flex-1 bg-transparent px-4 h-full text-xs md:text-sm focus:outline-none text-[#0A4F6E] min-w-0"
                   />
-                  <button className="h-full px-3 flex items-center justify-center hover:bg-gray-50 transition-colors">
-                    <Search size={20} className="text-[#0A4F6E]" strokeWidth={2.5} />
+                  <button className="h-full px-3 flex items-center justify-center hover:bg-gray-50 transition-colors shrink-0">
+                    <Search size={18} className="text-[#0A4F6E]" strokeWidth={2.5} />
                   </button>
                 </div>
 
-                {/* Mobile Icon */}
                 <button 
                   onClick={handleOpenSearch} 
                   className="sm:hidden text-white p-1 flex items-center gap-1 group"
@@ -93,7 +90,7 @@ export const HeaderListagem = ({
           </div>
         </div>
 
-        <div className="h-8 w-[1px] bg-white/20 hidden sm:block"></div>
+        <div className="h-8 w-[1px] bg-white/20 hidden lg:block"></div>
 
         {/* CATEGORIAS DESKTOP */}
         <nav 
@@ -105,7 +102,7 @@ export const HeaderListagem = ({
             <button 
               key={cat} 
               onClick={() => setCategoriaAtiva(cat)}
-              className={`rounded-full border border-white/20 font-bold whitespace-nowrap px-4 py-1.5 text-[11px] transition-all
+              className={`rounded-full border border-white/20 font-bold whitespace-nowrap px-4 py-1.5 text-[10px] md:text-[11px] transition-all
               ${categoriaAtiva === cat ? "bg-white text-[#0A4F6E]" : "text-white hover:bg-white/20"}`}
             > 
               {cat} 
@@ -113,8 +110,9 @@ export const HeaderListagem = ({
           ))}
         </nav>
 
-        {/* AÇÕES DIREITA */}
-        <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-white/20 h-8 shrink-0">
+        {/* AÇÕES DIREITA: Linha separadora condicional ajustada */}
+        <div className={`flex items-center gap-2 sm:gap-4 pl-2 sm:pl-3 h-8 shrink-0 
+          ${isEmpreendedor ? "border-l border-white/20" : ""}`}> 
             <div className="sm:hidden">
                 <MenuCategoriasMobile 
                     categorias={categorias} 
@@ -133,20 +131,21 @@ export const HeaderListagem = ({
             )}
 
             {isEmpreendedor && (
-              <Link 
-                href="/empreendedor/gerenciar" 
-                className="text-white text-[10px] sm:text-xs font-semibold hover:underline whitespace-nowrap"
-              >
-                Gerenciar
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link 
+                  href="/empreendedor/gerenciar" 
+                  className="text-white text-[10px] md:text-xs font-semibold hover:underline whitespace-nowrap"
+                >
+                  Gerenciar
+                </Link>
+                <Link 
+                  href="/empreendedor/meu-perfil" 
+                  className="text-white text-[10px] md:text-xs font-semibold hover:underline whitespace-nowrap"
+                >
+                  Perfil
+                </Link>
+              </div>
             )}
-
-            <Link 
-              href={isEmpreendedor ? "/empreendedor/meu-perfil" : "/perfil/exemplo"} 
-              className="text-white text-[10px] sm:text-xs font-semibold hover:underline whitespace-nowrap"
-            >
-              {isEmpreendedor ? "Perfil" : "Ver Perfil"}
-            </Link>
         </div>
       </div>
     </header>
