@@ -1,5 +1,3 @@
-
-
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -17,8 +15,6 @@ export default function LoginEmpreendedor() {
 
   return (
     <LayoutAuth>
-      
-      {/* 1. LOGO NO TOPO */}
       <div className="relative h-40 w-40 mb-2 transition-all">
         <Image
           src="/images/LOGOfundotransparente 3.png"
@@ -28,12 +24,10 @@ export default function LoginEmpreendedor() {
         />
       </div>
 
-      {/* 2. TÍTULO ABAIXO DA LOGO */}
       <h2 className="mb-10 text-[28px] font-medium text-[#0A4F6E] text-center">
         Área do Empreendedor
       </h2>
 
-      {/* 3. FORMULÁRIO */}
       <div className="flex flex-col gap-4 w-full">
         <InputCustomizado 
           label="E-mail" 
@@ -59,7 +53,6 @@ export default function LoginEmpreendedor() {
         </div>
       </div>
 
-      {/* 4. BOTÕES */}
       <div className="flex flex-col items-center gap-3 mt-10 w-full">
         <BotaoFormulario 
           texto="ENTRAR" 
@@ -68,14 +61,14 @@ export default function LoginEmpreendedor() {
           onClick={() => router.push("/empreendedor/explorer")}
         />
         
+        {/* ROTA ATUALIZADA */}
         <Link 
-          href="/cadastro-empreendedor" 
+          href="/empreendedor/cadastro-empreendedor" 
           className="text-[15px] font-medium text-[#FF7620] hover:underline decoration-2 underline-offset-4"
         >
           Criar conta
         </Link>
       </div>
-
     </LayoutAuth>
   );
 }

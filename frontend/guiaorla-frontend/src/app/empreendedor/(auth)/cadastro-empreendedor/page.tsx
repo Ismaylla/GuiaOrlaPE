@@ -2,9 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // Importação necessária
-import { Eye, EyeOff, ChevronDown } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 import { LayoutAuth } from "@/components/Formulario/LayoutAuth";
 import { InputCustomizado } from "@/components/Formulario/InputCustomizado";
 import { BotaoFormulario } from "@/components/Formulario/BotaoFormulario";
@@ -14,7 +12,7 @@ import { BotaoVoltar } from "@/components/Formulario/BotaoVoltar";
 export default function CadastroEmpreendedor() {
     const [step, setStep] = useState(1);
     const [selectedService, setSelectedService] = useState("Selecione...");
-    const router = useRouter(); // Inicialização do router
+    const router = useRouter();
 
     const nextStep = () => setStep((prev) => prev + 1);
     const prevStep = () => setStep((prev) => (prev > 1 ? prev - 1 : 1));
@@ -28,7 +26,6 @@ export default function CadastroEmpreendedor() {
             </div>
 
             <div className="text-center mt-12 mb-8">
-                {/* Título em Laranja */}
                 <h2 className="text-[32px] font-medium text-[#FF7620]">Cadastro do Empreendedor</h2>
                 <p className="text-[16px] text-[#FF7620] opacity-80">Passo {step} de 3</p>
             </div>
@@ -36,7 +33,6 @@ export default function CadastroEmpreendedor() {
             <div className="flex w-full max-w-[450px] flex-col">
                 <div className="h-[480px] w-full flex flex-col justify-start">
                     
-                    {/* PASSO 1: DADOS BÁSICOS */}
                     {step === 1 && (
                         <div className="flex flex-col gap-4 animate-in fade-in duration-500">
                             <InputCustomizado label="Nome Completo ou do Negócio" />
@@ -47,7 +43,6 @@ export default function CadastroEmpreendedor() {
                         </div>
                     )}
 
-                    {/* PASSO 2: SERVIÇO E LOCALIZAÇÃO */}
                     {step === 2 && (
                         <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right duration-500">
                             <DropdownServicos 
@@ -69,7 +64,6 @@ export default function CadastroEmpreendedor() {
                         </div>
                     )}
 
-                    {/* PASSO 3: FOTO E TERMOS (Versão Azul) */}
                     {step === 3 && (
                         <div className="flex flex-col items-center gap-6 animate-in fade-in slide-in-from-right duration-500 w-full">
                             <h3 className="text-[22px] font-medium text-[#0A4F6E] leading-tight text-center">Adicione uma foto do seu negócio</h3>
@@ -91,12 +85,12 @@ export default function CadastroEmpreendedor() {
                     )}
                 </div>
 
-                {/* BOTÃO FINAL COM ROTA PARA LOGIN */}
                 <div className="flex justify-center mt-4">
                     <BotaoFormulario 
                         variante="laranja"
                         texto={step === 3 ? "FINALIZAR CADASTRO" : "PRÓXIMO"} 
-                        onClick={step === 3 ? () => router.push("/login-empreendedor") : nextStep} 
+
+                        onClick={step === 3 ? () => router.push("/empreendedor/login-empreendedor") : nextStep} 
                     />
                 </div>
             </div>

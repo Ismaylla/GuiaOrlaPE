@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 import { FiltrosInterface } from "@/components/ListagemServicos/FiltrosInterface";
@@ -15,8 +16,13 @@ const SERVICOS_MOCK = [
     { id: 6, nome: "Restaurante Mar Aberto", categoria: "Bares e Restaurantes", nota: 4.7, desc: "Frutos do mar frescos e vista privilegiada. Pratos individuais e para família.", img: "/images/hotdog.jpg", aberto: true, aceitaCard: true },
 ];
 
-export default function ExplorarServicos() {
-    const [categoriaAtiva, setCategoriaAtiva] = useState("Barracas e Ambulantes");
+interface ExplorerScreenProps {
+    isEmpreendedor: boolean;
+}
+
+export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
+    const searchParams = useSearchParams();
+    const [categoriaAtiva, setCategoriaAtiva] = useState("");
     const [scrolled, setScrolled] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -29,6 +35,11 @@ export default function ExplorarServicos() {
         precoMinManual: "", precoMaxManual: "", faixaPreco: "", cartao: true,
         chuveiro: false, estacionamento: false, cadeira: false, petFriendly: false, acessibilidade: false, melhoresAvaliados: false
     });
+
+    useEffect(() => {
+        const catUrl = searchParams.get("categoria");
+        if (catUrl) setCategoriaAtiva(catUrl);
+    }, [searchParams]);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -72,12 +83,13 @@ export default function ExplorarServicos() {
                 setIsFilterOpen={setIsFilterOpen}
                 navRef={navRef}
                 handleMouseDown={handleMouseDown}
+                isEmpreendedor={isEmpreendedor}
+                forceBlue={true}
             />
 
-            {/* Espaçador para o header fixo */}
             <div className="h-20"></div>
 
-            {/* MODAL DE FILTROS (MOBILE) */}
+            {/* MODAL DE FILTROS */}
             <div className={`fixed inset-0 z-[100] md:hidden transition-all duration-300 ${isFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
                 <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isFilterOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsFilterOpen(false)}></div>
                 <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] p-8 shadow-2xl transition-all duration-300 ${isFilterOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}>
@@ -89,8 +101,6 @@ export default function ExplorarServicos() {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-[260px_1fr] gap-8 mt-6 relative">
-                
-                {/* ASIDE (DESKTOP) */}
                 <aside className="hidden md:flex flex-col gap-2 sticky top-24 h-fit self-start">
                     <div className="w-full h-38 rounded-xl overflow-hidden relative border border-gray-200 shadow-sm cursor-pointer group">
                         <Image src="/images/map-placeholder.png" alt="Mapa" fill className="object-cover group-hover:scale-110 transition-transform" />
@@ -108,7 +118,6 @@ export default function ExplorarServicos() {
                     </div>
                 </aside>
 
-                {/* CONTEÚDO PRINCIPAL */}
                 <div className="min-w-0">
                     <section className="mb-16">
                         <h2 className="text-[#0A4F6E] text-xl font-bold italic mb-6 text-center md:text-left">Próximos de você</h2>
@@ -121,7 +130,7 @@ export default function ExplorarServicos() {
                                     className="flex overflow-x-auto gap-4 md:gap-5 w-full pb-8 scrollbar-hide snap-x items-start cursor-grab active:cursor-grabbing"
                                 >
                                     {SERVICOS_MOCK.map((item) => (
-                                        <CardServico key={item.id} item={item} variante="vertical" />
+                                        <CardServico key={item.id} item={item} variante="vertical" isEmpreendedor={isEmpreendedor} />
                                     ))}
                                 </div>
                                 <button onClick={() => scroll("right")} className="absolute right-0 top-[40%] -translate-y-1/2 z-20 hover:scale-110 transition-transform rotate-180 hidden md:block">
@@ -142,7 +151,7 @@ export default function ExplorarServicos() {
                         {temDados ? (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
                                 {SERVICOS_MOCK.map((item) => (
-                                    <CardServico key={item.id} item={item} variante="horizontal" />
+                                    <CardServico key={item.id} item={item} variante="horizontal" isEmpreendedor={isEmpreendedor} />
                                 ))}
                             </div>
                         ) : (
@@ -155,4 +164,4 @@ export default function ExplorarServicos() {
             </div>
         </main>
     );
-}
+};
