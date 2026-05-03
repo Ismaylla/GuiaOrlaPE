@@ -26,6 +26,11 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
     };
 
     useEffect(() => {
+        document.body.style.overflow = "auto";
+        window.scrollTo(0, 0);
+    }, []);
+
+    useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
@@ -55,13 +60,25 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
     };
 
     return (
-        <main className="min-h-screen bg-[#F0F2F5] font-sans pb-20">
-            <HeaderListagem isEmpreendedor={isEmpreendedor} forceBlue={true} scrolled={scrolled} categoriaAtiva="" setCategoriaAtiva={handleCategoryClick} showFilter={false} setIsFilterOpen={() => {}} navRef={navRef} handleMouseDown={handleMouseDown} />
+        <main className="min-h-screen h-full bg-[#F0F2F5] font-sans pb-20 text-left">
+            <HeaderListagem 
+                isEmpreendedor={isEmpreendedor} 
+                forceBlue={true} 
+                scrolled={scrolled} 
+                categoriaAtiva="" 
+                setCategoriaAtiva={handleCategoryClick} 
+                showFilter={false} 
+                setIsFilterOpen={() => {}} 
+                navRef={navRef} 
+                handleMouseDown={handleMouseDown} 
+            />
+            
             <div className="h-16"></div>
 
             <div className="max-w-[1100px] mx-auto">
                 <PerfilHeader podeEditar={false} />
-                <div className="px-4 grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 mt-4 text-left">
+                
+                <div className="px-4 grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 mt-4">
                     <aside className="flex flex-col gap-4">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                              <div className="flex justify-between items-center mb-3">
@@ -75,7 +92,8 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                                 {dadosEstaticos.nome}: Os melhores cocos e frutas selecionadas da Praia de Gaibu. 
                              </p>
                         </div>
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-5">
+
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-5">
                             <h3 className="font-bold text-[#0A4F6E] text-lg">Informações</h3>
                             <InfoRow icon={<Clock size={18} className="text-[#1398D4]" />} label="Funcionamento" value={dadosEstaticos.horario} />
                             <InfoRow icon={<MapPin size={18} className="text-[#1398D4]" />} label="Onde estamos" value={dadosEstaticos.localizacao} />
@@ -92,8 +110,12 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                                 <div className="aspect-square bg-gray-50 rounded-xl border border-dashed border-gray-300"></div>
                             </div>
                         </div>
-                        {/* Botão Avaliar ATIVADO para o turista */}
-                        <SecaoFeedback nota={dadosEstaticos.nota} totalAvaliacoes={dadosEstaticos.totalAvaliacoes} exibirBotaoAvaliar={true} />
+                        
+                        <SecaoFeedback 
+                            nota={dadosEstaticos.nota} 
+                            totalAvaliacoes={dadosEstaticos.totalAvaliacoes} 
+                            exibirBotaoAvaliar={!isEmpreendedor} 
+                        />
                     </section>
                 </div>
             </div>
@@ -104,7 +126,7 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
 const InfoRow = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) => (
     <div className="flex items-start gap-3">
         <div className="mt-0.5">{icon}</div>
-        <div className="flex flex-col">
+        <div className="flex flex-col text-left">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label}</span>
             <span className="text-sm text-[#0A4F6E] font-medium leading-tight">{value}</span>
         </div>
