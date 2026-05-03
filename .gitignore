@@ -1,0 +1,16 @@
+# Build .NET
+**/bin/
+**/obj/
+
+# History (VS Code extension)
+.history/
+
+# Node
+node_modules/
+
+# Docker
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db

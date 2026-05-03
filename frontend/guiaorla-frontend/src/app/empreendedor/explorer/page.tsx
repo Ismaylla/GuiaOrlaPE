@@ -1,6 +1,10 @@
-
+import { Suspense } from "react";
 import { ExplorerScreen } from "@/components/ListagemServicos/ExplorerScreen";
 
 export default function ExplorarEmpreendedorPage() {
-    return <ExplorerScreen isEmpreendedor={true} />;
+    return (
+        <Suspense fallback={<div>Carregando...</div>}>
+            <ExplorerScreen isEmpreendedor={true} />
+        </Suspense>
+    );
 }
