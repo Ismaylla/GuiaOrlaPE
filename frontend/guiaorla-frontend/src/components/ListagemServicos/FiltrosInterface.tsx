@@ -1,5 +1,17 @@
 "use client";
 
+import { 
+    Banknote, 
+    CreditCard, 
+    Droplets, 
+    Car, 
+    Umbrella, 
+    Dog, 
+    Accessibility, 
+    Star,
+    DollarSign
+} from "lucide-react";
+
 interface FiltrosProps {
     filtros: any;
     setFiltros: (filtros: any) => void;
@@ -20,8 +32,13 @@ export const FiltrosInterface = ({ filtros, setFiltros, fecharModal, contexto }:
 
     return (
         <div className="flex flex-col gap-1.5">
+            {/* SEÇÃO: PREÇOS */}
             <div>
-                <h4 className="text-[#0A4F6E] font-bold text-[11px] mb-1 uppercase tracking-wider">💰 Preços</h4>
+                <h4 className="text-[#0A4F6E] font-bold text-[11px] mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                    <DollarSign size={13} strokeWidth={3} />
+                    Preços
+                </h4>
+                
                 <div className="flex flex-col gap-1 mb-2">
                     {[
                         { id: 'ate50', label: 'Até R$ 50' },
@@ -70,23 +87,35 @@ export const FiltrosInterface = ({ filtros, setFiltros, fecharModal, contexto }:
                 </div>
             </div>
 
+            {/* SEÇÃO: COMODIDADES */}
             <div className="mt-1">
-                <h4 className="text-[#0A4F6E] font-bold text-[11px] mb-1 uppercase tracking-wider">Comodidades</h4>
+                <h4 className="text-[#0A4F6E] font-bold text-[11px] mb-2 uppercase tracking-wider">
+                    Comodidades
+                </h4>
+                
                 <div className="flex flex-col gap-1.5">
                     {[
-                        { id: 'cartao', label: '💳 Pix/Cartão' }, // Texto abreviado
-                        { id: 'chuveiro', label: '🚿 Chuveirão' },
-                        { id: 'estacionamento', label: '🚗 Estacionamento' },
-                        { id: 'cadeira', label: '⛱️ Cadeira' },
-                        { id: 'petFriendly', label: '🐾 Pet Friendly' },
-                        { id: 'acessibilidade', label: '♿ Acessibilidade' },
-                        { id: 'melhoresAvaliados', label: '⭐ Melhores' }
+                        { id: 'cartao', label: 'Pix/Cartão', icon: <CreditCard size={14} /> },
+                        { id: 'chuveiro', label: 'Chuveirão', icon: <Droplets size={14} /> },
+                        { id: 'estacionamento', label: 'Estacionamento', icon: <Car size={14} /> },
+                        { id: 'cadeira', label: 'Cadeira/Sol', icon: <Umbrella size={14} /> },
+                        { id: 'petFriendly', label: 'Pet Friendly', icon: <Dog size={14} /> },
+                        { id: 'acessibilidade', label: 'Acessibilidade', icon: <Accessibility size={14} /> },
+                        { id: 'melhoresAvaliados', label: 'Melhores', icon: <Star size={14} /> }
                     ].map((f) => (
                         <label key={f.id} className="flex items-center gap-2 cursor-pointer group">
-                            <input type="checkbox" checked={filtros[f.id]}
+                            <input 
+                                type="checkbox" 
+                                checked={filtros[f.id]}
                                 onChange={() => setFiltros((prev: any) => ({ ...prev, [f.id]: !prev[f.id] }))}
-                                className="w-3.5 h-3.5 rounded border-gray-300 text-[#FF7620] focus:ring-[#FF7620]" />
-                            <span className="text-[12px] text-gray-700 group-hover:text-[#0A4F6E]">{f.label}</span>
+                                className="w-3.5 h-3.5 rounded border-gray-300 text-[#FF7620] focus:ring-[#FF7620]" 
+                            />
+                            <div className="flex items-center gap-1.5 text-gray-700 group-hover:text-[#0A4F6E] transition-colors">
+                                <span className="text-[#0A4F6E] opacity-70 group-hover:opacity-100">
+                                    {f.icon}
+                                </span>
+                                <span className="text-[12px]">{f.label}</span>
+                            </div>
                         </label>
                     ))}
                 </div>
