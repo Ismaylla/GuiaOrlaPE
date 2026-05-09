@@ -3,13 +3,13 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
 
-// Importação dos Modais
 import { ModalHorario } from "./ModalHorario"; 
 import { ModalLocalizacao } from "./ModalLocalizacao";
 import { ModalPagamentos } from "./ModalPagamentos";
 import { ModalComodidades } from "./ModalComodidades";
+import { ModalCategoria } from "./ModalCategoria"; // Novo Import
 
-import { Clock, CreditCard, MapPin, Settings, ChevronRight } from "lucide-react";
+import { Clock, CreditCard, MapPin, Settings, ChevronRight, Store } from "lucide-react";
 
 const MenuOption = ({ icon, title, description, onClick }: { 
     icon: React.ReactNode, title: string, description: string, onClick?: () => void 
@@ -30,35 +30,31 @@ export const GerenciarNegocioScreen = () => {
     const navRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
     
-    // ESTADOS DE DADOS
     const [horarioOperacao, setHorarioOperacao] = useState("08:00 às 18:00");
     const [localizacao, setLocalizacao] = useState("Praia de Gaibu, Cabo de Santo Agostinho");
+    const [categoria, setCategoria] = useState("Barracas e Ambulantes"); // Novo Estado
     const [meiosPagamento, setMeiosPagamento] = useState<string[]>(["Pix", "Dinheiro"]);
     const [comodidades, setComodidades] = useState<string[]>(["Wi-fi Grátis", "Pet Friendly"]);
     
-    const [activeModal, setActiveModal] = useState<"horario" | "localizacao" | "pagamentos" | "comodidades" | null>(null);
+    const [activeModal, setActiveModal] = useState<"horario" | "localizacao" | "pagamentos" | "comodidades" | "categoria" | null>(null);
 
-    // Carregar dados salvos ao iniciar
     useEffect(() => {
         const salvo = localStorage.getItem("dadosNegocio");
         if (salvo) {
             const d = JSON.parse(salvo);
             if (d.horario) setHorarioOperacao(d.horario);
             if (d.localizacao) setLocalizacao(d.localizacao);
+            if (d.categoria) setCategoria(d.categoria);
             if (d.pagamentos) setMeiosPagamento(d.pagamentos);
             if (d.comodidades) setComodidades(d.comodidades);
         }
     }, []);
 
-    // Função central para persistir mudanças
     const atualizarEPersistir = (campo: string, valor: any) => {
         const dadosAtuais = JSON.parse(localStorage.getItem("dadosNegocio") || "{}");
         const novosDados = {
             ...dadosAtuais,
-            horario: campo === "horario" ? valor : horarioOperacao,
-            localizacao: campo === "localizacao" ? valor : localizacao,
-            pagamentos: campo === "pagamentos" ? valor : meiosPagamento,
-            comodidades: campo === "comodidades" ? valor : comodidades,
+            [campo]: valor
         };
         localStorage.setItem("dadosNegocio", JSON.stringify(novosDados));
     };
@@ -94,6 +90,7 @@ export const GerenciarNegocioScreen = () => {
                 <div className="flex flex-col gap-4">
                     <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                         <div className="p-4 border-b border-gray-50 bg-gray-50/50"><span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Operação</span></div>
+                        <MenuOption icon={<Store className="text-[#FF7620]" />} title="Categoria de Serviço" description={categoria} onClick={() => setActiveModal("categoria")} />
                         <MenuOption icon={<Clock className="text-[#FF7620]" />} title="Horário de Funcionamento" description={horarioOperacao} onClick={() => setActiveModal("horario")} />
                         <MenuOption icon={<MapPin className="text-[#FF7620]" />} title="Localização Exata" description={localizacao} onClick={() => setActiveModal("localizacao")} />
                     </section>
@@ -106,15 +103,8 @@ export const GerenciarNegocioScreen = () => {
                 </div>
             </div>
 
-            <ModalHorario 
-    isOpen={activeModal === "horario"} 
-    onClose={() => setActiveModal(null)} 
-    valorAtual={horarioOperacao} // Passando o valor atual para o modal
-    onSave={(v) => { 
-        setHorarioOperacao(v); 
-        atualizarEPersistir("horario", v); 
-    }} 
-/>
+            <ModalCategoria isOpen={activeModal === "categoria"} categoriaAtual={categoria} onClose={() => setActiveModal(null)} onSave={(v) => { setCategoria(v); atualizarEPersistir("categoria", v); }} />
+            <ModalHorario isOpen={activeModal === "horario"} onClose={() => setActiveModal(null)} valorAtual={horarioOperacao} onSave={(v) => { setHorarioOperacao(v); atualizarEPersistir("horario", v); }} />
             <ModalLocalizacao isOpen={activeModal === "localizacao"} onClose={() => setActiveModal(null)} onSave={(l: any) => { setLocalizacao(l.endereco); atualizarEPersistir("localizacao", l.endereco); }} />
             <ModalPagamentos isOpen={activeModal === "pagamentos"} onClose={() => setActiveModal(null)} pagamentosAtuais={meiosPagamento} onSave={(v) => { setMeiosPagamento(v); atualizarEPersistir("pagamentos", v); }} />
             <ModalComodidades isOpen={activeModal === "comodidades"} onClose={() => setActiveModal(null)} comodidadesAtuais={comodidades} onSave={(v) => { setComodidades(v); atualizarEPersistir("comodidades", v); }} />

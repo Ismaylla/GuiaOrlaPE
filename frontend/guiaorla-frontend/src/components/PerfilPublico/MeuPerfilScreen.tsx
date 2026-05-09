@@ -6,13 +6,11 @@ import { PerfilHeader } from "@/components/PerfilPublico/PerfilHeader";
 import { ModalUpload } from "./ModalUpload";
 import { ModalSobre } from "./ModalSobre"; 
 import { SecaoFeedback } from "@/components/PerfilPublico/SecaoFeedback";
-import { Clock, MapPin, CreditCard, Sparkles } from "lucide-react";
+import { Clock, MapPin, CreditCard, Sparkles, Store } from "lucide-react";
 
 export const MeuPerfilScreen = () => {
     const [scrolled, setScrolled] = useState(false);
     const [isModalSobreOpen, setIsModalSobreOpen] = useState(false);
-    
-    // Controle do Modal de Upload
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [uploadType, setUploadType] = useState<"galeria" | "header">("galeria");
 
@@ -21,6 +19,7 @@ export const MeuPerfilScreen = () => {
 
     const [dadosNegocio, setDadosNegocio] = useState({
         nome: "Meu Negócio Gaibu",
+        categoria: "Defina sua categoria", // Novo campo
         sobre: "Os melhores cocos e frutas selecionadas da Praia de Gaibu. Atendimento diferenciado e qualidade garantida.",
         localizacao: "Defina sua localização",
         horario: "Defina seu horário",
@@ -36,6 +35,7 @@ export const MeuPerfilScreen = () => {
             const d = JSON.parse(salvo);
             setDadosNegocio(prev => ({
                 ...prev,
+                categoria: d.categoria || prev.categoria,
                 sobre: d.sobre || prev.sobre,
                 horario: d.horario || prev.horario,
                 localizacao: d.localizacao || prev.localizacao,
@@ -48,12 +48,10 @@ export const MeuPerfilScreen = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // AJUSTE: Função que lida com o clique na categoria e redireciona para o explorer
     const handleCategoryClick = (cat: string) => {
         router.push(`/empreendedor/explorer?categoria=${encodeURIComponent(cat)}`);
     };
 
-    // Função para abrir o upload correto
     const handleOpenUpload = (tipo: "galeria" | "header") => {
         setUploadType(tipo);
         setIsUploadModalOpen(true);
@@ -79,26 +77,11 @@ export const MeuPerfilScreen = () => {
 
     return (
         <main className="min-h-screen bg-[#F0F2F5] font-sans pb-20 text-left">
-            {/* AJUSTE: setCategoriaAtiva agora recebe handleCategoryClick para permitir navegação */}
-            <HeaderListagem 
-                isEmpreendedor={true} 
-                forceBlue={true} 
-                scrolled={scrolled} 
-                categoriaAtiva="" 
-                setCategoriaAtiva={handleCategoryClick} 
-                showFilter={false} 
-                setIsFilterOpen={() => {}} 
-                navRef={navRef} 
-                handleMouseDown={handleMouseDown} 
-            />
-            
+            <HeaderListagem isEmpreendedor={true} forceBlue={true} scrolled={scrolled} categoriaAtiva="" setCategoriaAtiva={handleCategoryClick} showFilter={false} setIsFilterOpen={() => {}} navRef={navRef} handleMouseDown={handleMouseDown} />
             <div className="h-16"></div>
 
             <div className="max-w-[1100px] mx-auto">
-                <PerfilHeader 
-                    podeEditar={true} 
-                    onEditCover={() => handleOpenUpload("header")} 
-                />
+                <PerfilHeader podeEditar={true} onEditCover={() => handleOpenUpload("header")} />
                 
                 <div className="px-4 grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 mt-4">
                     <aside className="flex flex-col gap-4">
@@ -113,6 +96,8 @@ export const MeuPerfilScreen = () => {
                         </div>
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-5">
                             <h3 className="font-bold text-[#0A4F6E] text-lg">Dados Operacionais</h3>
+                            {/* ADIÇÃO: Exibição da Categoria no Perfil */}
+                            <InfoRow icon={<Store size={18} className="text-[#FF7620]" />} label="Categoria" value={dadosNegocio.categoria} />
                             <InfoRow icon={<Clock size={18} className="text-[#1398D4]" />} label="Seu Horário" value={dadosNegocio.horario} />
                             <InfoRow icon={<MapPin size={18} className="text-[#1398D4]" />} label="Sua Localização" value={dadosNegocio.localizacao} />
                             <InfoRow icon={<CreditCard size={18} className="text-[#1398D4]" />} label="Seus Pagamentos" value={dadosNegocio.pagamentos.join(", ")} />
@@ -135,22 +120,8 @@ export const MeuPerfilScreen = () => {
                 </div>
             </div>
 
-            <ModalSobre 
-                isOpen={isModalSobreOpen} 
-                onClose={() => setIsModalSobreOpen(false)} 
-                valorAtual={dadosNegocio.sobre}
-                onSave={(novo) => {
-                    const d = {...dadosNegocio, sobre: novo};
-                    setDadosNegocio(d);
-                    localStorage.setItem("dadosNegocio", JSON.stringify(d));
-                }}
-            />
-            
-            <ModalUpload 
-                isOpen={isUploadModalOpen} 
-                onClose={() => setIsUploadModalOpen(false)} 
-                tipo={uploadType} 
-            />
+            <ModalSobre isOpen={isModalSobreOpen} onClose={() => setIsModalSobreOpen(false)} valorAtual={dadosNegocio.sobre} onSave={(novo) => { const d = {...dadosNegocio, sobre: novo}; setDadosNegocio(d); localStorage.setItem("dadosNegocio", JSON.stringify(d)); }} />
+            <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} />
         </main>
     );
 };

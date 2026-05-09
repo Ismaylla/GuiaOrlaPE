@@ -6,6 +6,7 @@ import Image from "next/image";
 import { FiltrosInterface } from "@/components/ListagemServicos/FiltrosInterface";
 import { CardServico } from "@/components/ListagemServicos/CardServico";
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
+import { ModalVerMais } from "@/components/ListagemServicos/ModalVerMais";
 
 const SERVICOS_MOCK = [
     { id: 1, nome: "Raio de Sol: Cocos e Frutas", categoria: "Barracas e Ambulantes", nota: 4.8, desc: "Beira-mar de Gaibu (Próximo ao Posto 4). Coco gelado na hora | Frutas da estação", img: "/images/coco.jpg", aberto: true, aceitaCard: true },
@@ -25,6 +26,8 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
     const [categoriaAtiva, setCategoriaAtiva] = useState("");
     const [scrolled, setScrolled] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    
+    const [servicoSelecionado, setServicoSelecionado] = useState<any>(null);
 
     const navRef = useRef<HTMLDivElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -32,8 +35,17 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
     const temDados = SERVICOS_MOCK.length > 0;
 
     const [filtros, setFiltros] = useState({
-        precoMinManual: "", precoMaxManual: "", faixaPreco: "", cartao: true,
-        chuveiro: false, estacionamento: false, cadeira: false, petFriendly: false, acessibilidade: false, melhoresAvaliados: false
+        localizacao: "",
+        precoMinManual: "", 
+        precoMaxManual: "", 
+        faixaPreco: "", 
+        cartao: true,
+        chuveiro: false, 
+        estacionamento: false, 
+        cadeira: false, 
+        petFriendly: false, 
+        acessibilidade: false, 
+        melhoresAvaliados: false
     });
 
     useEffect(() => {
@@ -46,6 +58,14 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
+    useEffect(() => {
+        if (servicoSelecionado) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "auto";
+        }
+    }, [servicoSelecionado]);
 
     const handleMouseDown = (ref: React.RefObject<HTMLDivElement | null>) => (e: React.MouseEvent) => {
         if (!ref.current || ref.current.scrollWidth <= ref.current.clientWidth) return;
@@ -87,76 +107,100 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                 forceBlue={true}
             />
 
-            <div className="h-20"></div>
+            {/* Espaçador entre Header e o Grid */}
+            <div className="h-16 md:h-20"></div>
 
-            {/* MODAL DE FILTROS */}
+            {servicoSelecionado && (
+                <ModalVerMais 
+                    item={servicoSelecionado}
+                    isEmpreendedor={isEmpreendedor}
+                    onClose={() => setServicoSelecionado(null)} 
+                />
+            )}
+
+            {/* MODAL DE FILTROS MOBILE */}
             <div className={`fixed inset-0 z-[100] md:hidden transition-all duration-300 ${isFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
                 <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isFilterOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsFilterOpen(false)}></div>
-                <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] p-8 shadow-2xl transition-all duration-300 ${isFilterOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}>
-                    <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-6"></div>
-                    <h3 className="text-[#0A4F6E] font-bold text-xl mb-6">Filtros</h3>
+                <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] p-6 shadow-2xl transition-all duration-300 ${isFilterOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}>
+                    <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                    <h3 className="text-[#0A4F6E] font-bold text-lg mb-4">Filtros</h3>
                     <FiltrosInterface filtros={filtros} setFiltros={setFiltros} contexto="modal" />
-                    <button onClick={() => setIsFilterOpen(false)} className="w-full mt-8 py-4 bg-[#0A4F6E] text-white rounded-2xl font-bold">Aplicar filtros</button>
+                    <button onClick={() => setIsFilterOpen(false)} className="w-full mt-6 py-3.5 bg-[#0A4F6E] text-white rounded-2xl font-bold">Aplicar filtros</button>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-[260px_1fr] gap-8 mt-6 relative">
-                <aside className="hidden md:flex flex-col gap-2 sticky top-24 h-fit self-start">
-                    <div className="w-full h-38 rounded-xl overflow-hidden relative border border-gray-200 shadow-sm cursor-pointer group">
+            <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6 mt-4 md:mt-6 relative">
+                {/* ASIDE COM STICKY AJUSTADO */}
+                {/* Mudei top-20 para top-[104px] para manter o espaçamento idêntico ao carregamento da página */}
+                <aside className="hidden md:flex flex-col gap-2 sticky top-[104px] h-fit self-start">
+                    <div className="w-full h-28 rounded-xl overflow-hidden relative border border-gray-200 shadow-sm group">
                         <Image src="/images/map-placeholder.png" alt="Mapa" fill className="object-cover group-hover:scale-110 transition-transform" />
-                        <div className="absolute inset-0 bg-[#0A4F6E]/20 flex items-center justify-center">
-                            <button className="bg-white text-[#0A4F6E] px-4 py-2 rounded-lg text-sm font-bold shadow-md">Ver no mapa</button>
+                        <div className="absolute inset-0 bg-[#0A4F6E]/10 flex items-center justify-center">
+                            <button className="bg-white/90 text-[#0A4F6E] px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-md hover:bg-white transition-all">Ver no mapa</button>
                         </div>
                     </div>
 
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <h3 className="text-[#0A4F6E] font-bold text-base mb-3 border-b pb-1">Refinar busca:</h3>
+                    <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-[#0A4F6E] font-bold text-[11px] mb-2 border-b pb-1 uppercase tracking-tighter">Refinar busca</h3>
                         <FiltrosInterface filtros={filtros} setFiltros={setFiltros} contexto="aside" />
-                        <button className="w-full mt-4 py-2.5 bg-[#0A4F6E] text-white rounded-lg font-bold hover:bg-[#083d55] transition-colors shadow-sm text-sm">
+                        <button className="w-full mt-3 py-2 bg-[#0A4F6E] text-white rounded-lg font-bold hover:bg-[#083d55] transition-colors shadow-sm text-[11px]">
                             Aplicar filtros
                         </button>
                     </div>
                 </aside>
 
+                {/* CONTEÚDO PRINCIPAL */}
                 <div className="min-w-0">
-                    <section className="mb-16">
-                        <h2 className="text-[#0A4F6E] text-xl font-bold italic mb-6 text-center md:text-left">Próximos de você</h2>
+                    <section className="mb-12 md:mb-16">
+                        <h2 className="text-[#0A4F6E] text-lg md:text-xl font-bold italic mb-4 md:mb-6 text-center md:text-left tracking-tight">Próximos de você</h2>
                         {temDados ? (
-                            <div className="relative flex items-start pt-2 px-0 md:px-12">
+                            <div className="relative flex items-start pt-2 px-0 md:px-10">
                                 <button onClick={() => scroll("left")} className="absolute left-0 top-[40%] -translate-y-1/2 z-20 hover:scale-110 transition-transform hidden md:block">
-                                    <Image src="/icons/SetaAzul.svg" width={32} height={32} alt="ant" />
+                                    <Image src="/icons/SetaAzul.svg" width={28} height={28} alt="ant" />
                                 </button>
                                 <div ref={scrollRef} onMouseDown={handleMouseDown(scrollRef)}
-                                    className="flex overflow-x-auto gap-4 md:gap-5 w-full pb-8 scrollbar-hide snap-x items-start cursor-grab active:cursor-grabbing"
+                                    className="flex overflow-x-auto gap-4 md:gap-5 w-full pb-6 scrollbar-hide snap-x items-start cursor-grab active:cursor-grabbing"
                                 >
                                     {SERVICOS_MOCK.map((item) => (
-                                        <CardServico key={item.id} item={item} variante="vertical" isEmpreendedor={isEmpreendedor} />
+                                        <CardServico 
+                                            key={item.id} 
+                                            item={item} 
+                                            variante="vertical" 
+                                            isEmpreendedor={isEmpreendedor} 
+                                            onOpenModal={(item) => setServicoSelecionado(item)}
+                                        />
                                     ))}
                                 </div>
                                 <button onClick={() => scroll("right")} className="absolute right-0 top-[40%] -translate-y-1/2 z-20 hover:scale-110 transition-transform rotate-180 hidden md:block">
-                                    <Image src="/icons/SetaAzul.svg" width={32} height={32} alt="prox" />
+                                    <Image src="/icons/SetaAzul.svg" width={28} height={28} alt="prox" />
                                 </button>
                             </div>
                         ) : (
-                            <div className="text-center p-12 bg-white rounded-2xl border border-dashed border-gray-300">
-                                <p className="text-gray-500 italic">Nenhum serviço encontrado próximo à sua localização.</p>
+                            <div className="text-center p-10 bg-white rounded-2xl border border-dashed border-gray-300">
+                                <p className="text-gray-500 text-sm italic">Nenhum serviço encontrado próximo a você.</p>
                             </div>
                         )}
                     </section>
 
-                    <hr className="w-full border-gray-300 mb-12" />
+                    <hr className="w-full border-gray-200 mb-10 md:mb-12" />
 
                     <section>
-                        <h2 className="text-[#0A4F6E] text-xl font-bold mb-10 italic text-center md:text-left">Todos os estabelecimentos</h2>
+                        <h2 className="text-[#0A4F6E] text-lg md:text-xl font-bold mb-6 md:mb-8 italic text-center md:text-left tracking-tight">Todos os estabelecimentos</h2>
                         {temDados ? (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-8">
                                 {SERVICOS_MOCK.map((item) => (
-                                    <CardServico key={item.id} item={item} variante="horizontal" isEmpreendedor={isEmpreendedor} />
+                                    <CardServico 
+                                        key={item.id} 
+                                        item={item} 
+                                        variante="horizontal" 
+                                        isEmpreendedor={isEmpreendedor} 
+                                        onOpenModal={(item) => setServicoSelecionado(item)}
+                                    />
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center p-12 bg-white rounded-2xl border border-dashed border-gray-300">
-                                <p className="text-gray-500 italic">Não há estabelecimentos cadastrados no momento.</p>
+                            <div className="text-center p-10 bg-white rounded-2xl border border-dashed border-gray-300">
+                                <p className="text-gray-500 text-sm italic">Não há estabelecimentos cadastrados no momento.</p>
                             </div>
                         )}
                     </section>
