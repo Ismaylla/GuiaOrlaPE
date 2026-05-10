@@ -68,11 +68,7 @@ public class UserService : IUserService
 
     public async Task UpdateAsync(Guid id, CreateBusinesspersonRequest request)
     {
-        var user = await _repository.GetByIdAsync(id);
-
-        if (user is null)
-            throw new Exception("Usuário não encontrado.");
-
+        var user = await _repository.GetByIdAsync(id) ?? throw new Exception("Usuário não encontrado.");
         user.Name = request.Name;
         user.Phone = request.Phone;
 
@@ -81,10 +77,7 @@ public class UserService : IUserService
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
-        var user = await _repository.GetByEmailAsync(request.Email);
-
-        if (user is null)
-            throw new Exception("Email ou senha inválidos.");
+        var user = await _repository.GetByEmailAsync(request.Email) ?? throw new Exception("Email ou senha inválidos.");
 
         var passwordIsValid = BCrypt.Net.BCrypt.Verify(
             request.Password,

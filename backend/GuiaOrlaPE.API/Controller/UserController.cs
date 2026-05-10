@@ -10,40 +10,127 @@ public class UserController : ControllerBase
 {
     private readonly IUserService _service;
 
-    public UserController(IUserService service)
+    private readonly ILogger<UserController> _logger;
+
+    public UserController(
+        IUserService service,
+        ILogger<UserController> logger)
     {
         _service = service;
+        _logger = logger;
     }
 
     [HttpPost("businessperson")]
     public async Task<IActionResult> CreateBusinessperson(
         [FromBody] CreateBusinesspersonRequest request)
     {
-        var user = await _service.CreateBusinesspersonAsync(request);
+        try
+        {
+            _logger.LogInformation(
+                "Iniciando cadastro de usuário Businessperson. Email: {Email}",
+                request.Email);
 
-        return CreatedAtAction(
-            nameof(GetById),
-            new { id = user.Id },
-            user);
+            var user = await _service.CreateBusinesspersonAsync(request);
+
+            _logger.LogInformation(
+                "Usuário Businessperson cadastrado com sucesso. UserId: {UserId}",
+                user.Id);
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = user.Id },
+                user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Erro ao cadastrar usuário Businessperson. Email: {Email}",
+                request.Email);
+
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new
+                {
+                    Message = "Erro interno do servidor."
+                });
+        }
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var users = await _service.GetAllAsync();
+        try
+        {
+            _logger.LogInformation(
+                "Iniciando busca de usuários.");
 
-        return Ok(users);
+            var users = await _service.GetAllAsync();
+
+            _logger.LogInformation(
+                "Busca de usuários realizada com sucesso. Quantidade: {Count}",
+                users.Count);
+
+            return Ok(users);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Erro ao buscar usuários.");
+
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new
+                {
+                    Message = "Erro interno do servidor."
+                });
+        }
     }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var user = await _service.GetByIdAsync(id);
+        try
+        {
+            _logger.LogInformation(
+                "Buscando usuário por id. UserId: {UserId}",
+                id);
 
-        if (user is null)
-            return NotFound();
+            var user = await _service.GetByIdAsync(id);
 
-        return Ok(user);
+            if (user is null)
+            {
+                _logger.LogWarning(
+                    "Usuário não encontrado. UserId: {UserId}",
+                    id);
+
+                return NotFound(new
+                {
+                    Message = "Usuário não encontrado."
+                });
+            }
+
+            _logger.LogInformation(
+                "Usuário encontrado com sucesso. UserId: {UserId}",
+                id);
+
+            return Ok(user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Erro ao buscar usuário por id. UserId: {UserId}",
+                id);
+
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new
+                {
+                    Message = "Erro interno do servidor."
+                });
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -51,8 +138,33 @@ public class UserController : ControllerBase
         Guid id,
         [FromBody] CreateBusinesspersonRequest request)
     {
-        await _service.UpdateAsync(id, request);
+        try
+        {
+            _logger.LogInformation(
+                "Iniciando atualização de usuário. UserId: {UserId}",
+                id);
 
-        return NoContent();
+            await _service.UpdateAsync(id, request);
+
+            _logger.LogInformation(
+                "Usuário atualizado com sucesso. UserId: {UserId}",
+                id);
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Erro ao atualizar usuário. UserId: {UserId}",
+                id);
+
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new
+                {
+                    Message = "Erro interno do servidor."
+                });
+        }
     }
 }
