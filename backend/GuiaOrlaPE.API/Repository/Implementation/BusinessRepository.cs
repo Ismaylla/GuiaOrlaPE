@@ -29,4 +29,31 @@ public class BusinessRepository : IBusinessRepository
             .Include(x => x.User)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
+
+    public async Task<(List<Business> Items, int TotalItems)> SearchAsync(string? search, int page, int pageSize)
+    {
+        var query = _context.Businesses
+            .AsNoTracking()
+            .Include(x => x.User)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim().ToLower();
+
+            query = query.Where(x =>
+                x.Name.ToLower().Contains(search) ||
+                x.Address.ToLower().Contains(search));
+        }
+
+        var totalItems = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(x => x.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalItems);
+    }
 }
