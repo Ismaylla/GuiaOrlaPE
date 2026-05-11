@@ -7,4 +7,6 @@ public interface IBusinessRepository
     Task<List<Business>> GetAllAsync();
 
     Task<Business?> GetByIdAsync(Guid id);
+    Task<(List<Business> Items, int TotalItems)> SearchAsync(string? search, int page, int pageSize);
+
 }

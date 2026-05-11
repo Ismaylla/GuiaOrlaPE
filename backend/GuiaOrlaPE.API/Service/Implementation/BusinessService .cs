@@ -1,4 +1,5 @@
-﻿using GuiaOrlaPE.API.Models.Responses;
+﻿using GuiaOrlaPE.API.Models.Requests;
+using GuiaOrlaPE.API.Models.Responses;
 using GuiaOrlaPE.API.Repository.Intefaces;
 using GuiaOrlaPE.API.Service.Interfaces;
 
@@ -106,6 +107,70 @@ public class BusinessService : IBusinessService
                 ex,
                 "Erro ao buscar empreendimento {BusinessId}",
                 id);
+
+            throw;
+        }
+    }
+
+    public async Task<PagedResponse<BusinessResponse>> SearchAsync(SearchBusinessRequest request)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Iniciando busca paginada de empreendimentos. " +
+                "Search: {Search}, Page: {Page}, PageSize: {PageSize}",
+                request.Search,
+                request.Page,
+                request.PageSize);
+
+            var (items, totalItems) =
+                await _repository.SearchAsync(
+                    request.Search,
+                    request.Page,
+                    request.PageSize);
+
+            var responseItems = items.Select(x => new BusinessResponse
+            {
+                Id = x.Id,
+                Name = x.Name,
+                ServiceType = x.ServiceType,
+                Address = x.Address,
+                Latitude = x.Latitude,
+                Longitude = x.Longitude,
+                BusinessPhotoUrl = x.BusinessPhotoUrl,
+
+                Owner = new BusinessOwnerResponse
+                {
+                    Id = x.User.Id,
+                    Name = x.User.Name,
+                    Email = x.User.Email,
+                    Phone = x.User.Phone
+                }
+            }).ToList();
+
+            var totalPages =
+                (int)Math.Ceiling(totalItems / (double)request.PageSize);
+
+            _logger.LogInformation(
+                "Busca paginada realizada com sucesso. TotalItems: {TotalItems}",
+                totalItems);
+
+            return new PagedResponse<BusinessResponse>
+            {
+                Items = responseItems,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                HasNextPage = request.Page < totalPages,
+                HasPreviousPage = request.Page > 1
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Erro ao realizar busca paginada de empreendimentos.");
 
             throw;
         }
