@@ -1,9 +1,12 @@
-
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google"; // Importa a Poppins
+import { Poppins } from "next/font/google";
+
 import "./globals.css";
 
-// Configura a fonte Poppins com os pesos que você usa no Figma
+import { AuthProvider } from "@/providers/AuthProvider";
+import { QueryProvider } from "@/providers/QueryProvider";
+
+// Configura a fonte Poppins
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
@@ -21,9 +24,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br">
+    <html lang="pt-BR">
       <body className={`${poppins.variable} antialiased`}>
-        {children}
+        <AuthProvider>
+          <QueryProvider>
+            {children}
+          </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

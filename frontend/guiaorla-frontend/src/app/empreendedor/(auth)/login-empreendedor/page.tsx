@@ -1,4 +1,5 @@
 "use client";
+import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -11,7 +12,34 @@ import { BotaoFormulario } from "@/components/Formulario/BotaoFormulario";
 export default function LoginEmpreendedor() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState("");
+
   const router = useRouter();
+
+  async function handleLogin() {
+    try {
+      setLoading(true);
+      setErro("");
+
+      const response = await signIn("credentials", {
+        email,
+        password: senha,
+        redirect: false,
+      });
+
+      if (response?.error) {
+        setErro("E-mail ou senha inválidos.");
+        return;
+      }
+
+      router.push("/empreendedor/explorer");
+    } catch (error) {
+      setErro("Erro ao realizar login.");
+    } finally {
+      setLoading(false);
+    }
+}
 
   return (
     <LayoutAuth>
@@ -53,12 +81,18 @@ export default function LoginEmpreendedor() {
         </div>
       </div>
 
+      {erro && (
+        <p className="text-red-500 text-sm text-center">
+          {erro}
+        </p>
+      )}
+      
       <div className="flex flex-col items-center gap-3 mt-10 w-full">
         <BotaoFormulario 
-          texto="ENTRAR" 
+          texto={loading ? "ENTRANDO..." : "ENTRAR"}
           larguraMax="240px"
           variante="azul"
-          onClick={() => router.push("/empreendedor/explorer")}
+          onClick={handleLogin}
         />
         
         {/* ROTA ATUALIZADA */}
