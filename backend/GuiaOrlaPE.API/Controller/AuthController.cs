@@ -6,19 +6,13 @@ namespace GuiaOrlaPE.API.Controller;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController : ControllerBase
+public class AuthController(
+    IUserService service,
+    ILogger<AuthController> logger) : ControllerBase
 {
-    private readonly IUserService _service;
+    private readonly IUserService _userService = service;
 
-    private readonly ILogger<AuthController> _logger;
-
-    public AuthController(
-        IUserService service,
-        ILogger<AuthController> logger)
-    {
-        _service = service;
-        _logger = logger;
-    }
+    private readonly ILogger<AuthController> _logger = logger;
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(
@@ -30,7 +24,7 @@ public class AuthController : ControllerBase
                 "Iniciando tentativa de login. Email: {Email}",
                 request.Email);
 
-            var response = await _service.LoginAsync(request);
+            var response = await _userService.LoginAsync(request);
 
             _logger.LogInformation(
                 "Login realizado com sucesso. Email: {Email}",

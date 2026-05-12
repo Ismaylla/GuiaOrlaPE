@@ -6,19 +6,12 @@ namespace GuiaOrlaPE.API.Controller;
 
 [ApiController]
 [Route("api/users")]
-public class UserController : ControllerBase
+public class UserController(IUserService service, ILogger<UserController> logger, IBusinessService businessService) : ControllerBase
 {
-    private readonly IUserService _service;
+    private readonly IUserService _service = service;
+    private readonly IBusinessService _businessService = businessService;
 
-    private readonly ILogger<UserController> _logger;
-
-    public UserController(
-        IUserService service,
-        ILogger<UserController> logger)
-    {
-        _service = service;
-        _logger = logger;
-    }
+    private readonly ILogger<UserController> _logger = logger;
 
     [HttpPost("businessperson")]
     public async Task<IActionResult> CreateBusinessperson(
@@ -158,6 +151,38 @@ public class UserController : ControllerBase
                 ex,
                 "Erro ao atualizar usuário. UserId: {UserId}",
                 id);
+
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new
+                {
+                    Message = "Erro interno do servidor."
+                });
+        }
+    }
+
+    [HttpGet("{userId:guid}/business")]
+    public async Task<IActionResult> GetBusinessesByUser(Guid userId, [FromQuery] PaginationRequest request)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Recebida requisição de busca de empreendimentos do usuário. UserId: {UserId}",
+                userId);
+
+            var response =
+                await _businessService.GetByUserIdAsync(
+                    userId,
+                    request);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Erro interno ao buscar empreendimentos do usuário. UserId: {UserId}",
+                userId);
 
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
