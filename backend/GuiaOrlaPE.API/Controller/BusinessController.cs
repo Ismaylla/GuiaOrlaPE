@@ -6,19 +6,13 @@ namespace GuiaOrlaPE.API.Controller;
 
 [ApiController]
 [Route("api/business")]
-public class BusinessController : ControllerBase
+public class BusinessController(
+    IBusinessService service,
+    ILogger<BusinessController> logger) : ControllerBase
 {
-    private readonly IBusinessService _service;
+    private readonly IBusinessService _service = service;
 
-    private readonly ILogger<BusinessController> _logger;
-
-    public BusinessController(
-        IBusinessService service,
-        ILogger<BusinessController> logger)
-    {
-        _service = service;
-        _logger = logger;
-    }
+    private readonly ILogger<BusinessController> _logger = logger;
 
     [HttpGet]
     public async Task<IActionResult> GetAll()

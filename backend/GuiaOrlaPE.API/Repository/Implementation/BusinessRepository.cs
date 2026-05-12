@@ -56,4 +56,22 @@ public class BusinessRepository : IBusinessRepository
 
         return (items, totalItems);
     }
+
+    public async Task<(List<Business> Items, int TotalItems)> GetByUserIdAsync(Guid userId, int page,int pageSize)
+    {
+        var query = _context.Businesses
+            .AsNoTracking()
+            .Include(x => x.User)
+            .Where(x => x.UserId == userId);
+
+        var totalItems = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(x => x.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalItems);
+    }
 }

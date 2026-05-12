@@ -5,19 +5,13 @@ using GuiaOrlaPE.API.Service.Interfaces;
 
 namespace GuiaOrlaPE.API.Service.Implementation;
 
-public class BusinessService : IBusinessService
+public class BusinessService(
+    IBusinessRepository repository,
+    ILogger<BusinessService> logger) : IBusinessService
 {
-    private readonly IBusinessRepository _repository;
+    private readonly IBusinessRepository _repository = repository;
 
-    private readonly ILogger<BusinessService> _logger;
-
-    public BusinessService(
-        IBusinessRepository repository,
-        ILogger<BusinessService> logger)
-    {
-        _repository = repository;
-        _logger = logger;
-    }
+    private readonly ILogger<BusinessService> _logger = logger;
 
     public async Task<List<BusinessResponse>> GetAllAsync()
     {
@@ -171,6 +165,70 @@ public class BusinessService : IBusinessService
             _logger.LogError(
                 ex,
                 "Erro ao realizar busca paginada de empreendimentos.");
+
+            throw;
+        }
+    }
+
+    public async Task<PagedResponse<BusinessResponse>> GetByUserIdAsync(Guid userId, PaginationRequest request)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Buscando empreendimentos do usuário. UserId: {UserId}",
+                userId);
+
+            var (items, totalItems) =
+                await _repository.GetByUserIdAsync(
+                    userId,
+                    request.Page,
+                    request.PageSize);
+
+            var responseItems = items.Select(x => new BusinessResponse
+            {
+                Id = x.Id,
+                Name = x.Name,
+                ServiceType = x.ServiceType,
+                Address = x.Address,
+                Latitude = x.Latitude,
+                Longitude = x.Longitude,
+                BusinessPhotoUrl = x.BusinessPhotoUrl,
+
+                Owner = new BusinessOwnerResponse
+                {
+                    Id = x.User.Id,
+                    Name = x.User.Name,
+                    Email = x.User.Email,
+                    Phone = x.User.Phone
+                }
+            }).ToList();
+
+            var totalPages =
+                (int)Math.Ceiling(
+                    totalItems / (double)request.PageSize);
+
+            _logger.LogInformation(
+                "Foram encontrados {Count} empreendimentos para o usuário {UserId}",
+                totalItems,
+                userId);
+
+            return new PagedResponse<BusinessResponse>
+            {
+                Items = responseItems,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                HasNextPage = request.Page < totalPages,
+                HasPreviousPage = request.Page > 1
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Erro ao buscar empreendimentos do usuário. UserId: {UserId}",
+                userId);
 
             throw;
         }

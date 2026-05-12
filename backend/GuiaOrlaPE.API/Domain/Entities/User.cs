@@ -1,6 +1,7 @@
 ﻿using GuiaOrlaPE.API.Domain.Enum;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace GuiaOrlaPE.API.Domain.Entities;
 
@@ -39,5 +40,6 @@ public class User
     [Required]
     public DateTime CreatedAt { get; set; }
 
+    [JsonIgnore]
     public ICollection<Business> Businesses { get; set; } = [];
 }

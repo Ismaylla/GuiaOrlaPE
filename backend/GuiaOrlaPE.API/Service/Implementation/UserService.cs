@@ -7,17 +7,11 @@ using GuiaOrlaPE.API.Service.Interfaces;
 
 namespace GuiaOrlaPE.API.Service.Implementation;
 
-public class UserService : IUserService
+public class UserService(IUserRepository repository, ITokenService tokenService) : IUserService
 {
-    private readonly IUserRepository _repository;
+    private readonly IUserRepository _repository = repository;
 
-    private readonly ITokenService _tokenService;
-
-    public UserService(IUserRepository repository, ITokenService tokenService)
-    {
-        _repository = repository;
-        _tokenService = tokenService;
-    }
+    private readonly ITokenService _tokenService = tokenService;
 
     public async Task<User> CreateBusinesspersonAsync(CreateBusinesspersonRequest request)
     {

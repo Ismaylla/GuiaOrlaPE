@@ -10,4 +10,6 @@ public interface IBusinessService
     Task<BusinessResponse?> GetByIdAsync(Guid id);
 
     Task<PagedResponse<BusinessResponse>> SearchAsync(SearchBusinessRequest request);
+
+    Task<PagedResponse<BusinessResponse>> GetByUserIdAsync(Guid userId, PaginationRequest request);
 }
