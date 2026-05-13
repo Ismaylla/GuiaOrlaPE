@@ -8,6 +8,9 @@ import { InputCustomizado } from "@/components/Formulario/InputCustomizado";
 import { BotaoFormulario } from "@/components/Formulario/BotaoFormulario";
 import { DropdownServicos } from "@/components/Formulario/DropdownServicos";
 import { BotaoVoltar } from "@/components/Formulario/BotaoVoltar";
+import { useRegisterBusinessperson } from "@/hooks/mutations/useRegisterBusinessperson";
+import { CreateBusinesspersonRequest } from "@/interfaces/businessPersonRequest";
+import { BusinessServiceTypeEnum } from "@/interfaces/businessRequest";
 
 export default function CadastroEmpreendedor() {
     const [step, setStep] = useState(1);
@@ -16,6 +19,70 @@ export default function CadastroEmpreendedor() {
 
     const nextStep = () => setStep((prev) => prev + 1);
     const prevStep = () => setStep((prev) => (prev > 1 ? prev - 1 : 1));
+
+    const { mutateAsync, isPending } = useRegisterBusinessperson();
+
+    const [formData, setFormData] = useState({
+        userName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        phone: "",
+        businessName: "",
+        address: "",
+        businessPhotoUrl: "teste",
+        serviceType: BusinessServiceTypeEnum.ArtesanatoLocal,
+    });
+
+    async function handleRegister() {
+        try {
+            if (formData.password !== formData.confirmPassword) {
+                alert("As senhas não coincidem");
+                return;
+            }
+
+            const payload: CreateBusinesspersonRequest = {
+                name: formData.userName,
+                email: formData.email,
+                password: formData.password,
+                phone: formData.phone,
+                business: {
+                    name: formData.businessName,
+                    serviceType: formData.serviceType,
+                    address: formData.address,
+                    latitude: 0,
+                    longitude: 0,
+                    businessPhotoUrl:
+                        formData.businessPhotoUrl ||
+                        "teste",
+                },
+            };
+
+            const createdUser = await mutateAsync(payload);
+
+            console.log("Usuário criado:", createdUser);
+
+            router.push("/empreendedor/login-empreendedor");
+        } catch (error: any) {
+            console.error(error);
+
+            const message =
+                error?.response?.data?.message ||
+                "Erro ao realizar cadastro";
+
+            alert(message);
+        }
+    }
+
+    function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) 
+    {
+        const { name, value } = e.target;
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    }
 
     return (
         <LayoutAuth>
@@ -35,22 +102,67 @@ export default function CadastroEmpreendedor() {
                     
                     {step === 1 && (
                         <div className="flex flex-col gap-4 animate-in fade-in duration-500">
-                            <InputCustomizado label="Nome Completo ou do Negócio" />
-                            <InputCustomizado label="E-mail (Será seu Login)" type="email" />
-                            <InputCustomizado label="Crie uma senha" type="password" showPasswordOption />
-                            <InputCustomizado label="Confirme sua senha" type="password" showPasswordOption />
-                            <InputCustomizado label="Whatsapp ou Telefone" placeholder="Ex: 87991234567" />
+                            <InputCustomizado 
+                                name="userName"
+                                value={formData.userName}
+                                onChange={handleInputChange} 
+                                label="Nome Completo" 
+                            />
+                            <InputCustomizado
+                                name="email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                label="E-mail (Será seu Login)" 
+                                type="email" 
+                            />
+                            <InputCustomizado 
+                                name="password"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                label="Crie uma senha" 
+                                type="password" 
+                                showPasswordOption 
+                            />
+                            <InputCustomizado 
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleInputChange}
+                                label="Confirme sua senha" 
+                                type="password" 
+                                showPasswordOption />
+                            <InputCustomizado
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleInputChange} 
+                                label="Whatsapp ou Telefone" 
+                                placeholder="Ex: 87991234567" />
                         </div>
                     )}
 
                     {step === 2 && (
                         <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right duration-500">
-                            <DropdownServicos 
-                                label="Qual serviço você oferece?" 
-                                selected={selectedService} 
-                                onSelect={setSelectedService} 
+                            <InputCustomizado 
+                                name="businessName"
+                                value={formData.businessName}
+                                onChange={handleInputChange} 
+                                label="Nome do negócio" 
                             />
-                            <InputCustomizado label="Endereço ou Ponto de Referência" placeholder="Ex: Av. Beira Mar, Gaibu" />
+                            <DropdownServicos
+                                label="Qual serviço você oferece?"
+                                selected={formData.serviceType}
+                                onSelect={(value) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        serviceType: value,
+                                    }))
+                                }
+                            />
+                            <InputCustomizado 
+                                name="address"
+                                value={formData.address}
+                                onChange={handleInputChange}
+                                label="Endereço ou Ponto de Referência" 
+                                placeholder="Ex: Av. Beira Mar, Gaibu" />
                             <button className="text-left ml-4 mt-[-10px] text-[13px] font-semibold text-[#FF904B] hover:underline">
                                 Usar minha localização atual
                             </button>
@@ -86,11 +198,16 @@ export default function CadastroEmpreendedor() {
                 </div>
 
                 <div className="flex justify-center mt-4">
-                    <BotaoFormulario 
+                    <BotaoFormulario
                         variante="laranja"
-                        texto={step === 3 ? "FINALIZAR CADASTRO" : "PRÓXIMO"} 
-
-                        onClick={step === 3 ? () => router.push("/empreendedor/login-empreendedor") : nextStep} 
+                        texto={
+                            isPending
+                                ? "CARREGANDO..."
+                                : step === 3
+                                ? "FINALIZAR CADASTRO"
+                                : "PRÓXIMO"
+                        }
+                        onClick={step === 3 ? handleRegister : nextStep}
                     />
                 </div>
             </div>
