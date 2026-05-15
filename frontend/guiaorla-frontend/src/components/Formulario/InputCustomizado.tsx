@@ -4,6 +4,7 @@ import { useState } from "react";
 
 interface InputProps {
   label: string;
+  name?: string;
   type?: string;
   placeholder?: string;
   value?: string;
@@ -13,6 +14,7 @@ interface InputProps {
 
 export const InputCustomizado = ({ 
   label, 
+  name,
   type = "text", 
   placeholder, 
   value, 
@@ -27,6 +29,7 @@ export const InputCustomizado = ({
       <label className="ml-4 font-medium text-[#0A4F6E] text-[18px]">{label}</label>
       <div className="relative w-full">
         <input
+          name={name}
           type={isPassword ? (show ? "text" : "password") : type}
           placeholder={placeholder}
           value={value}
