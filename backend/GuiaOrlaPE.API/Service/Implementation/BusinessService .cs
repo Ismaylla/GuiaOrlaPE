@@ -105,6 +105,7 @@ public class BusinessService(
             throw;
         }
     }
+
     public async Task<PagedResponse<BusinessResponse>> SearchAsync(SearchBusinessRequest request)
     {
         try
@@ -117,7 +118,6 @@ public class BusinessService(
                 request.Localizacao,
                 request.Page);
 
-            // AGORA PASSA O REQUEST COMPLETO PARA O REPOSITÓRIO TRATAR OS FILTROS DEDICADOS
             var (items, totalItems) =
                 await _repository.SearchAsync(request);
 
@@ -167,6 +167,7 @@ public class BusinessService(
             throw;
         }
     }
+
     public async Task<PagedResponse<BusinessResponse>> GetByUserIdAsync(Guid userId, PaginationRequest request)
     {
         try
@@ -227,6 +228,46 @@ public class BusinessService(
                 "Erro ao buscar empreendimentos do usuário. UserId: {UserId}",
                 userId);
 
+            throw;
+        }
+    }
+
+    // MÉTODO DE CRIAÇÃO COMPATÍVEL COM ENUMS E OPERADORES DO SEU SISTEMA:
+    public async Task<BusinessResponse> CreateAsync(CreateBusinessRequest request)
+    {
+        try
+        {
+            _logger.LogInformation("Iniciando criação provisória do negócio: {Name}", request.Name);
+
+            var mockResponse = new BusinessResponse
+            {
+                Id = Guid.NewGuid(),
+                Name = request.Name,
+                Address = request.Address ?? "Endereço não informado",
+
+                // Mapeando dinamicamente o primeiro item do seu Enum real (BusinessServiceTypeEnum)
+                // ServiceType = GuiaOrlaPE.API.Domain.Enum.BusinessServiceTypeEnum.BarracasAmbulantes, 
+
+                // Substitui a linha antiga do ServiceType por essa aqui:
+                ServiceType = (GuiaOrlaPE.API.Domain.Enum.BusinessServiceTypeEnum)0,
+
+                Latitude = 0.0,
+                Longitude = 0.0,
+                BusinessPhotoUrl = "/images/capa-exemplo.jpg",
+                Owner = new BusinessOwnerResponse
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Empreendedor Cadastrado",
+                    Email = "dono@teste.com",
+                    Phone = "81999999999"
+                }
+            };
+
+            return await Task.FromResult(mockResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro no service ao criar novo empreendimento.");
             throw;
         }
     }
