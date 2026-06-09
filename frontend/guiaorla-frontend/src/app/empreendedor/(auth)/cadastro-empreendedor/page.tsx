@@ -30,7 +30,7 @@ export default function CadastroEmpreendedor() {
         phone: "",
         businessName: "",
         address: "",
-        businessPhotoUrl: "teste",
+        businessPhotoUrl: "/images/fundopraia.jpg",
         serviceType: BusinessServiceTypeEnum.ArtesanatoLocal,
     });
 

@@ -56,3 +56,51 @@ export async function buscarNegociosComFiltros(
     throw error;
   }
 }
+
+/**
+ * Busca um único estabelecimento pelo ID específico
+ * @param id O UUID do negócio vindo da rota dinâmica
+ */
+export async function buscarNegocioPorId(id: string): Promise<any> {
+  try {
+    const response = await api.get<any>(`/api/business/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Erro no service ao executar GetByIdAsync para o ID ${id}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Busca todas as avaliações reais de um estabelecimento específico
+ * @param businessId O UUID do quiosque
+ */
+export async function listarAvaliacoesDoNegocio(businessId: string): Promise<any[]> {
+  try {
+    const response = await api.get<any[]>(`/api/business/${businessId}/reviews`);
+    return response.data;
+  } catch (error: any) {
+    // Se o erro for 404 (Rota não existe no C#), silencia e entrega o array vazio
+    if (error.response && error.response.status === 404) {
+      return [];
+    }
+    
+    console.error("Erro inesperado ao buscar avaliações:", error);
+    return []; 
+  }
+} // <--- CHAVE CORRIGIDA AQUI: Agora fecha a função listarAvaliacoesDoNegocio perfeitamente!
+
+/**
+ * Cadastra um novo estabelecimento na orla
+ * @param dadosObjeto Os dados vindos do formulário de cadastro
+ */
+export async function cadastrarNovoNegocio(dadosObjeto: any): Promise<any> {
+  try {
+    // Dispara um POST direto para a rota que criamos no BusinessController do C#
+    const response = await api.post<any>("/api/business", dadosObjeto);
+    return response.data;
+  } catch (error) {
+    console.error("Erro no service ao executar CreateAsync:", error);
+    throw error;
+  }
+}

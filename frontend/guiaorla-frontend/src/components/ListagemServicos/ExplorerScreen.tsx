@@ -20,7 +20,7 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
     const [categoriaAtiva, setCategoriaAtiva] = useState("");
     const [scrolled, setScrolled] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    
+
     // ESTADOS DE INTEGRAÇÃO DA API
     const [listaNegocios, setListaNegocios] = useState<any[]>([]);
     const [carregando, setCarregando] = useState(true);
@@ -35,49 +35,92 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
 
     const [filtros, setFiltros] = useState({
         localizacao: "",
-        precoMinManual: "", 
-        precoMaxManual: "", 
-        faixaPreco: "", 
+        precoMinManual: "",
+        precoMaxManual: "",
+        faixaPreco: "",
         cartao: true,
-        chuveiro: false, 
-        estacionamento: false, 
-        cadeira: false, 
-        petFriendly: false, 
-        acessibilidade: false, 
+        chuveiro: false,
+        estacionamento: false,
+        cadeira: false,
+        petFriendly: false,
+        acessibilidade: false,
         melhoresAvaliados: false
     });
 
-    // Função centralizada para buscar os dados do C#
-    const carregarNegocios = useCallback(async (filtrosAtuais = filtros, categoriaFiltro = categoriaAtiva) => {
+    // FUNÇÃO CENTRAL: Faz mapeamento e filtro local dinâmico baseado na resposta real do banco
+    const carregarNegocios = useCallback(async (
+        filtrosAtuais = filtros,
+        categoriaFiltro = categoriaAtiva,
+        termoBusca = ""
+    ) => {
         try {
             setCarregando(true);
             setErroApi(false);
 
-            // Verifica se existe algum filtro de busca ativo ou categoria selecionada
-            const temFiltroAtivo = 
-                filtrosAtuais.localizacao || 
-                filtrosAtuais.faixaPreco || 
-                categoriaFiltro ||
-                !filtrosAtuais.cartao || // Se desmarcar cartão, altera a busca
-                filtrosAtuais.chuveiro || 
-                filtrosAtuais.estacionamento ||
-                filtrosAtuais.cadeira ||
-                filtrosAtuais.petFriendly || 
-                filtrosAtuais.acessibilidade ||
-                filtrosAtuais.melhoresAvaliados;
+            // 1. Busca os dados brutos da API C#
+            let dados = await listarTodosOsNegocios();
+            dados = (dados as any)?.items ? (dados as any).items : (Array.isArray(dados) ? dados : []);
 
-            let dados;
-            if (temFiltroAtivo) {
-                // Passa os filtros, a categoria selecionada e o termo de busca (opcional) para o service
-                dados = await buscarNegociosComFiltros(filtrosAtuais, categoriaFiltro);
-                
-                // Trata caso o método Search de paginação retorne um objeto envelopado (ex: { items: [...] })
-                setListaNegocios(dados.items ? dados.items : dados);
-            } else {
-                // Rota limpa quando não há parâmetros
-                dados = await listarTodosOsNegocios();
-                setListaNegocios(dados);
-            }
+            const termo = termoBusca.toLowerCase().trim();
+            const categoriaAlvo = categoriaFiltro.toLowerCase().trim();
+
+            // 2. Mapeamento e Filtragem Rígida
+            const dadosFormatados = dados
+                .map((backendItem: any) => {
+                    const localizacaoReal = backendItem.address || backendItem.location || backendItem.endereco || "Gaibu";
+
+                    // Se o banco trouxer null, undefined ou 0, definimos como "N/A" (Sem Avaliação)
+                    const notaBanco = backendItem.rating || backendItem.nota || backendItem.avaliacao;
+                    const notaReal = (notaBanco && notaBanco > 0) ? Number(notaBanco).toFixed(1) : "N/A";
+
+                    return {
+                        id: backendItem.id,
+                        nome: backendItem.name || backendItem.nome || "Sem Nome",
+                        desc: localizacaoReal,
+                        img: backendItem.businessPhotoUrl || "/images/fundopraia.jpg",
+                        nota: notaReal, // Passa "N/A" ou a nota real (ex: 4.5) pro CardServico
+                        aberto: backendItem.status ?? true,
+                        aceitaCard: backendItem.cartao ?? backendItem.aceitaCard ?? false,
+                        chuveiro: backendItem.chuveiro ?? false,
+                        estacionamento: backendItem.estacionamento ?? false,
+                        cadeira: backendItem.cadeira ?? false,
+                        petFriendly: backendItem.petFriendly ?? false,
+                        acessibilidade: backendItem.acessibilidade ?? false,
+                        serviceTypeCsharp: String(backendItem.serviceType ?? backendItem.tipoServico ?? "")
+                    };
+                })
+                .filter((item: any) => {
+                    // FILTRO DE BUSCA POR TEXTO
+                    if (termo) {
+                        const bateNome = item.nome.toLowerCase().includes(termo);
+                        const bateLocal = item.desc.toLowerCase().includes(termo);
+                        if (!bateNome && !bateLocal) return false;
+                    }
+
+                    if (categoriaAlvo) {
+                        // Compara direto o ID da URL ("0", "1", "2", "3", "4") com o do banco.
+                        // Se for diferente, o item some da tela na hora!
+                        if (item.serviceTypeCsharp !== categoriaAlvo) {
+                            return false;
+                        }
+                    }
+
+                    // FILTROS LATERAIS (ASIDE)
+                    if (filtrosAtuais.chuveiro && !item.chuveiro) return false;
+                    if (filtrosAtuais.estacionamento && !item.estacionamento) return false;
+                    if (filtrosAtuais.cadeira && !item.cadeira) return false;
+                    if (filtrosAtuais.petFriendly && !item.petFriendly) return false;
+                    if (filtrosAtuais.acessibilidade && !item.acessibilidade) return false;
+
+                    if (filtrosAtuais.localizacao && !item.desc.toLowerCase().includes(filtrosAtuais.localizacao.toLowerCase())) {
+                        return false;
+                    }
+
+                    return true;
+                });
+
+            setListaNegocios(dadosFormatados);
+
         } catch (error) {
             console.error("Erro ao carregar dados do GuiaOrlaPE.API:", error);
             setErroApi(true);
@@ -86,17 +129,14 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
         }
     }, [filtros, categoriaAtiva]);
 
-    // Busca inicial quando a página carrega
-    useEffect(() => {
-        carregarNegocios();
-    }, []);
-
-    // Sincroniza a categoria vinda da URL/Header e refaz a busca automaticamente
+    // Sincroniza a categoria e o texto de busca vinda da URL/Header e refaz a busca automaticamente
     useEffect(() => {
         const catUrl = searchParams.get("categoria") || "";
+        const buscaUrl = searchParams.get("search") || "";
+
         setCategoriaAtiva(catUrl);
-        carregarNegocios(filtros, catUrl);
-    }, [searchParams]);
+        carregarNegocios(filtros, catUrl, buscaUrl);
+    }, [searchParams, carregarNegocios, filtros]);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -155,10 +195,10 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
             <div className="h-16 md:h-20"></div>
 
             {servicoSelecionado && (
-                <ModalVerMais 
+                <ModalVerMais
                     item={servicoSelecionado}
                     isEmpreendedor={isEmpreendedor}
-                    onClose={() => setServicoSelecionado(null)} 
+                    onClose={() => setServicoSelecionado(null)}
                 />
             )}
 
@@ -169,8 +209,8 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                     <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
                     <h3 className="text-[#0A4F6E] font-bold text-lg mb-4">Filtros</h3>
                     <FiltrosInterface filtros={filtros} setFiltros={setFiltros} contexto="modal" />
-                    <button 
-                        onClick={() => { setIsFilterOpen(false); carregarNegocios(); }} 
+                    <button
+                        onClick={() => { setIsFilterOpen(false); carregarNegocios(); }}
                         className="w-full mt-6 py-3.5 bg-[#0A4F6E] text-white rounded-2xl font-bold"
                     >
                         Aplicar filtros
@@ -190,8 +230,11 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                     <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
                         <h3 className="text-[#0A4F6E] font-bold text-[11px] mb-2 border-b pb-1 uppercase tracking-tighter">Refinar busca</h3>
                         <FiltrosInterface filtros={filtros} setFiltros={setFiltros} contexto="aside" />
-                        <button 
-                            onClick={() => carregarNegocios()}
+                        <button
+                            onClick={() => {
+                                const buscaUrl = searchParams.get("search") || "";
+                                carregarNegocios(filtros, categoriaAtiva, buscaUrl);
+                            }}
                             className="w-full mt-3 py-2 bg-[#0A4F6E] text-white rounded-lg font-bold hover:bg-[#083d55] transition-colors shadow-sm text-[11px]"
                         >
                             Aplicar filtros
@@ -199,7 +242,6 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                     </div>
                 </aside>
 
-                {/* CONTEÚDO PRINCIPAL CONTROLADO PELO ESTADO DA API */}
                 <div className="min-w-0">
                     {carregando ? (
                         <div className="text-center p-20 flex flex-col items-center justify-center gap-3">
@@ -216,26 +258,42 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                             <section className="mb-12 md:mb-16">
                                 <h2 className="text-[#0A4F6E] text-lg md:text-xl font-bold italic mb-4 md:mb-6 text-center md:text-left tracking-tight">Próximos de você</h2>
                                 {temDados ? (
-                                    <div className="relative flex items-start pt-2 px-0 md:px-10">
-                                        <button onClick={() => scroll("left")} className="absolute left-0 top-[40%] -translate-y-1/2 z-20 hover:scale-110 transition-transform hidden md:block">
-                                            <Image src="/icons/SetaAzul.svg" width={28} height={28} alt="ant" />
-                                        </button>
+                                    <div className="relative flex items-start pt-2 px-0 md:px-10 group">
+
+                                        {/* SETA ESQUERDA: Só aparece no Desktop E se houver mais de 4 itens na lista */}
+                                        {listaNegocios.length > 4 && (
+                                            <button
+                                                onClick={() => scroll("left")}
+                                                className="absolute left-0 top-[40%] -translate-y-1/2 z-20 p-2 bg-white/80 hover:bg-white rounded-full shadow-md text-[#0A4F6E] hover:scale-110 transition-all hidden md:flex items-center justify-center border border-gray-100"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                            </button>
+                                        )}
+
                                         <div ref={scrollRef} onMouseDown={handleMouseDown(scrollRef)}
                                             className="flex overflow-x-auto gap-4 md:gap-5 w-full pb-6 scrollbar-hide snap-x items-start cursor-grab active:cursor-grabbing"
                                         >
                                             {listaNegocios.map((item) => (
-                                                <CardServico 
-                                                    key={item.id} 
-                                                    item={item} 
-                                                    variante="vertical" 
-                                                    isEmpreendedor={isEmpreendedor} 
+                                                <CardServico
+                                                    key={item.id}
+                                                    item={item}
+                                                    variante="vertical"
+                                                    isEmpreendedor={isEmpreendedor}
                                                     onOpenModal={(item) => setServicoSelecionado(item)}
                                                 />
                                             ))}
                                         </div>
-                                        <button onClick={() => scroll("right")} className="absolute right-0 top-[40%] -translate-y-1/2 z-20 hover:scale-110 transition-transform rotate-180 hidden md:block">
-                                            <Image src="/icons/SetaAzul.svg" width={28} height={28} alt="prox" />
-                                        </button>
+
+                                        {/* SETA DIREITA: Só aparece no Desktop E se houver mais de 4 itens na lista */}
+                                        {listaNegocios.length > 4 && (
+                                            <button
+                                                onClick={() => scroll("right")}
+                                                className="absolute right-0 top-[40%] -translate-y-1/2 z-20 p-2 bg-white/80 hover:bg-white rounded-full shadow-md text-[#0A4F6E] hover:scale-110 transition-all hidden md:flex items-center justify-center border border-gray-100"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                            </button>
+                                        )}
+
                                     </div>
                                 ) : (
                                     <div className="text-center p-10 bg-white rounded-2xl border border-dashed border-gray-300">
@@ -251,13 +309,14 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                                 {temDados ? (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-8">
                                         {listaNegocios.map((item) => (
-                                            <CardServico 
-                                                key={item.id} 
-                                                item={item} 
-                                                variante="horizontal" 
-                                                isEmpreendedor={isEmpreendedor} 
-                                                onOpenModal={(item) => setServicoSelecionado(item)}
-                                            />
+                                            <div key={item.id} className="h-fit">
+                                                <CardServico
+                                                    item={item}
+                                                    variante="horizontal"
+                                                    isEmpreendedor={isEmpreendedor}
+                                                    onOpenModal={(item) => setServicoSelecionado(item)}
+                                                />
+                                            </div>
                                         ))}
                                     </div>
                                 ) : (
