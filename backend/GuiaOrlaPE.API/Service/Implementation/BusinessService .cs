@@ -105,23 +105,21 @@ public class BusinessService(
             throw;
         }
     }
-
     public async Task<PagedResponse<BusinessResponse>> SearchAsync(SearchBusinessRequest request)
     {
         try
         {
             _logger.LogInformation(
                 "Iniciando busca paginada de empreendimentos. " +
-                "Search: {Search}, Page: {Page}, PageSize: {PageSize}",
+                "Search: {Search}, Categoria: {Categoria}, Localizacao: {Localizacao}, Page: {Page}",
                 request.Search,
-                request.Page,
-                request.PageSize);
+                request.Categoria,
+                request.Localizacao,
+                request.Page);
 
+            // AGORA PASSA O REQUEST COMPLETO PARA O REPOSITÓRIO TRATAR OS FILTROS DEDICADOS
             var (items, totalItems) =
-                await _repository.SearchAsync(
-                    request.Search,
-                    request.Page,
-                    request.PageSize);
+                await _repository.SearchAsync(request);
 
             var responseItems = items.Select(x => new BusinessResponse
             {
@@ -169,7 +167,6 @@ public class BusinessService(
             throw;
         }
     }
-
     public async Task<PagedResponse<BusinessResponse>> GetByUserIdAsync(Guid userId, PaginationRequest request)
     {
         try

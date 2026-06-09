@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
@@ -8,14 +8,8 @@ import { CardServico } from "@/components/ListagemServicos/CardServico";
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
 import { ModalVerMais } from "@/components/ListagemServicos/ModalVerMais";
 
-const SERVICOS_MOCK = [
-    { id: 1, nome: "Raio de Sol: Cocos e Frutas", categoria: "Barracas e Ambulantes", nota: 4.8, desc: "Beira-mar de Gaibu (Próximo ao Posto 4). Coco gelado na hora | Frutas da estação", img: "/images/coco.jpg", aberto: true, aceitaCard: true },
-    { id: 2, nome: "Passeio de Buggy: Ricardo", categoria: "Passeios e Lazer", nota: 4.9, desc: "O melhor passeio da região. Explore as piscinas naturais e trilhas com segurança e conforto.", img: "/images/acai.jpg", aberto: true, aceitaCard: true },
-    { id: 3, nome: "Hot Dog do Bruno", categoria: "Barracas e Ambulantes", nota: 4.5, desc: "Melhor hot dog da região. Ingredientes frescos e molho especial da casa todos os dias.", img: "/images/hotdog.jpg", aberto: false, aceitaCard: true },
-    { id: 4, nome: "Pousada Oxente", categoria: "Hospedagem", nota: 4.8, desc: "Conforto e beira mar com o melhor café da manhã. Suítes equipadas com ar-condicionado.", img: "/images/coco.jpg", aberto: true, aceitaCard: true },
-    { id: 5, nome: "Artesanato da Ilha", categoria: "Artesanato Local", nota: 4.9, desc: "Peças exclusivas feitas por artistas locais. Leve um pedaço da nossa ilha com você.", img: "/images/acai.jpg", aberto: true, aceitaCard: false },
-    { id: 6, nome: "Restaurante Mar Aberto", categoria: "Bares e Restaurantes", nota: 4.7, desc: "Frutos do mar frescos e vista privilegiada. Pratos individuais e para família.", img: "/images/hotdog.jpg", aberto: true, aceitaCard: true },
-];
+// Importação das funções do novo arquivo de serviço
+import { listarTodosOsNegocios, buscarNegociosComFiltros } from "@/services/businessService";
 
 interface ExplorerScreenProps {
     isEmpreendedor: boolean;
@@ -27,12 +21,17 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
     const [scrolled, setScrolled] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     
+    // ESTADOS DE INTEGRAÇÃO DA API
+    const [listaNegocios, setListaNegocios] = useState<any[]>([]);
+    const [carregando, setCarregando] = useState(true);
+    const [erroApi, setErroApi] = useState(false);
+
     const [servicoSelecionado, setServicoSelecionado] = useState<any>(null);
 
     const navRef = useRef<HTMLDivElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    const temDados = SERVICOS_MOCK.length > 0;
+    const temDados = listaNegocios.length > 0;
 
     const [filtros, setFiltros] = useState({
         localizacao: "",
@@ -48,9 +47,55 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
         melhoresAvaliados: false
     });
 
+    // Função centralizada para buscar os dados do C#
+    const carregarNegocios = useCallback(async (filtrosAtuais = filtros, categoriaFiltro = categoriaAtiva) => {
+        try {
+            setCarregando(true);
+            setErroApi(false);
+
+            // Verifica se existe algum filtro de busca ativo ou categoria selecionada
+            const temFiltroAtivo = 
+                filtrosAtuais.localizacao || 
+                filtrosAtuais.faixaPreco || 
+                categoriaFiltro ||
+                !filtrosAtuais.cartao || // Se desmarcar cartão, altera a busca
+                filtrosAtuais.chuveiro || 
+                filtrosAtuais.estacionamento ||
+                filtrosAtuais.cadeira ||
+                filtrosAtuais.petFriendly || 
+                filtrosAtuais.acessibilidade ||
+                filtrosAtuais.melhoresAvaliados;
+
+            let dados;
+            if (temFiltroAtivo) {
+                // Passa os filtros, a categoria selecionada e o termo de busca (opcional) para o service
+                dados = await buscarNegociosComFiltros(filtrosAtuais, categoriaFiltro);
+                
+                // Trata caso o método Search de paginação retorne um objeto envelopado (ex: { items: [...] })
+                setListaNegocios(dados.items ? dados.items : dados);
+            } else {
+                // Rota limpa quando não há parâmetros
+                dados = await listarTodosOsNegocios();
+                setListaNegocios(dados);
+            }
+        } catch (error) {
+            console.error("Erro ao carregar dados do GuiaOrlaPE.API:", error);
+            setErroApi(true);
+        } finally {
+            setCarregando(false);
+        }
+    }, [filtros, categoriaAtiva]);
+
+    // Busca inicial quando a página carrega
     useEffect(() => {
-        const catUrl = searchParams.get("categoria");
-        if (catUrl) setCategoriaAtiva(catUrl);
+        carregarNegocios();
+    }, []);
+
+    // Sincroniza a categoria vinda da URL/Header e refaz a busca automaticamente
+    useEffect(() => {
+        const catUrl = searchParams.get("categoria") || "";
+        setCategoriaAtiva(catUrl);
+        carregarNegocios(filtros, catUrl);
     }, [searchParams]);
 
     useEffect(() => {
@@ -107,7 +152,6 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                 forceBlue={true}
             />
 
-            {/* Espaçador entre Header e o Grid */}
             <div className="h-16 md:h-20"></div>
 
             {servicoSelecionado && (
@@ -125,13 +169,16 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                     <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
                     <h3 className="text-[#0A4F6E] font-bold text-lg mb-4">Filtros</h3>
                     <FiltrosInterface filtros={filtros} setFiltros={setFiltros} contexto="modal" />
-                    <button onClick={() => setIsFilterOpen(false)} className="w-full mt-6 py-3.5 bg-[#0A4F6E] text-white rounded-2xl font-bold">Aplicar filtros</button>
+                    <button 
+                        onClick={() => { setIsFilterOpen(false); carregarNegocios(); }} 
+                        className="w-full mt-6 py-3.5 bg-[#0A4F6E] text-white rounded-2xl font-bold"
+                    >
+                        Aplicar filtros
+                    </button>
                 </div>
             </div>
 
             <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6 mt-4 md:mt-6 relative">
-                {/* ASIDE COM STICKY AJUSTADO */}
-                {/* Mudei top-20 para top-[104px] para manter o espaçamento idêntico ao carregamento da página */}
                 <aside className="hidden md:flex flex-col gap-2 sticky top-[104px] h-fit self-start">
                     <div className="w-full h-28 rounded-xl overflow-hidden relative border border-gray-200 shadow-sm group">
                         <Image src="/images/map-placeholder.png" alt="Mapa" fill className="object-cover group-hover:scale-110 transition-transform" />
@@ -143,67 +190,84 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                     <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
                         <h3 className="text-[#0A4F6E] font-bold text-[11px] mb-2 border-b pb-1 uppercase tracking-tighter">Refinar busca</h3>
                         <FiltrosInterface filtros={filtros} setFiltros={setFiltros} contexto="aside" />
-                        <button className="w-full mt-3 py-2 bg-[#0A4F6E] text-white rounded-lg font-bold hover:bg-[#083d55] transition-colors shadow-sm text-[11px]">
+                        <button 
+                            onClick={() => carregarNegocios()}
+                            className="w-full mt-3 py-2 bg-[#0A4F6E] text-white rounded-lg font-bold hover:bg-[#083d55] transition-colors shadow-sm text-[11px]"
+                        >
                             Aplicar filtros
                         </button>
                     </div>
                 </aside>
 
-                {/* CONTEÚDO PRINCIPAL */}
+                {/* CONTEÚDO PRINCIPAL CONTROLADO PELO ESTADO DA API */}
                 <div className="min-w-0">
-                    <section className="mb-12 md:mb-16">
-                        <h2 className="text-[#0A4F6E] text-lg md:text-xl font-bold italic mb-4 md:mb-6 text-center md:text-left tracking-tight">Próximos de você</h2>
-                        {temDados ? (
-                            <div className="relative flex items-start pt-2 px-0 md:px-10">
-                                <button onClick={() => scroll("left")} className="absolute left-0 top-[40%] -translate-y-1/2 z-20 hover:scale-110 transition-transform hidden md:block">
-                                    <Image src="/icons/SetaAzul.svg" width={28} height={28} alt="ant" />
-                                </button>
-                                <div ref={scrollRef} onMouseDown={handleMouseDown(scrollRef)}
-                                    className="flex overflow-x-auto gap-4 md:gap-5 w-full pb-6 scrollbar-hide snap-x items-start cursor-grab active:cursor-grabbing"
-                                >
-                                    {SERVICOS_MOCK.map((item) => (
-                                        <CardServico 
-                                            key={item.id} 
-                                            item={item} 
-                                            variante="vertical" 
-                                            isEmpreendedor={isEmpreendedor} 
-                                            onOpenModal={(item) => setServicoSelecionado(item)}
-                                        />
-                                    ))}
-                                </div>
-                                <button onClick={() => scroll("right")} className="absolute right-0 top-[40%] -translate-y-1/2 z-20 hover:scale-110 transition-transform rotate-180 hidden md:block">
-                                    <Image src="/icons/SetaAzul.svg" width={28} height={28} alt="prox" />
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="text-center p-10 bg-white rounded-2xl border border-dashed border-gray-300">
-                                <p className="text-gray-500 text-sm italic">Nenhum serviço encontrado próximo a você.</p>
-                            </div>
-                        )}
-                    </section>
+                    {carregando ? (
+                        <div className="text-center p-20 flex flex-col items-center justify-center gap-3">
+                            <div className="w-8 h-8 border-4 border-[#0A4F6E] border-t-transparent rounded-full animate-spin"></div>
+                            <p className="text-gray-500 text-xs italic font-medium">Carregando estabelecimentos da orla...</p>
+                        </div>
+                    ) : erroApi ? (
+                        <div className="text-center p-12 bg-red-50 rounded-2xl border border-dashed border-red-200">
+                            <p className="text-red-600 font-bold text-sm">Não foi possível conectar ao servidor local.</p>
+                            <p className="text-gray-500 text-xs mt-1">Verifique se a sua API C# está rodando perfeitamente na porta 5148.</p>
+                        </div>
+                    ) : (
+                        <>
+                            <section className="mb-12 md:mb-16">
+                                <h2 className="text-[#0A4F6E] text-lg md:text-xl font-bold italic mb-4 md:mb-6 text-center md:text-left tracking-tight">Próximos de você</h2>
+                                {temDados ? (
+                                    <div className="relative flex items-start pt-2 px-0 md:px-10">
+                                        <button onClick={() => scroll("left")} className="absolute left-0 top-[40%] -translate-y-1/2 z-20 hover:scale-110 transition-transform hidden md:block">
+                                            <Image src="/icons/SetaAzul.svg" width={28} height={28} alt="ant" />
+                                        </button>
+                                        <div ref={scrollRef} onMouseDown={handleMouseDown(scrollRef)}
+                                            className="flex overflow-x-auto gap-4 md:gap-5 w-full pb-6 scrollbar-hide snap-x items-start cursor-grab active:cursor-grabbing"
+                                        >
+                                            {listaNegocios.map((item) => (
+                                                <CardServico 
+                                                    key={item.id} 
+                                                    item={item} 
+                                                    variante="vertical" 
+                                                    isEmpreendedor={isEmpreendedor} 
+                                                    onOpenModal={(item) => setServicoSelecionado(item)}
+                                                />
+                                            ))}
+                                        </div>
+                                        <button onClick={() => scroll("right")} className="absolute right-0 top-[40%] -translate-y-1/2 z-20 hover:scale-110 transition-transform rotate-180 hidden md:block">
+                                            <Image src="/icons/SetaAzul.svg" width={28} height={28} alt="prox" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="text-center p-10 bg-white rounded-2xl border border-dashed border-gray-300">
+                                        <p className="text-gray-500 text-sm italic">Nenhum serviço encontrado para os critérios selecionados.</p>
+                                    </div>
+                                )}
+                            </section>
 
-                    <hr className="w-full border-gray-200 mb-10 md:mb-12" />
+                            <hr className="w-full border-gray-200 mb-10 md:mb-12" />
 
-                    <section>
-                        <h2 className="text-[#0A4F6E] text-lg md:text-xl font-bold mb-6 md:mb-8 italic text-center md:text-left tracking-tight">Todos os estabelecimentos</h2>
-                        {temDados ? (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-8">
-                                {SERVICOS_MOCK.map((item) => (
-                                    <CardServico 
-                                        key={item.id} 
-                                        item={item} 
-                                        variante="horizontal" 
-                                        isEmpreendedor={isEmpreendedor} 
-                                        onOpenModal={(item) => setServicoSelecionado(item)}
-                                    />
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center p-10 bg-white rounded-2xl border border-dashed border-gray-300">
-                                <p className="text-gray-500 text-sm italic">Não há estabelecimentos cadastrados no momento.</p>
-                            </div>
-                        )}
-                    </section>
+                            <section>
+                                <h2 className="text-[#0A4F6E] text-lg md:text-xl font-bold mb-6 md:mb-8 italic text-center md:text-left tracking-tight">Todos os estabelecimentos</h2>
+                                {temDados ? (
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-8">
+                                        {listaNegocios.map((item) => (
+                                            <CardServico 
+                                                key={item.id} 
+                                                item={item} 
+                                                variante="horizontal" 
+                                                isEmpreendedor={isEmpreendedor} 
+                                                onOpenModal={(item) => setServicoSelecionado(item)}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center p-10 bg-white rounded-2xl border border-dashed border-gray-300">
+                                        <p className="text-gray-500 text-sm italic">Não há estabelecimentos cadastrados no momento.</p>
+                                    </div>
+                                )}
+                            </section>
+                        </>
+                    )}
                 </div>
             </div>
         </main>

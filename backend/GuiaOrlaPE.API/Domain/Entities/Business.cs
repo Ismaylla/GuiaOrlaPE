@@ -40,7 +40,27 @@ public class Business
     [Required]
     public bool Status { get; set; }
 
+    // --- NOVOS CAMPOS DE COMODIDADES PARA OS FILTROS ---
+    [Required]
+    public bool Cartao { get; set; }
+
+    [Required]
+    public bool Chuveiro { get; set; }
+
+    [Required]
+    public bool Estacionamento { get; set; }
+
+    [Required]
+    public bool Cadeira { get; set; }
+
+    [Required]
+    public bool PetFriendly { get; set; }
+
+    [Required]
+    public bool Acessibilidade { get; set; }
+
+    // --------------------------------------------------
+
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;
-
 }
