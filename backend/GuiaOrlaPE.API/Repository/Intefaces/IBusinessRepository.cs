@@ -13,4 +13,8 @@ public interface IBusinessRepository
     Task<(List<Business> Items, int TotalItems)> SearchAsync(SearchBusinessRequest request);
 
     Task<(List<Business> Items, int TotalItems)> GetByUserIdAsync(Guid userId, int page, int pageSize);
+
+    Task AddAsync(Business business);
+
+    
 }

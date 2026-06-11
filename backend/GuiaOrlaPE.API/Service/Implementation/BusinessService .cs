@@ -2,6 +2,8 @@
 using GuiaOrlaPE.API.Models.Responses;
 using GuiaOrlaPE.API.Repository.Intefaces;
 using GuiaOrlaPE.API.Service.Interfaces;
+using GuiaOrlaPE.API.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace GuiaOrlaPE.API.Service.Implementation;
 
@@ -10,15 +12,13 @@ public class BusinessService(
     ILogger<BusinessService> logger) : IBusinessService
 {
     private readonly IBusinessRepository _repository = repository;
-
     private readonly ILogger<BusinessService> _logger = logger;
 
     public async Task<List<BusinessResponse>> GetAllAsync()
     {
         try
         {
-            _logger.LogInformation(
-                "Iniciando busca de todos os empreendimentos.");
+            _logger.LogInformation("Iniciando busca de todos os empreendimentos.");
 
             var businesses = await _repository.GetAllAsync();
 
@@ -41,18 +41,13 @@ public class BusinessService(
                 }
             }).ToList();
 
-            _logger.LogInformation(
-                "Foram encontrados {Count} empreendimentos.",
-                response.Count);
+            _logger.LogInformation("Foram encontrados {Count} empreendimentos.", response.Count);
 
             return response;
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                ex,
-                "Erro ao buscar empreendimentos.");
-
+            _logger.LogError(ex, "Erro ao buscar empreendimentos.");
             throw;
         }
     }
@@ -61,18 +56,13 @@ public class BusinessService(
     {
         try
         {
-            _logger.LogInformation(
-                "Buscando empreendimento {BusinessId}",
-                id);
+            _logger.LogInformation("Buscando empreendimento {BusinessId}", id);
 
             var business = await _repository.GetByIdAsync(id);
 
             if (business is null)
             {
-                _logger.LogWarning(
-                    "Empreendimento {BusinessId} não encontrado.",
-                    id);
-
+                _logger.LogWarning("Empreendimento {BusinessId} não encontrado.", id);
                 return null;
             }
 
@@ -97,11 +87,7 @@ public class BusinessService(
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                ex,
-                "Erro ao buscar empreendimento {BusinessId}",
-                id);
-
+            _logger.LogError(ex, "Erro ao buscar empreendimento {BusinessId}", id);
             throw;
         }
     }
@@ -111,15 +97,10 @@ public class BusinessService(
         try
         {
             _logger.LogInformation(
-                "Iniciando busca paginada de empreendimentos. " +
-                "Search: {Search}, Categoria: {Categoria}, Localizacao: {Localizacao}, Page: {Page}",
-                request.Search,
-                request.Categoria,
-                request.Localizacao,
-                request.Page);
+                "Iniciando busca paginada de empreendimentos. Search: {Search}, Categoria: {Categoria}, Localizacao: {Localizacao}, Page: {Page}",
+                request.Search, request.Categoria, request.Localizacao, request.Page);
 
-            var (items, totalItems) =
-                await _repository.SearchAsync(request);
+            var (items, totalItems) = await _repository.SearchAsync(request);
 
             var responseItems = items.Select(x => new BusinessResponse
             {
@@ -140,12 +121,9 @@ public class BusinessService(
                 }
             }).ToList();
 
-            var totalPages =
-                (int)Math.Ceiling(totalItems / (double)request.PageSize);
+            var totalPages = (int)Math.Ceiling(totalItems / (double)request.PageSize);
 
-            _logger.LogInformation(
-                "Busca paginada realizada com sucesso. TotalItems: {TotalItems}",
-                totalItems);
+            _logger.LogInformation("Busca paginada realizada com sucesso. TotalItems: {TotalItems}", totalItems);
 
             return new PagedResponse<BusinessResponse>
             {
@@ -160,10 +138,7 @@ public class BusinessService(
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                ex,
-                "Erro ao realizar busca paginada de empreendimentos.");
-
+            _logger.LogError(ex, "Erro ao realizar busca paginada de empreendimentos.");
             throw;
         }
     }
@@ -172,15 +147,9 @@ public class BusinessService(
     {
         try
         {
-            _logger.LogInformation(
-                "Buscando empreendimentos do usuário. UserId: {UserId}",
-                userId);
+            _logger.LogInformation("Buscando empreendimentos do usuário. UserId: {UserId}", userId);
 
-            var (items, totalItems) =
-                await _repository.GetByUserIdAsync(
-                    userId,
-                    request.Page,
-                    request.PageSize);
+            var (items, totalItems) = await _repository.GetByUserIdAsync(userId, request.Page, request.PageSize);
 
             var responseItems = items.Select(x => new BusinessResponse
             {
@@ -201,14 +170,9 @@ public class BusinessService(
                 }
             }).ToList();
 
-            var totalPages =
-                (int)Math.Ceiling(
-                    totalItems / (double)request.PageSize);
+            var totalPages = (int)Math.Ceiling(totalItems / (double)request.PageSize);
 
-            _logger.LogInformation(
-                "Foram encontrados {Count} empreendimentos para o usuário {UserId}",
-                totalItems,
-                userId);
+            _logger.LogInformation("Foram encontrados {Count} empreendimentos para o usuário {UserId}", totalItems, userId);
 
             return new PagedResponse<BusinessResponse>
             {
@@ -223,47 +187,65 @@ public class BusinessService(
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                ex,
-                "Erro ao buscar empreendimentos do usuário. UserId: {UserId}",
-                userId);
-
+            _logger.LogError(ex, "Erro ao buscar empreendimentos do usuário. UserId: {UserId}", userId);
             throw;
         }
     }
 
-    // MÉTODO DE CRIAÇÃO COMPATÍVEL COM ENUMS E OPERADORES DO SEU SISTEMA:
-    public async Task<BusinessResponse> CreateAsync(CreateBusinessRequest request)
+    // AJUSTADO: Assinatura corrigida com dois parâmetros e gravação real no banco de dados
+    public async Task<BusinessResponse> CreateAsync(CreateBusinessRequest request, Guid userId)
     {
         try
         {
-            _logger.LogInformation("Iniciando criação provisória do negócio: {Name}", request.Name);
+            _logger.LogInformation("Iniciando criação real do negócio: {Name} para o usuário {UserId}", request.Name, userId);
 
-            var mockResponse = new BusinessResponse
+            var business = new Business
             {
                 Id = Guid.NewGuid(),
+                UserId = userId,
                 Name = request.Name,
-                Address = request.Address ?? "Endereço não informado",
-
-                // Mapeando dinamicamente o primeiro item do seu Enum real (BusinessServiceTypeEnum)
-                // ServiceType = GuiaOrlaPE.API.Domain.Enum.BusinessServiceTypeEnum.BarracasAmbulantes, 
-
-                // Substitui a linha antiga do ServiceType por essa aqui:
-                ServiceType = (GuiaOrlaPE.API.Domain.Enum.BusinessServiceTypeEnum)0,
-
-                Latitude = 0.0,
-                Longitude = 0.0,
-                BusinessPhotoUrl = "/images/capa-exemplo.jpg",
-                Owner = new BusinessOwnerResponse
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Empreendedor Cadastrado",
-                    Email = "dono@teste.com",
-                    Phone = "81999999999"
-                }
+                ServiceType = request.ServiceType,
+                Address = request.Address,
+                Latitude = request.Latitude,
+                Longitude = request.Longitude,
+                BusinessPhotoUrl = request.BusinessPhotoUrl,
+                Status = true,
+                Cartao = request.Cartao,
+                Pix = request.Pix,
+                Dinheiro = request.Dinheiro,
+                Chuveiro = request.Chuveiro,
+                Estacionamento = request.Estacionamento,
+                Cadeira = request.Cadeira,
+                PetFriendly = request.PetFriendly,
+                Acessibilidade = request.Acessibilidade,
+                Horario = request.Horario
             };
 
-            return await Task.FromResult(mockResponse);
+            await _repository.AddAsync(business);
+
+            return new BusinessResponse
+            {
+                Id = business.Id,
+                Name = business.Name,
+                ServiceType = business.ServiceType,
+                Address = business.Address,
+                Latitude = business.Latitude,
+                Longitude = business.Longitude,
+                BusinessPhotoUrl = business.BusinessPhotoUrl,
+                Cartao = business.Cartao,
+                Pix = business.Pix,
+                Dinheiro = business.Dinheiro,
+                Chuveiro = business.Chuveiro,
+                Estacionamento = business.Estacionamento,
+                Cadeira = business.Cadeira,
+                PetFriendly = business.PetFriendly,
+                Acessibilidade = business.Acessibilidade,
+                Horario = business.Horario,
+                Owner = new BusinessOwnerResponse 
+                { 
+                    Id = userId 
+                }
+            };
         }
         catch (Exception ex)
         {
