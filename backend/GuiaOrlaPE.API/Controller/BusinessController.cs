@@ -55,6 +55,49 @@ public class BusinessController(
         }
     }
 
+    // ---------------------------------------------------------------------------
+    // ADICIONADO: Endpoint inteligente para o Front recuperar o quiosque do usuário logado
+    // ---------------------------------------------------------------------------
+    [HttpGet("user")]
+    [Authorize]
+    public async Task<IActionResult> GetByUserId()
+    {
+        try
+        {
+            _logger.LogInformation("Buscando o empreendimento do usuário autenticado via Token JWT.");
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized(new { Message = "Usuário não identificado no token de autenticação." });
+            }
+
+            var userId = Guid.Parse(userIdClaim);
+
+            // Instancia a paginação mínima exigida pela assinatura do seu serviço
+            var paginationRequest = new PaginationRequest { Page = 1, PageSize = 1 };
+            var pagedResponse = await _service.GetByUserIdAsync(userId, paginationRequest);
+
+            if (pagedResponse.Items is null || !pagedResponse.Items.Any())
+            {
+                return NotFound(new { Message = "Nenhum negócio cadastrado para este empreendedor." });
+            }
+
+            // Retorna o primeiro e único item encontrado (A Barraca do Açaí)
+            var business = pagedResponse.Items.First();
+            return Ok(business);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro interno ao buscar o negócio do usuário logado.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new { Message = "Erro interno do servidor." });
+        }
+    }
+    // ---------------------------------------------------------------------------
+
     [HttpGet("search")]
     public async Task<IActionResult> Search([FromQuery] SearchBusinessRequest request)
     {
