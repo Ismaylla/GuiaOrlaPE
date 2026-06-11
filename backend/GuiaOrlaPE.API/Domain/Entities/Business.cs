@@ -40,9 +40,15 @@ public class Business
     [Required]
     public bool Status { get; set; }
 
-    // --- NOVOS CAMPOS DE COMODIDADES PARA OS FILTROS ---
+    // Campos de comodidades e filtros que adicionei para busca
     [Required]
     public bool Cartao { get; set; }
+
+    [Required]
+    public bool Pix { get; set; }
+
+    [Required]
+    public bool Dinheiro { get; set; }
 
     [Required]
     public bool Chuveiro { get; set; }
@@ -59,7 +65,9 @@ public class Business
     [Required]
     public bool Acessibilidade { get; set; }
 
-    // --------------------------------------------------
+    // Campo de horário que implementei para controlar o funcionamento
+    [MaxLength(100)]
+    public string Horario { get; set; } = "08:00 às 18:00";
 
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;
