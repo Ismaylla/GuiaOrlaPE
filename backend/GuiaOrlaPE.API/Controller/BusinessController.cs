@@ -53,16 +53,17 @@ public class BusinessController(
 
             var b = pagedResponse.Items.First();
 
-            // Mapeamento corrigido com a propriedade Wifi inclusa!
             var response = new BusinessResponse
             {
                 Id = b.Id,
+                UserId = b.UserId,
                 Name = b.Name,
                 ServiceType = b.ServiceType,
                 Address = b.Address,
                 Latitude = b.Latitude,
                 Longitude = b.Longitude,
                 BusinessPhotoUrl = b.BusinessPhotoUrl ?? "",
+                CoverPhotoUrl = b.CoverPhotoUrl ?? "", 
                 Horario = b.Horario ?? "", 
                 Cartao = b.Cartao,
                 Pix = b.Pix,
@@ -72,16 +73,14 @@ public class BusinessController(
                 Cadeira = b.Cadeira,
                 PetFriendly = b.PetFriendly,
                 Acessibilidade = b.Acessibilidade,
-                Wifi = b.Wifi // <-- LINHA CORRIGIDA BEM AQUI
+                Wifi = b.Wifi,
+                Description = b.Description ?? "", 
+                GalleryPhotos = b.GalleryPhotos ?? [] 
             };
 
             return Ok(response);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao buscar negócio do usuário.");
-            return StatusCode(500, new { Message = "Erro interno ao processar dados." });
-        }
+        catch (Exception ex) { _logger.LogError(ex, "Erro ao buscar negócio do usuário."); return StatusCode(500, new { Message = "Erro interno ao processar dados." }); }
     }
 
     [HttpGet("search")]
@@ -118,4 +117,83 @@ public class BusinessController(
         }
         catch (Exception ex) { _logger.LogError(ex, "Erro."); return StatusCode(500, new { Message = "Erro ao salvar." }); }
     }
+
+    // 🛠️ MAPEAMENTO CORRIGIDO USANDO O NOVO DTO UploadImageRequest
+    [HttpPost("{id:guid}/upload")]
+    [Authorize]
+    public async Task<IActionResult> UploadImage(Guid id, [FromForm] UploadImageRequest request, [FromQuery] string type)
+    {
+        try
+        {
+            if (request == null || request.File == null || request.File.Length == 0)
+                return BadRequest(new { message = "Nenhum arquivo enviado." });
+
+            var extensoesPermitidas = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var extensao = Path.GetExtension(request.File.FileName).ToLower();
+            if (!extensoesPermitidas.Contains(extensao))
+                return BadRequest(new { message = "Formato inválido. Use JPG, JPEG, PNG ou WEBP." });
+
+            if (string.IsNullOrEmpty(type))
+                return BadRequest(new { message = "O parâmetro 'type' é obrigatório." });
+
+            var businessDto = await _service.GetByIdAsync(id);
+            if (businessDto == null)
+                return NotFound(new { message = "Estabelecimento não encontrado." });
+
+            var caminhoPasta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            var nomeArquivoUnico = $"{Guid.NewGuid()}{extensao}";
+            var caminhoCompleto = Path.Combine(caminhoPasta, nomeArquivoUnico);
+
+            using (var stream = new FileStream(caminhoCompleto, FileMode.Create))
+            {
+                await request.File.CopyToAsync(stream);
+            }
+
+            var urlImagemSalva = $"/uploads/{nomeArquivoUnico}";
+
+            var requestUpdate = new CreateBusinessRequest
+            {
+                Name = businessDto.Name,
+                ServiceType = businessDto.ServiceType,
+                Address = businessDto.Address,
+                Latitude = businessDto.Latitude,
+                Longitude = businessDto.Longitude,
+                Horario = businessDto.Horario,
+                Cartao = businessDto.Cartao,
+                Pix = businessDto.Pix,
+                Dinheiro = businessDto.Dinheiro,
+                Chuveiro = businessDto.Chuveiro,
+                Estacionamento = businessDto.Estacionamento,
+                Cadeira = businessDto.Cadeira,
+                PetFriendly = businessDto.PetFriendly,
+                Acessibilidade = businessDto.Acessibilidade,
+                Wifi = businessDto.Wifi,
+                Description = businessDto.Description,
+                CoverPhotoUrl = businessDto.CoverPhotoUrl,
+                BusinessPhotoUrl = businessDto.BusinessPhotoUrl
+            };
+
+            if (type.ToLower() == "profile")
+                requestUpdate.BusinessPhotoUrl = urlImagemSalva;
+            else if (type.ToLower() == "header")
+                requestUpdate.CoverPhotoUrl = urlImagemSalva;
+            else
+                return BadRequest(new { message = "Tipo inválido. Use 'profile' ou 'header'." });
+
+            await _service.UpdateAsync(id, requestUpdate, businessDto.UserId);
+
+            return Ok(new { url = urlImagemSalva, message = "Upload realizado com sucesso!" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao realizar upload da imagem.");
+            return StatusCode(500, new { message = $"Erro interno: {ex.Message}" });
+        }
+    }
+}
+
+// 📦 DTO AUXILIAR PARA CORREÇÃO DO SWAGGER COM IFORMFILE
+public class UploadImageRequest
+{
+    public IFormFile File { get; set; } = null!;
 }
