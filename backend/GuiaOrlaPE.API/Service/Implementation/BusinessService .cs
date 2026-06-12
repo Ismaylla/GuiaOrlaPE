@@ -22,12 +22,14 @@ public class BusinessService(
             return businesses.Select(x => new BusinessResponse
             {
                 Id = x.Id, 
-                UserId = x.UserId, // ADICIONADO
+                UserId = x.UserId,
                 Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
                 Latitude = x.Latitude, Longitude = x.Longitude, BusinessPhotoUrl = x.BusinessPhotoUrl,
                 Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
                 Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
                 PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
+                Description = x.Description, // 👈 MAPEADO
+                GalleryPhotos = x.Photos?.Select(p => p.PhotoUrl).ToList() ?? [], // 👈 MAPEADO
                 Owner = new BusinessOwnerResponse { Id = x.User.Id, Name = x.User.Name, Email = x.User.Email, Phone = x.User.Phone }
             }).ToList();
         }
@@ -45,12 +47,14 @@ public class BusinessService(
             return new BusinessResponse
             {
                 Id = business.Id, 
-                UserId = business.UserId, // CORRIGIDO: Agora a tela pública vai receber o ID do Dono!
+                UserId = business.UserId,
                 Name = business.Name, ServiceType = business.ServiceType, Address = business.Address,
                 Latitude = business.Latitude, Longitude = business.Longitude, BusinessPhotoUrl = business.BusinessPhotoUrl,
                 Horario = business.Horario, Cartao = business.Cartao, Pix = business.Pix, Dinheiro = business.Dinheiro,
                 Chuveiro = business.Chuveiro, Estacionamento = business.Estacionamento, Cadeira = business.Cadeira,
                 PetFriendly = business.PetFriendly, Acessibilidade = business.Acessibilidade, Wifi = business.Wifi,
+                Description = business.Description, // 👈 MAPEADO
+                GalleryPhotos = business.Photos?.Select(p => p.PhotoUrl).ToList() ?? [], // 👈 MAPEADO
                 Owner = new BusinessOwnerResponse { Id = business.User.Id, Name = business.User.Name, Email = business.User.Email, Phone = business.User.Phone }
             };
         }
@@ -65,12 +69,14 @@ public class BusinessService(
             var responseItems = items.Select(x => new BusinessResponse
             {
                 Id = x.Id, 
-                UserId = x.UserId, // ADICIONADO
+                UserId = x.UserId,
                 Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
                 Latitude = x.Latitude, Longitude = x.Longitude, BusinessPhotoUrl = x.BusinessPhotoUrl,
                 Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
                 Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
                 PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
+                Description = x.Description, // 👈 MAPEADO
+                GalleryPhotos = x.Photos?.Select(p => p.PhotoUrl).ToList() ?? [], // 👈 MAPEADO
                 Owner = new BusinessOwnerResponse { Id = x.User.Id, Name = x.User.Name, Email = x.User.Email, Phone = x.User.Phone }
             }).ToList();
 
@@ -90,15 +96,16 @@ public class BusinessService(
                 var resp = new BusinessResponse
                 {
                     Id = x.Id, 
-                    UserId = x.UserId, // ADICIONADO
+                    UserId = x.UserId,
                     Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
                     Latitude = x.Latitude, Longitude = x.Longitude, BusinessPhotoUrl = x.BusinessPhotoUrl,
                     Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
                     Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
                     PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
+                    Description = x.Description, // 👈 MAPEADO
+                    GalleryPhotos = x.Photos?.Select(p => p.PhotoUrl).ToList() ?? [], // 👈 MAPEADO
                     Owner = new BusinessOwnerResponse { Id = x.User.Id, Name = x.User.Name, Email = x.User.Email, Phone = x.User.Phone }
                 };
-                _logger.LogInformation("DEBUG FINAL: Retornando Wifi={Wifi} para o ID={Id}", resp.Wifi, resp.Id);
                 return resp;
             }).ToList();
 
@@ -119,18 +126,18 @@ public class BusinessService(
                 BusinessPhotoUrl = request.BusinessPhotoUrl, Status = true, Horario = request.Horario,
                 Cartao = request.Cartao, Pix = request.Pix, Dinheiro = request.Dinheiro,
                 Chuveiro = request.Chuveiro, Estacionamento = request.Estacionamento, Cadeira = request.Cadeira,
-                PetFriendly = request.PetFriendly, Acessibilidade = request.Acessibilidade, Wifi = request.Wifi
+                PetFriendly = request.PetFriendly, Acessibilidade = request.Acessibilidade, Wifi = request.Wifi,
+                Description = string.Empty
             };
 
             await _repository.AddAsync(business);
-            return new BusinessResponse { Id = business.Id, UserId = business.UserId, Name = business.Name, ServiceType = business.ServiceType, Address = business.Address, Latitude = business.Latitude, Longitude = business.Longitude, BusinessPhotoUrl = business.BusinessPhotoUrl, Horario = business.Horario, Cartao = business.Cartao, Pix = business.Pix, Dinheiro = business.Dinheiro, Chuveiro = business.Chuveiro, Estacionamento = business.Estacionamento, Cadeira = business.Cadeira, PetFriendly = business.PetFriendly, Acessibilidade = business.Acessibilidade, Wifi = business.Wifi, Owner = new BusinessOwnerResponse { Id = userId } };
+            return new BusinessResponse { Id = business.Id, UserId = business.UserId, Name = business.Name, ServiceType = business.ServiceType, Address = business.Address, Latitude = business.Latitude, Longitude = business.Longitude, BusinessPhotoUrl = business.BusinessPhotoUrl, Horario = business.Horario, Cartao = business.Cartao, Pix = business.Pix, Dinheiro = business.Dinheiro, Chuveiro = business.Chuveiro, Estacionamento = business.Estacionamento, Cadeira = business.Cadeira, PetFriendly = business.PetFriendly, Acessibilidade = business.Acessibilidade, Wifi = business.Wifi, Description = business.Description, GalleryPhotos = [], Owner = new BusinessOwnerResponse { Id = userId } };
         }
         catch (Exception ex) { _logger.LogError(ex, "Erro."); throw; }
     }
 
     public async Task UpdateAsync(Guid id, CreateBusinessRequest request, Guid userId)
     {
-        _logger.LogInformation("Recebendo atualização: Wifi={Wifi}", request.Wifi);
         try
         {
             var business = await _repository.GetByIdAsync(id);

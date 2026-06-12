@@ -10,6 +10,8 @@ public class AppDbContext : DbContext
 
     public DbSet<Business> Businesses => Set<Business>();
 
+    public DbSet<BusinessPhoto> BusinessPhotos => Set<BusinessPhoto>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>()

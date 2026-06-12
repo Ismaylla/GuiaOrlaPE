@@ -43,6 +43,10 @@ public class BusinessResponse
 
     public bool Wifi { get; set; }
 
+    public string Description { get; set; } = string.Empty; // ADICIONADO
+
+    public List<string> GalleryPhotos { get; set; } = []; // ADICIONADO
+
     public BusinessOwnerResponse Owner { get; set; } = null!;
 }
 

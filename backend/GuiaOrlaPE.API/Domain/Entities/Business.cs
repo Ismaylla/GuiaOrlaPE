@@ -73,6 +73,16 @@ public class Business
     [MaxLength(100)]
     public string Horario { get; set; } = "08:00 às 18:00";
 
+    // ADICIONEI ESTES DOIS CAMPOS NOVOS AQUI:
+    
+    [MaxLength(1000)]
+    public string Description { get; set; } = string.Empty;
+
+    public virtual ICollection<BusinessPhoto> Photos { get; set; } = new List<BusinessPhoto>();
+
+    // ---
+
+
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;
 }
