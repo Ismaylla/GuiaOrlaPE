@@ -1,48 +1,130 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react"; 
+import Image from "next/image"; 
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
 import { PerfilHeader } from "@/components/PerfilPublico/PerfilHeader";
 import { ModalUpload } from "./ModalUpload";
 import { ModalSobre } from "./ModalSobre"; 
 import { SecaoFeedback } from "@/components/PerfilPublico/SecaoFeedback";
-import { Clock, MapPin, CreditCard, Sparkles, Store } from "lucide-react";
+import { Clock, MapPin, CreditCard, Sparkles, Store, Loader2 } from "lucide-react";
+
+interface BusinessData {
+    id: string;
+    name: string;
+    serviceType: number;
+    address: string;
+    horario: string;
+    cartao: boolean;
+    pix: boolean;
+    dinheiro: boolean;
+    chuveiro: boolean;
+    estacionamento: boolean;
+    cadeira: boolean;
+    petFriendly: boolean;
+    acessibilidade: boolean;
+    wifi: boolean;
+    businessPhotoUrl: string;
+    description: string;
+    galleryPhotos: string[];
+    nota: number;
+    totalAvaliacoes: number;
+}
 
 export const MeuPerfilScreen = () => {
+    const router = useRouter();
+    const { data: session, status } = useSession(); 
+
     const [scrolled, setScrolled] = useState(false);
+    const [business, setBusiness] = useState<BusinessData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Controladores dos Modais
     const [isModalSobreOpen, setIsModalSobreOpen] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-    const [uploadType, setUploadType] = useState<"galeria" | "header">("galeria");
+    
+    // CORRIGIDO: Tipagem expandida para incluir o tipo "profile"
+    const [uploadType, setUploadType] = useState<"galeria" | "header" | "profile">("galeria");
 
     const navRef = useRef<HTMLDivElement>(null);
-    const router = useRouter();
 
-    const [dadosNegocio, setDadosNegocio] = useState({
-        nome: "Meu Negócio Gaibu",
-        categoria: "Defina sua categoria", // Novo campo
-        sobre: "Os melhores cocos e frutas selecionadas da Praia de Gaibu. Atendimento diferenciado e qualidade garantida.",
-        localizacao: "Defina sua localização",
-        horario: "Defina seu horário",
-        pagamentos: ["Pix"],
-        comodidades: ["Nenhuma"],
-        nota: 5.0,
-        totalAvaliacoes: 0
-    });
+    const getCategoriaTexto = (type: number) => {
+        const categories = ["Barracas e Ambulantes", "Passeios e Lazer", "Bares e Restaurantes", "Artesanato Local", "Comércio e Serviços"];
+        return categories[type] || "Não Categorizado";
+    };
+
+    const getPagamentosLista = (b: BusinessData) => {
+        const list = [];
+        if (b.pix) list.push("Pix");
+        if (b.cartao) list.push("Cartão");
+        if (b.dinheiro) list.push("Dinheiro");
+        return list.length > 0 ? list : ["Não informado"];
+    };
+
+    const getComodidadesLista = (b: BusinessData) => {
+        const list = [];
+        if (b.chuveiro) list.push("Chuveirão");
+        if (b.estacionamento) list.push("Estacionamento");
+        if (b.cadeira) list.push("Cadeira de Sol");
+        if (b.petFriendly) list.push("Pet Friendly");
+        if (b.acessibilidade) list.push("Acessibilidade");
+        if (b.wifi) list.push("Wi-Fi Grátis");
+        return list.length > 0 ? list : ["Nenhuma comodidade informada"];
+    };
 
     useEffect(() => {
-        const salvo = localStorage.getItem("dadosNegocio");
-        if (salvo) {
-            const d = JSON.parse(salvo);
-            setDadosNegocio(prev => ({
-                ...prev,
-                categoria: d.categoria || prev.categoria,
-                sobre: d.sobre || prev.sobre,
-                horario: d.horario || prev.horario,
-                localizacao: d.localizacao || prev.localizacao,
-                pagamentos: d.pagamentos || prev.pagamentos,
-                comodidades: d.comodidades || prev.comodidades,
-            }));
-        }
+        const carregarDadosDono = async () => {
+            if (status === "loading" || !session) return;
+            try {
+                setIsLoading(true);
+                const token = (session as any).accessToken || (session as any).token;
+
+                const response = await fetch(`http://localhost:5148/api/business/user?t=${new Date().getTime()}`, {
+                    method: "GET",
+                    cache: "no-store",
+                    headers: { 
+                        "Authorization": `Bearer ${token}`, 
+                        "Content-Type": "application/json" 
+                    }
+                });
+
+                if (response.ok) {
+                    const d = await response.json();
+                    
+                    setBusiness({
+                        id: d.id ?? d.Id,
+                        name: d.name ?? d.Name ?? "",
+                        serviceType: d.serviceType ?? d.ServiceType ?? 0,
+                        address: d.address ?? d.Address ?? "",
+                        horario: d.horario ?? d.Horario ?? "08:00 às 18:00",
+                        cartao: !!(d.cartao ?? d.Cartao),
+                        pix: !!(d.pix ?? d.Pix),
+                        dinheiro: !!(d.dinheiro ?? d.Dinheiro),
+                        chuveiro: !!(d.chuveiro ?? d.Chuveiro),
+                        estacionamento: !!(d.estacionamento ?? d.Estacionamento),
+                        cadeira: !!(d.cadeira ?? d.Cadeira),
+                        petFriendly: !!(d.petFriendly ?? d.PetFriendly),
+                        acessibilidade: !!(d.acessibilidade ?? d.Acessibilidade),
+                        wifi: d.wifi === true || d.Wifi === true,
+                        businessPhotoUrl: d.businessPhotoUrl ?? d.BusinessPhotoUrl ?? "",
+                        description: d.description ?? d.Description ?? "",
+                        galleryPhotos: d.galleryPhotos ?? d.GalleryPhotos ?? [],
+                        nota: 5.0, 
+                        totalAvaliacoes: 0
+                    });
+                }
+            } catch (error) {
+                console.error("Erro ao buscar perfil do dono:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        carregarDadosDono();
+    }, [session, status]);
+
+    useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
@@ -52,7 +134,8 @@ export const MeuPerfilScreen = () => {
         router.push(`/empreendedor/explorer?categoria=${encodeURIComponent(cat)}`);
     };
 
-    const handleOpenUpload = (tipo: "galeria" | "header") => {
+    // CORRIGIDO: Aceita "profile" como parâmetro de entrada
+    const handleOpenUpload = (tipo: "galeria" | "header" | "profile") => {
         setUploadType(tipo);
         setIsUploadModalOpen(true);
     };
@@ -75,13 +158,30 @@ export const MeuPerfilScreen = () => {
         document.addEventListener('mouseup', handleMouseUp);
     };
 
+    if (isLoading || !business) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5]">
+                <Loader2 className="animate-spin text-[#0A4F6E]" size={40} />
+            </div>
+        );
+    }
+
     return (
         <main className="min-h-screen bg-[#F0F2F5] font-sans pb-20 text-left">
             <HeaderListagem isEmpreendedor={true} forceBlue={true} scrolled={scrolled} categoriaAtiva="" setCategoriaAtiva={handleCategoryClick} showFilter={false} setIsFilterOpen={() => {}} navRef={navRef} handleMouseDown={handleMouseDown} />
             <div className="h-16"></div>
 
             <div className="max-w-[1100px] mx-auto">
-                <PerfilHeader podeEditar={true} onEditCover={() => handleOpenUpload("header")} />
+                {/* CORRIGIDO: Injetada a ação onEditProfile para escutar o clique na foto menor */}
+                <PerfilHeader 
+                    podeEditar={true} 
+                    onEditCover={() => handleOpenUpload("header")} 
+                    onEditProfile={() => handleOpenUpload("profile")}
+                    nomeNegocio={business.name}
+                    fotoCapa="/images/capa-exemplo.jpg"
+                    fotoPerfil={business.businessPhotoUrl}
+                    localizacao={business.address}
+                />
                 
                 <div className="px-4 grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 mt-4">
                     <aside className="flex flex-col gap-4">
@@ -91,17 +191,17 @@ export const MeuPerfilScreen = () => {
                                 <button onClick={() => setIsModalSobreOpen(true)} className="text-xs font-bold text-[#1398D4] hover:underline">Editar Bio</button>
                              </div>
                              <p className="text-gray-600 text-sm leading-relaxed font-medium">
-                                {dadosNegocio.sobre}
+                                {business.description || "Nenhuma descrição adicionada. Clique em 'Editar Bio' para contar sobre o seu estabelecimento!"}
                              </p>
                         </div>
+                        
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-5">
                             <h3 className="font-bold text-[#0A4F6E] text-lg">Dados Operacionais</h3>
-                            {/* ADIÇÃO: Exibição da Categoria no Perfil */}
-                            <InfoRow icon={<Store size={18} className="text-[#FF7620]" />} label="Categoria" value={dadosNegocio.categoria} />
-                            <InfoRow icon={<Clock size={18} className="text-[#1398D4]" />} label="Seu Horário" value={dadosNegocio.horario} />
-                            <InfoRow icon={<MapPin size={18} className="text-[#1398D4]" />} label="Sua Localização" value={dadosNegocio.localizacao} />
-                            <InfoRow icon={<CreditCard size={18} className="text-[#1398D4]" />} label="Seus Pagamentos" value={dadosNegocio.pagamentos.join(", ")} />
-                            <InfoRow icon={<Sparkles size={18} className="text-[#1398D4]" />} label="Suas Comodidades" value={dadosNegocio.comodidades.join(" • ")} />
+                            <InfoRow icon={<Store size={18} className="text-[#FF7620]" />} label="Categoria" value={getCategoriaTexto(business.serviceType)} />
+                            <InfoRow icon={<Clock size={18} className="text-[#1398D4]" />} label="Seu Horário" value={business.horario} />
+                            <InfoRow icon={<MapPin size={18} className="text-[#1398D4]" />} label="Sua Localização" value={business.address} />
+                            <InfoRow icon={<CreditCard size={18} className="text-[#1398D4]" />} label="Seus Pagamentos" value={getPagamentosLista(business).join(", ")} />
+                            <InfoRow icon={<Sparkles size={18} className="text-[#1398D4]" />} label="Suas Comodidades" value={getComodidadesLista(business).join(" • ")} />
                         </div>
                     </aside>
 
@@ -111,16 +211,39 @@ export const MeuPerfilScreen = () => {
                                 <h3 className="font-bold text-[#0A4F6E] text-xl italic">Minha Galeria</h3>
                                 <button onClick={() => handleOpenUpload("galeria")} className="text-sm font-bold text-[#1398D4] hover:underline">+ Adicionar Fotos</button>
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                <div className="aspect-square bg-gray-100 rounded-xl border border-gray-200"></div>
-                            </div>
+                            
+                            {business.galleryPhotos.length > 0 ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {business.galleryPhotos.map((foto, idx) => (
+                                        <div key={idx} className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
+                                            <Image 
+                                                src={foto} 
+                                                alt={`Foto ${idx + 1} da galeria`} 
+                                                fill 
+                                                className="object-cover" 
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl p-8 min-h-[200px] bg-gray-50/50">
+                                    <p className="text-sm font-semibold text-gray-400">Nenhuma foto na sua galeria ainda.</p>
+                                </div>
+                            )}
                         </div>
-                        <SecaoFeedback nota={dadosNegocio.nota} totalAvaliacoes={dadosNegocio.totalAvaliacoes} exibirBotaoAvaliar={false} />
+                        <SecaoFeedback nota={business.nota} totalAvaliacoes={business.totalAvaliacoes} exibirBotaoAvaliar={false} />
                     </section>
                 </div>
             </div>
 
-            <ModalSobre isOpen={isModalSobreOpen} onClose={() => setIsModalSobreOpen(false)} valorAtual={dadosNegocio.sobre} onSave={(novo) => { const d = {...dadosNegocio, sobre: novo}; setDadosNegocio(d); localStorage.setItem("dadosNegocio", JSON.stringify(d)); }} />
+            <ModalSobre 
+                isOpen={isModalSobreOpen} 
+                onClose={() => setIsModalSobreOpen(false)} 
+                valorAtual={business.description} 
+                onSave={(novo: string) => { 
+                    setBusiness((prev: any) => ({ ...prev, description: novo }));
+                }} 
+            />
             <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} />
         </main>
     );

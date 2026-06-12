@@ -1,12 +1,16 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useSession } from "next-auth/react"; // IMPORTADO: Para controle de acesso
+import { useSession } from "next-auth/react";
+import Image from "next/image"; 
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
 import { PerfilHeader } from "@/components/PerfilPublico/PerfilHeader";
 import { SecaoFeedback } from "@/components/PerfilPublico/SecaoFeedback";
 import { Clock, MapPin, CreditCard, Sparkles, Star } from "lucide-react";
 import { buscarNegocioPorId, listarAvaliacoesDoNegocio } from "@/services/businessService";
+
+import { ModalUpload } from "./ModalUpload";
+import { ModalSobre } from "./ModalSobre";
 
 interface PerfilPublicoScreenProps {
     isEmpreendedor: boolean;
@@ -14,7 +18,7 @@ interface PerfilPublicoScreenProps {
 
 export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps) => {
     const router = useRouter();
-    const { data: session } = useSession(); // Captura a sessão ativa do usuário logado
+    const { data: session } = useSession(); 
     const params = useParams(); 
     const idNegocio = params?.id as string;
 
@@ -23,12 +27,13 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState(false);
 
+    const [isModalSobreOpen, setIsModalSobreOpen] = useState(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [uploadType, setUploadType] = useState<"galeria" | "header" | "profile">("galeria");
+
     const navRef = useRef<HTMLDivElement>(null);
 
-    // Recupera o ID do usuário logado de forma flexível dependendo do formato do JWT
     const usuarioLogadoId = (session as any)?.user?.id || (session as any)?.id;
-
-    // LÓGICA DE DONO (isOwner): Valida se o negócio pertence a quem está visualizando
     const isOwner = !!(session && negocio && negocio.userId === usuarioLogadoId);
 
     useEffect(() => {
@@ -38,42 +43,41 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                 setCarregando(true);
                 setErro(false);
 
-                // 1. Faz as duas chamadas paralelas para a API C#
                 const dados = await buscarNegocioPorId(idNegocio);
                 const avaliacoes = await listarAvaliacoesDoNegocio(idNegocio);
 
-                // 2. Calcula a média e o total de avaliações dinamicamente baseando-se no banco
                 const total = avaliacoes.length;
                 const media = total > 0 
                     ? avaliacoes.reduce((acc: number, item: any) => acc + item.stars, 0) / total 
                     : 0.0;
 
-                // 3. Mapeamento dinâmico de pagamentos (Ajuste de UI Real)
                 const pagamentosLista: string[] = [];
                 if (dados.pix ?? dados.Pix) pagamentosLista.push("Pix");
                 if (dados.cartao ?? dados.Cartao) pagamentosLista.push("Cartão");
                 if (dados.dinheiro ?? dados.Dinheiro) pagamentosLista.push("Dinheiro");
 
-                // 4. Mapeamento dinâmico de comodidades incluindo o campo Wi-Fi
                 const comodidadesLista: string[] = [];
                 if (dados.chuveiro ?? dados.Chuveiro) comodidadesLista.push("Chuveirão");
                 if (dados.estacionamento ?? dados.Estacionamento) comodidadesLista.push("Estacionamento");
                 if (dados.cadeira ?? dados.Cadeira) comodidadesLista.push("Cadeira de Sol");
                 if (dados.petFriendly ?? dados.PetFriendly) comodidadesLista.push("Pet Friendly");
                 if (dados.acessibilidade ?? dados.Acessibilidade) comodidadesLista.push("Acessibilidade");
-                if (dados.wifi ?? dados.Wifi) comodidadesLista.push("Wi-Fi Grátis"); // Campo adicionado!
+                if (dados.wifi ?? dados.Wifi) comodidadesLista.push("Wi-Fi Grátis");
 
                 setNegocio({
                     id: dados.id ?? dados.Id,
-                    userId: dados.userId ?? dados.UserId, // Guardado para fazer a checagem do isOwner
+                    userId: dados.userId ?? dados.UserId, 
                     nome: dados.name || "Sem Nome",
                     localizacao: dados.address || "Endereço não informado",
-                    horario: dados.horario || dados.Horario || "Horário não informado", // Agora vem do banco!
+                    horario: dados.horario || dados.Horario || "Horário não informado", 
                     pagamentos: pagamentosLista.length > 0 ? pagamentosLista : ["Não informado"],
                     comodidades: comodidadesLista.length > 0 ? comodidadesLista : ["Nenhuma comodidade informada"],
                     nota: media, 
                     totalAvaliacoes: total, 
-                    fotoCapa: dados.businessPhotoUrl || "/images/capa-exemplo.jpg"
+                    fotoCapa: "/images/capa-exemplo.jpg", 
+                    fotoPerfil: dados.businessPhotoUrl || dados.BusinessPhotoUrl || "/images/perfil-exemplo.jpg", 
+                    description: dados.description ?? dados.Description ?? "", 
+                    galleryPhotos: dados.galleryPhotos ?? dados.GalleryPhotos ?? [] 
                 });
             } catch (error) {
                 console.error("Erro ao carregar o perfil do negócio:", error);
@@ -100,6 +104,11 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
     const handleCategoryClick = (cat: string) => {
         const baseRoute = isEmpreendedor ? "/empreendedor/explorer" : "/explorer";
         router.push(`${baseRoute}?categoria=${encodeURIComponent(cat)}`);
+    };
+
+    const handleOpenUpload = (tipo: "galeria" | "header" | "profile") => {
+        setUploadType(tipo);
+        setIsUploadModalOpen(true);
     };
 
     const handleMouseDown = (ref: React.RefObject<HTMLDivElement | null>) => (e: React.MouseEvent) => {
@@ -143,26 +152,17 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
 
     return (
         <main className="min-h-screen h-full bg-[#F0F2F5] font-sans pb-20 text-left">
-            <HeaderListagem
-                isEmpreendedor={isEmpreendedor}
-                forceBlue={true}
-                scrolled={scrolled}
-                categoriaAtiva=""
-                setCategoriaAtiva={handleCategoryClick}
-                showFilter={false}
-                setIsFilterOpen={() => { }}
-                navRef={navRef}
-                handleMouseDown={handleMouseDown}
-            />
-
+            <HeaderListagem isEmpreendedor={isEmpreendedor} forceBlue={true} scrolled={scrolled} categoriaAtiva="" setCategoriaAtiva={handleCategoryClick} showFilter={false} setIsFilterOpen={() => { }} navRef={navRef} handleMouseDown={handleMouseDown} />
             <div className="h-16"></div>
 
             <div className="max-w-[1100px] mx-auto">
-                {/* ALTERAÇÃO DA ETAPA 4: podeEditar agora recebe a validação em tempo real de dono */}
                 <PerfilHeader 
                     podeEditar={isOwner} 
+                    onEditCover={() => handleOpenUpload("header")}
+                    onEditProfile={() => handleOpenUpload("profile")}
                     nomeNegocio={negocio.nome} 
                     fotoCapa={negocio.fotoCapa} 
+                    fotoPerfil={negocio.fotoPerfil}
                     localizacao={negocio.localizacao}
                 />
 
@@ -171,13 +171,21 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                             <div className="flex justify-between items-center mb-3">
                                 <h3 className="font-bold text-[#0A4F6E] text-lg">Sobre</h3>
-                                <div className="flex items-center gap-1 bg-orange-50 px-2 py-1 rounded-lg">
-                                    <span className="text-[#FF7620] font-bold text-sm">{negocio.nota.toFixed(1)}</span>
-                                    <Star size={12} className="text-[#FF7620] fill-[#FF7620]" />
+                                <div className="flex items-center gap-2">
+                                    {isOwner && (
+                                        <button onClick={() => setIsModalSobreOpen(true)} className="text-xs font-bold text-[#1398D4] hover:underline mr-1">
+                                            Editar Bio
+                                        </button>
+                                    )}
+                                    <div className="flex items-center gap-1 bg-orange-50 px-2 py-1 rounded-lg">
+                                        <span className="text-[#FF7620] font-bold text-sm">{negocio.nota.toFixed(1)}</span>
+                                        <Star size={12} className="text-[#FF7620] fill-[#FF7620]" />
+                                    </div>
                                 </div>
                             </div>
                             <p className="text-gray-600 text-sm leading-relaxed font-medium">
-                                <span className="font-bold text-[#0A4F6E]">{negocio.nome}:</span> Venha conhecer nosso espaço na orla! Oferecemos uma ótima experiência gastronômica e de lazer na praia.
+                                <span className="font-bold text-[#0A4F6E]">{negocio.nome}:</span>{" "}
+                                {negocio.description || "Venha conhecer nosso espaço na orla! Oferecemos uma ótima experiência gastronômica e de lazer na praia."}
                             </p>
                         </div>
 
@@ -192,21 +200,44 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
 
                     <section className="flex flex-col gap-4">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 min-h-[400px]">
-                            <h3 className="font-bold text-[#0A4F6E] text-xl italic mb-6">Galeria de Fotos</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                <div className="aspect-square bg-gray-100 rounded-xl border border-gray-200"></div>
-                                <div className="aspect-square bg-gray-50 rounded-xl border border-dashed border-gray-300"></div>
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="font-bold text-[#0A4F6E] text-xl italic">Galeria de Fotos</h3>
+                                {isOwner && (
+                                    <button onClick={() => handleOpenUpload("galeria")} className="text-sm font-bold text-[#1398D4] hover:underline">
+                                        + Adicionar Fotos
+                                    </button>
+                                )}
                             </div>
+                            
+                            {negocio.galleryPhotos.length > 0 ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {negocio.galleryPhotos.map((foto: string, idx: number) => (
+                                        <div key={idx} className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
+                                            <Image src={foto} alt={`Foto ${idx + 1} de ${negocio.nome}`} fill className="object-cover" />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl p-8 min-h-[220px] bg-gray-50/50">
+                                    <p className="text-sm font-semibold text-gray-400">Nenhuma foto adicionada à galeria ainda.</p>
+                                </div>
+                            )}
                         </div>
 
-                        <SecaoFeedback
-                            nota={negocio.nota}
-                            totalAvaliacoes={negocio.totalAvaliacoes}
-                            exibirBotaoAvaliar={!isOwner} // ALTERAÇÃO: Dono não pode avaliar o próprio estabelecimento
-                        />
+                        <SecaoFeedback nota={negocio.nota} totalAvaliacoes={negocio.totalAvaliacoes} exibirBotaoAvaliar={!isOwner} />
                     </section>
                 </div>
             </div>
+
+            <ModalSobre 
+                isOpen={isModalSobreOpen} 
+                onClose={() => setIsModalSobreOpen(false)} 
+                valorAtual={negocio.description} 
+                onSave={(novo: string) => { 
+                    setNegocio((prev: any) => ({ ...prev, description: novo }));
+                }} 
+            />
+            <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} />
         </main>
     );
 };

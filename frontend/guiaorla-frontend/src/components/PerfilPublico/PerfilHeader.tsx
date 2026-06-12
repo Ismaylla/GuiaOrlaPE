@@ -5,28 +5,37 @@ import { MapPin, Camera } from "lucide-react";
 interface PerfilHeaderProps {
   podeEditar?: boolean;
   onEditCover?: () => void; 
+  onEditProfile?: () => void; // 🔥 ADICIONADO: Gatilho para editar a foto de perfil
   nomeNegocio?: string;
   fotoCapa?: string;
+  fotoPerfil?: string; 
   localizacao?: string;
 }
 
-// FUNÇÃO DE SEGURANÇA PARA EVITAR QUE STRINGS INVÁLIDAS QUEBREM A IMAGEM DE CAPA
-const obterCapaValida = (src: string | undefined) => {
+const obtenerCapaValida = (src: string | undefined) => {
   if (!src) return "/images/capa-exemplo.jpg";
   const ehValido = src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://");
   return ehValido ? src : "/images/capa-exemplo.jpg";
 };
 
+const obtenerPerfilValido = (src: string | undefined) => {
+  if (!src) return "/images/perfil-exemplo.jpg";
+  const ehValido = src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://");
+  return ehValido ? src : "/images/perfil-exemplo.jpg";
+};
+
 export const PerfilHeader = ({ 
   podeEditar = false, 
   onEditCover,
+  onEditProfile, // 🔥 ADICIONADO
   nomeNegocio,
   fotoCapa,
+  fotoPerfil,
   localizacao 
 }: PerfilHeaderProps) => {
 
-  // Aplicando a trava de segurança na imagem vinda do banco
-  const imagemCapa = obterCapaValida(fotoCapa);
+  const imagemCapa = obtenerCapaValida(fotoCapa);
+  const imagemPerfil = obtenerPerfilValido(fotoPerfil); 
   const nomeExibicao = nomeNegocio || "Raio de Sol: Cocos e Frutas";
   const localizacaoExibicao = localizacao || "Praia de Gaibu, Cabo de Santo Agostinho";
 
@@ -58,14 +67,25 @@ export const PerfilHeader = ({
       <div className="max-w-[1050px] mx-auto px-4 pb-6">
         <div className="relative flex flex-col md:flex-row items-center md:items-end gap-5 -mt-10 md:-mt-14">
           
-          {/* FOTO DE PERFIL */}
+          {/* FOTO DE PERFIL COM BOTÃO DE EDIÇÃO */}
           <div className="relative h-28 w-28 md:h-36 md:w-36 rounded-full border-4 border-white bg-gray-100 shadow-md overflow-hidden shrink-0 group">
             <Image 
-              src="/images/perfil-exemplo.jpg" 
+              src={imagemPerfil} 
               alt="Foto de Perfil" 
               fill 
               className="object-cover"
             />
+            {/* ADICIONADO: Overlay escuro com ícone de câmera que aparece no hover se for o dono */}
+            {podeEditar && (
+              <button
+                type="button"
+                onClick={onEditProfile}
+                className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-1 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              >
+                <Camera size={22} />
+                <span className="text-[10px] font-bold uppercase">Alterar</span>
+              </button>
+            )}
           </div>
 
           {/* TEXTOS PRINCIPAIS */}

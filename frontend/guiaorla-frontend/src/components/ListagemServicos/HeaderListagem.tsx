@@ -1,6 +1,6 @@
 "use client";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { X, Search, LogOut } from "lucide-react";
@@ -98,7 +98,8 @@ export const HeaderListagem = ({
   const handleSignOutClick = () => {
     const pularConfirmacao = localStorage.getItem("guiaorla_pular_confirmacao_logout");
     if (pularConfirmacao === "true") {
-      signOut({ callbackUrl: "/empreendedor/login-empreendedor" });
+      // AJUSTADO: Redireciona para a rota raiz (Splash)
+      signOut({ callbackUrl: "/" });
     } else {
       setIsLogoutModalOpen(true);
     }
@@ -108,7 +109,8 @@ export const HeaderListagem = ({
     if (naoPerguntarDeNovo) {
       localStorage.setItem("guiaorla_pular_confirmacao_logout", "true");
     }
-    signOut({ callbackUrl: "/empreendedor/login-empreendedor" });
+    // AJUSTADO: Redireciona para a rota raiz (Splash)
+    signOut({ callbackUrl: "/" });
   };
 
   return (
@@ -215,7 +217,7 @@ export const HeaderListagem = ({
             {showFilter && (
               <button
                 onClick={() => setIsFilterOpen(true)}
-                className="md:hidden text-white text-[10px] sm:text-xs font-bold whitespace-nowrap hover:underline"
+                className="text-white text-[10px] sm:text-xs font-bold whitespace-nowrap hover:underline"
               >
                 Filtros
               </button>
@@ -225,7 +227,6 @@ export const HeaderListagem = ({
               <div className="flex items-center gap-3.5">
                 <Link href="/empreendedor/gerenciar" className="text-white text-[10px] md:text-xs font-semibold hover:underline whitespace-nowrap">Gerenciar</Link>
                 <Link href="/empreendedor/meu-perfil" className="text-white text-[10px] md:text-xs font-semibold hover:underline whitespace-nowrap">Perfil</Link>
-                {/* ALTERADO: Agora chama a função inteligente com modal */}
                 <button 
                   type="button"
                   onClick={handleSignOutClick}
