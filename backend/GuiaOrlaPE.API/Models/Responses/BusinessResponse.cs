@@ -6,6 +6,9 @@ public class BusinessResponse
 {
     public Guid Id { get; set; }
 
+    // ADICIONADO: Esse campo liga o negócio ao dono no frontend
+    public Guid UserId { get; set; }
+
     public string Name { get; set; } = string.Empty;
 
     public BusinessServiceTypeEnum ServiceType { get; set; }
@@ -20,14 +23,14 @@ public class BusinessResponse
 
     public string Horario { get; set; } = string.Empty;
 
-    // Campos de pagamento que adicionei para a resposta
+    // Campos de pagamento
     public bool Cartao { get; set; }
 
     public bool Pix { get; set; }
 
     public bool Dinheiro { get; set; }
 
-    // Campos de comodidades que adicionei para a resposta
+    // Campos de comodidades
     public bool Chuveiro { get; set; }
 
     public bool Estacionamento { get; set; }

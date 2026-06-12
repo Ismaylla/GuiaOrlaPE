@@ -21,11 +21,13 @@ public class BusinessService(
             var businesses = await _repository.GetAllAsync();
             return businesses.Select(x => new BusinessResponse
             {
-                Id = x.Id, Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
+                Id = x.Id, 
+                UserId = x.UserId, // ADICIONADO
+                Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
                 Latitude = x.Latitude, Longitude = x.Longitude, BusinessPhotoUrl = x.BusinessPhotoUrl,
                 Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
                 Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
-                PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi, // Adicionado Wifi
+                PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
                 Owner = new BusinessOwnerResponse { Id = x.User.Id, Name = x.User.Name, Email = x.User.Email, Phone = x.User.Phone }
             }).ToList();
         }
@@ -34,7 +36,6 @@ public class BusinessService(
 
     public async Task<BusinessResponse?> GetByIdAsync(Guid id)
     {
-
         _logger.LogInformation("--- BUSCANDO NEGOCIO ID: {id} ---", id);
         try
         {
@@ -43,11 +44,13 @@ public class BusinessService(
 
             return new BusinessResponse
             {
-                Id = business.Id, Name = business.Name, ServiceType = business.ServiceType, Address = business.Address,
+                Id = business.Id, 
+                UserId = business.UserId, // CORRIGIDO: Agora a tela pública vai receber o ID do Dono!
+                Name = business.Name, ServiceType = business.ServiceType, Address = business.Address,
                 Latitude = business.Latitude, Longitude = business.Longitude, BusinessPhotoUrl = business.BusinessPhotoUrl,
                 Horario = business.Horario, Cartao = business.Cartao, Pix = business.Pix, Dinheiro = business.Dinheiro,
                 Chuveiro = business.Chuveiro, Estacionamento = business.Estacionamento, Cadeira = business.Cadeira,
-                PetFriendly = business.PetFriendly, Acessibilidade = business.Acessibilidade, Wifi = business.Wifi, // Adicionado Wifi
+                PetFriendly = business.PetFriendly, Acessibilidade = business.Acessibilidade, Wifi = business.Wifi,
                 Owner = new BusinessOwnerResponse { Id = business.User.Id, Name = business.User.Name, Email = business.User.Email, Phone = business.User.Phone }
             };
         }
@@ -61,11 +64,13 @@ public class BusinessService(
             var (items, totalItems) = await _repository.SearchAsync(request);
             var responseItems = items.Select(x => new BusinessResponse
             {
-                Id = x.Id, Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
+                Id = x.Id, 
+                UserId = x.UserId, // ADICIONADO
+                Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
                 Latitude = x.Latitude, Longitude = x.Longitude, BusinessPhotoUrl = x.BusinessPhotoUrl,
                 Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
                 Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
-                PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi, // Adicionado Wifi
+                PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
                 Owner = new BusinessOwnerResponse { Id = x.User.Id, Name = x.User.Name, Email = x.User.Email, Phone = x.User.Phone }
             }).ToList();
 
@@ -76,31 +81,33 @@ public class BusinessService(
     }
 
     public async Task<PagedResponse<BusinessResponse>> GetByUserIdAsync(Guid userId, PaginationRequest request)
-{
-    try
     {
-        var (items, totalItems) = await _repository.GetByUserIdAsync(userId, request.Page, request.PageSize);
-        
-        var responseItems = items.Select(x => {
-            var resp = new BusinessResponse
-            {
-                Id = x.Id, Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
-                Latitude = x.Latitude, Longitude = x.Longitude, BusinessPhotoUrl = x.BusinessPhotoUrl,
-                Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
-                Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
-                PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, 
-                Wifi = x.Wifi, // <- GARANTIA QUE ESTA LINHA ESTÁ AQUI
-                Owner = new BusinessOwnerResponse { Id = x.User.Id, Name = x.User.Name, Email = x.User.Email, Phone = x.User.Phone }
-            };
-            _logger.LogInformation("DEBUG FINAL: Retornando Wifi={Wifi} para o ID={Id}", resp.Wifi, resp.Id);
-            return resp;
-        }).ToList();
+        try
+        {
+            var (items, totalItems) = await _repository.GetByUserIdAsync(userId, request.Page, request.PageSize);
+            
+            var responseItems = items.Select(x => {
+                var resp = new BusinessResponse
+                {
+                    Id = x.Id, 
+                    UserId = x.UserId, // ADICIONADO
+                    Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
+                    Latitude = x.Latitude, Longitude = x.Longitude, BusinessPhotoUrl = x.BusinessPhotoUrl,
+                    Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
+                    Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
+                    PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
+                    Owner = new BusinessOwnerResponse { Id = x.User.Id, Name = x.User.Name, Email = x.User.Email, Phone = x.User.Phone }
+                };
+                _logger.LogInformation("DEBUG FINAL: Retornando Wifi={Wifi} para o ID={Id}", resp.Wifi, resp.Id);
+                return resp;
+            }).ToList();
 
-        var totalPages = (int)Math.Ceiling(totalItems / (double)request.PageSize);
-        return new PagedResponse<BusinessResponse> { Items = responseItems, Page = request.Page, PageSize = request.PageSize, TotalItems = totalItems, TotalPages = totalPages, HasNextPage = request.Page < totalPages, HasPreviousPage = request.Page > 1 };
+            var totalPages = (int)Math.Ceiling(totalItems / (double)request.PageSize);
+            return new PagedResponse<BusinessResponse> { Items = responseItems, Page = request.Page, PageSize = request.PageSize, TotalItems = totalItems, TotalPages = totalPages, HasNextPage = request.Page < totalPages, HasPreviousPage = request.Page > 1 };
+        }
+        catch (Exception ex) { _logger.LogError(ex, "Erro."); throw; }
     }
-    catch (Exception ex) { _logger.LogError(ex, "Erro."); throw; }
-}
+
     public async Task<BusinessResponse> CreateAsync(CreateBusinessRequest request, Guid userId)
     {
         try
@@ -116,14 +123,13 @@ public class BusinessService(
             };
 
             await _repository.AddAsync(business);
-            return new BusinessResponse { Id = business.Id, Name = business.Name, ServiceType = business.ServiceType, Address = business.Address, Latitude = business.Latitude, Longitude = business.Longitude, BusinessPhotoUrl = business.BusinessPhotoUrl, Horario = business.Horario, Cartao = business.Cartao, Pix = business.Pix, Dinheiro = business.Dinheiro, Chuveiro = business.Chuveiro, Estacionamento = business.Estacionamento, Cadeira = business.Cadeira, PetFriendly = business.PetFriendly, Acessibilidade = business.Acessibilidade, Wifi = business.Wifi, Owner = new BusinessOwnerResponse { Id = userId } };
+            return new BusinessResponse { Id = business.Id, UserId = business.UserId, Name = business.Name, ServiceType = business.ServiceType, Address = business.Address, Latitude = business.Latitude, Longitude = business.Longitude, BusinessPhotoUrl = business.BusinessPhotoUrl, Horario = business.Horario, Cartao = business.Cartao, Pix = business.Pix, Dinheiro = business.Dinheiro, Chuveiro = business.Chuveiro, Estacionamento = business.Estacionamento, Cadeira = business.Cadeira, PetFriendly = business.PetFriendly, Acessibilidade = business.Acessibilidade, Wifi = business.Wifi, Owner = new BusinessOwnerResponse { Id = userId } };
         }
         catch (Exception ex) { _logger.LogError(ex, "Erro."); throw; }
     }
 
     public async Task UpdateAsync(Guid id, CreateBusinessRequest request, Guid userId)
     {
-
         _logger.LogInformation("Recebendo atualização: Wifi={Wifi}", request.Wifi);
         try
         {
@@ -138,7 +144,7 @@ public class BusinessService(
             business.Chuveiro = request.Chuveiro; business.Estacionamento = request.Estacionamento;
             business.Cadeira = request.Cadeira; business.PetFriendly = request.PetFriendly;
             business.Acessibilidade = request.Acessibilidade;
-            business.Wifi = request.Wifi; // Correto
+            business.Wifi = request.Wifi;
 
             await _repository.UpdateAsync(business);
         }

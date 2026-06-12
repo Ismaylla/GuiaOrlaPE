@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useSession } from "next-auth/react"; // IMPORTADO: Para controle de acesso
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
 import { PerfilHeader } from "@/components/PerfilPublico/PerfilHeader";
 import { SecaoFeedback } from "@/components/PerfilPublico/SecaoFeedback";
@@ -13,7 +14,8 @@ interface PerfilPublicoScreenProps {
 
 export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps) => {
     const router = useRouter();
-    const params = useParams(); // Captura o [id] da pasta da rota dinâmica
+    const { data: session } = useSession(); // Captura a sessão ativa do usuário logado
+    const params = useParams(); 
     const idNegocio = params?.id as string;
 
     const [scrolled, setScrolled] = useState(false);
@@ -23,7 +25,12 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
 
     const navRef = useRef<HTMLDivElement>(null);
 
-    // Efeito para carregar os dados do C# usando o ID da URL
+    // Recupera o ID do usuário logado de forma flexível dependendo do formato do JWT
+    const usuarioLogadoId = (session as any)?.user?.id || (session as any)?.id;
+
+    // LÓGICA DE DONO (isOwner): Valida se o negócio pertence a quem está visualizando
+    const isOwner = !!(session && negocio && negocio.userId === usuarioLogadoId);
+
     useEffect(() => {
         const carregarPerfil = async () => {
             if (!idNegocio) return;
@@ -41,20 +48,28 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                     ? avaliacoes.reduce((acc: number, item: any) => acc + item.stars, 0) / total 
                     : 0.0;
 
-                // 3. Mapeia as comodidades dinâmicas
+                // 3. Mapeamento dinâmico de pagamentos (Ajuste de UI Real)
+                const pagamentosLista: string[] = [];
+                if (dados.pix ?? dados.Pix) pagamentosLista.push("Pix");
+                if (dados.cartao ?? dados.Cartao) pagamentosLista.push("Cartão");
+                if (dados.dinheiro ?? dados.Dinheiro) pagamentosLista.push("Dinheiro");
+
+                // 4. Mapeamento dinâmico de comodidades incluindo o campo Wi-Fi
                 const comodidadesLista: string[] = [];
-                if (dados.cartao) comodidadesLista.push("Aceita Cartão");
-                if (dados.chuveiro) comodidadesLista.push("Chuveirão");
-                if (dados.estacionamento) comodidadesLista.push("Estacionamento");
-                if (dados.cadeira) comodidadesLista.push("Cadeira de Sol");
-                if (dados.petFriendly) comodidadesLista.push("Pet Friendly");
-                if (dados.acessibilidade) comodidadesLista.push("Acessibilidade");
+                if (dados.chuveiro ?? dados.Chuveiro) comodidadesLista.push("Chuveirão");
+                if (dados.estacionamento ?? dados.Estacionamento) comodidadesLista.push("Estacionamento");
+                if (dados.cadeira ?? dados.Cadeira) comodidadesLista.push("Cadeira de Sol");
+                if (dados.petFriendly ?? dados.PetFriendly) comodidadesLista.push("Pet Friendly");
+                if (dados.acessibilidade ?? dados.Acessibilidade) comodidadesLista.push("Acessibilidade");
+                if (dados.wifi ?? dados.Wifi) comodidadesLista.push("Wi-Fi Grátis"); // Campo adicionado!
 
                 setNegocio({
+                    id: dados.id ?? dados.Id,
+                    userId: dados.userId ?? dados.UserId, // Guardado para fazer a checagem do isOwner
                     nome: dados.name || "Sem Nome",
                     localizacao: dados.address || "Endereço não informado",
-                    horario: "08:00 às 18:00",
-                    pagamentos: dados.cartao ? ["Pix", "Cartão", "Dinheiro"] : ["Pix", "Dinheiro"],
+                    horario: dados.horario || dados.Horario || "Horário não informado", // Agora vem do banco!
+                    pagamentos: pagamentosLista.length > 0 ? pagamentosLista : ["Não informado"],
                     comodidades: comodidadesLista.length > 0 ? comodidadesLista : ["Nenhuma comodidade informada"],
                     nota: media, 
                     totalAvaliacoes: total, 
@@ -105,7 +120,6 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
         document.addEventListener('mouseup', handleMouseUp);
     };
 
-    // Estados visuais de carregamento e erro
     if (carregando) {
         return (
             <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center gap-3">
@@ -144,9 +158,9 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
             <div className="h-16"></div>
 
             <div className="max-w-[1100px] mx-auto">
-                {/* Passando os dados reais para o Header do Perfil (Nome, Capa e Localização reais do banco) */}
+                {/* ALTERAÇÃO DA ETAPA 4: podeEditar agora recebe a validação em tempo real de dono */}
                 <PerfilHeader 
-                    podeEditar={false} 
+                    podeEditar={isOwner} 
                     nomeNegocio={negocio.nome} 
                     fotoCapa={negocio.fotoCapa} 
                     localizacao={negocio.localizacao}
@@ -163,7 +177,7 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                                 </div>
                             </div>
                             <p className="text-gray-600 text-sm leading-relaxed font-medium">
-                                <span className="font-bold text-[#0A4F6E]">{negocio.nome}:</span> Venha conhecer nosso space na orla! Oferecemos uma ótima experiência gastronômica e de lazer na praia.
+                                <span className="font-bold text-[#0A4F6E]">{negocio.nome}:</span> Venha conhecer nosso espaço na orla! Oferecemos uma ótima experiência gastronômica e de lazer na praia.
                             </p>
                         </div>
 
@@ -188,7 +202,7 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                         <SecaoFeedback
                             nota={negocio.nota}
                             totalAvaliacoes={negocio.totalAvaliacoes}
-                            exibirBotaoAvaliar={!isEmpreendedor}
+                            exibirBotaoAvaliar={!isOwner} // ALTERAÇÃO: Dono não pode avaliar o próprio estabelecimento
                         />
                     </section>
                 </div>
