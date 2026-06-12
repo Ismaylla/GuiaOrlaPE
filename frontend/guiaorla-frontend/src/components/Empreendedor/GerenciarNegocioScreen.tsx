@@ -97,7 +97,6 @@ export const GerenciarNegocioScreen = () => {
                 if (response.ok) {
                     const d = await response.json();
 
-                    console.log("DADOS DO BACKEND:", d);
                     setBusiness({
                         id: d.id ?? d.Id,
                         name: d.name ?? d.Name ?? "",
@@ -196,7 +195,7 @@ export const GerenciarNegocioScreen = () => {
                 atualizarEPersistir({ serviceType: map[v] ?? 0 });
             }} />
             <ModalHorario isOpen={activeModal === "horario"} onClose={() => setActiveModal(null)} valorAtual={business.horario} onSave={(v) => atualizarEPersistir({ horario: v })} />
-            <ModalLocalizacao isOpen={activeModal === "localizacao"} onClose={() => setActiveModal(null)} onSave={(l: any) => atualizarEPersistir({ address: l.endereco, latitude: l.coords.lat, longitude: l.coords.lng })} />
+            <ModalLocalizacao isOpen={activeModal === "localizacao"} onClose={() => setActiveModal(null)} enderecoAtual={business.address} latitudeAtual={business.latitude} longitudeAtual={business.longitude} onSave={(l: any) => atualizarEPersistir({ address: l.endereco, latitude: l.coords.lat, longitude: l.coords.lng })} />
             <ModalPagamentos isOpen={activeModal === "pagamentos"} onClose={() => setActiveModal(null)} pagamentosAtuais={[...(business.pix ? ["Pix"] : []), ...(business.cartao ? ["Cartão de Crédito"] : []), ...(business.dinheiro ? ["Dinheiro"] : [])]} onSave={(v) => atualizarEPersistir({ pix: v.includes("Pix"), cartao: v.includes("Cartão de Crédito"), dinheiro: v.includes("Dinheiro") })} />
             <ModalComodidades isOpen={activeModal === "comodidades"} onClose={() => setActiveModal(null)} comodidadesAtuais={[...(business.chuveiro ? ["Ducha/Chuveiro"] : []), ...(business.estacionamento ? ["Estacionamento"] : []), ...(business.cadeira ? ["Guarda-sol"] : []), ...(business.petFriendly ? ["Pet Friendly"] : []), ...(business.acessibilidade ? ["Acessibilidade"] : []), ...(business.wifi ? ["Wi-fi Grátis"] : [])]} onSave={(v) => atualizarEPersistir({ chuveiro: v.includes("Ducha/Chuveiro"), estacionamento: v.includes("Estacionamento"), cadeira: v.includes("Guarda-sol"), petFriendly: v.includes("Pet Friendly"), acessibilidade: v.includes("Acessibilidade"), wifi: v.includes("Wi-fi Grátis") })} />
         </main>

@@ -75,8 +75,6 @@ public class BusinessController(
                 Wifi = b.Wifi // <-- LINHA CORRIGIDA BEM AQUI
             };
 
-            Console.WriteLine($"DEBUG: Enviando para o front -> Id: {response.Id}, Horario: '{response.Horario}', Wifi: {response.Wifi}");
-
             return Ok(response);
         }
         catch (Exception ex)
