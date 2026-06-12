@@ -35,4 +35,8 @@ public class CreateBusinessRequest
     public bool PetFriendly { get; set; }
 
     public bool Acessibilidade { get; set; }
+
+    public bool Wifi { get; set; }
+
+
 }

@@ -65,6 +65,10 @@ public class Business
     [Required]
     public bool Acessibilidade { get; set; }
 
+
+    [Required] // Adicione esta linha
+    public bool Wifi { get; set; }
+
     // Campo de horário que implementei para controlar o funcionamento
     [MaxLength(100)]
     public string Horario { get; set; } = "08:00 às 18:00";

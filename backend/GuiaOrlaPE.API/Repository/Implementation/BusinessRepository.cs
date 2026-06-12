@@ -30,10 +30,11 @@ public class BusinessRepository : IBusinessRepository
             .ToListAsync();
     }
 
+    // REMOVIDO .AsNoTracking() apenas do GetByIdAsync para permitir que o EF 
+    // rastreie a entidade quando o Service for fazer a atualização (PUT).
     public async Task<Business?> GetByIdAsync(Guid id)
     {
         return await _context.Businesses
-            .AsNoTracking()
             .Include(x => x.User)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
@@ -117,7 +118,18 @@ public class BusinessRepository : IBusinessRepository
             .Take(pageSize)
             .ToListAsync();
 
-        // AJUSTADO: Forçando os nomes das propriedades para bater com a assinatura do método
         return (Items: items, TotalItems: totalItems);
+    }
+
+    // =========================================================================
+    // IMPLEMENTADO: Método de persistência do PUT exigido pela Interface
+    // =========================================================================
+    public async Task UpdateAsync(Business business)
+    {
+        // Altera o estado da entidade para Modificado no contexto do Entity Framework
+        _context.Businesses.Update(business);
+        
+        // Salva as alterações de verdade no seu banco Postgres
+        await _context.SaveChangesAsync();
     }
 }

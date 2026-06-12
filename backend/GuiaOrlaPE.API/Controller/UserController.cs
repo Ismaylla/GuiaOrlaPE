@@ -6,49 +6,48 @@ namespace GuiaOrlaPE.API.Controller;
 
 [ApiController]
 [Route("api/users")]
-public class UserController(IUserService service, ILogger<UserController> logger, IBusinessService businessService) : ControllerBase
+public class UserController : ControllerBase
 {
-    private readonly IUserService _service = service;
-    private readonly IBusinessService _businessService = businessService;
+    private readonly IUserService _service;
+    private readonly IBusinessService _businessService;
+    private readonly ITokenService _tokenService; // ADICIONADO: Serviço de geração de tokens
+    private readonly ILogger<UserController> _logger;
 
-    private readonly ILogger<UserController> _logger = logger;
+    // Construtor explícito para injetar os 3 serviços necessários limpamente
+    public UserController(
+        IUserService service, 
+        IBusinessService businessService, 
+        ITokenService tokenService, 
+        ILogger<UserController> logger)
+    {
+        _service = service;
+        _businessService = businessService;
+        _tokenService = tokenService;
+        _logger = logger;
+    }
 
     [HttpPost("businessperson")]
-    public async Task<IActionResult> CreateBusinessperson(
-        [FromBody] CreateBusinesspersonRequest request)
+    public async Task<IActionResult> CreateBusinessperson([FromBody] CreateBusinesspersonRequest request)
     {
         try
         {
-            _logger.LogInformation(
-                "Iniciando cadastro de usuário Businessperson. Email: {Email}",
-                request.Email);
+            _logger.LogInformation("Iniciando cadastro de usuário Businessperson. Email: {Email}", request.Email);
 
             var user = await _service.CreateBusinesspersonAsync(request);
 
-            _logger.LogInformation(
-                "Usuário Businessperson cadastrado com sucesso. UserId: {UserId}",
-                user.Id);
+            _logger.LogInformation("Usuário Businessperson cadastrado com sucesso. UserId: {UserId}", user.Id);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = user.Id },
-                user);
+            return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                ex,
-                "Erro ao cadastrar usuário Businessperson. Email: {Email}",
-                request.Email);
-
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new { Message = "Erro interno do servidor." });
+            _logger.LogError(ex, "Erro ao cadastrar usuário Businessperson. Email: {Email}", request.Email);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Erro interno do servidor." });
         }
     }
 
     // =========================================================================
-    // ENDPOINT DE LOGIN REAL AJUSTADO (BUSCA DIRETO NO BANCO DE DADOS PELO EMAIL)
+    // ENDPOINT DE LOGIN CORRIGIDO (GERA E RETORNA O TOKEN JWT LEGÍTIMO)
     // =========================================================================
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -57,10 +56,8 @@ public class UserController(IUserService service, ILogger<UserController> logger
         {
             _logger.LogInformation("Recebida tentativa de login para o email: {Email}", request.Email);
 
-            // 1. Busca a lista de usuários reais direto do banco de dados através do service
             var users = await _service.GetAllAsync();
             
-            // 2. Filtra na lista se o email digitado existe de fato no banco de dados
             var usuarioValido = users.FirstOrDefault(u => 
                 u.Email.ToLower() == request.Email.ToLower());
 
@@ -68,12 +65,16 @@ public class UserController(IUserService service, ILogger<UserController> logger
             {
                 _logger.LogInformation("Login efetuado com sucesso para o usuário real: {Id}", usuarioValido.Id);
                 
-                // Retorna os dados que o seu NextAuth precisa para criar a sessão do usuário logado
+                // 1. GERA O TOKEN REAL usando a instância do usuário do banco
+                var tokenGerado = _tokenService.GenerateToken(usuarioValido);
+
+                // 2. RETORNA os dados do usuário JUNTO com o accessToken verdadeiro!
                 return Ok(new 
                 { 
                     Id = usuarioValido.Id, 
                     Name = usuarioValido.Name, 
-                    Email = usuarioValido.Email 
+                    Email = usuarioValido.Email,
+                    AccessToken = tokenGerado // O NextAuth e o Axios finalmente vão ler a hash real aqui!
                 });
             }
 

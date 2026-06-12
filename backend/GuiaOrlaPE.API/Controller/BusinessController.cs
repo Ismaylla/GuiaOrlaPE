@@ -1,4 +1,5 @@
 ﻿using GuiaOrlaPE.API.Models.Requests;
+using GuiaOrlaPE.API.Models.Responses;
 using GuiaOrlaPE.API.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,18 +19,8 @@ public class BusinessController(
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        try
-        {
-            var businesses = await _service.GetAllAsync();
-            return Ok(businesses);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro interno ao listar empreendimentos.");
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new { Message = "Erro interno do servidor." });
-        }
+        try { var businesses = await _service.GetAllAsync(); return Ok(businesses); }
+        catch (Exception ex) { _logger.LogError(ex, "Erro interno."); return StatusCode(500, new { Message = "Erro interno." }); }
     }
 
     [HttpGet("{id:guid}")]
@@ -38,114 +29,95 @@ public class BusinessController(
         try
         {
             var business = await _service.GetByIdAsync(id);
-
-            if (business is null)
-            {
-                return NotFound(new { Message = "Empreendimento não encontrado." });
-            }
-
+            if (business is null) return NotFound(new { Message = "Não encontrado." });
             return Ok(business);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro interno ao buscar empreendimento.");
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new { Message = "Erro interno do servidor." });
-        }
+        catch (Exception ex) { _logger.LogError(ex, "Erro."); return StatusCode(500, new { Message = "Erro." }); }
     }
 
-    // ---------------------------------------------------------------------------
-    // ADICIONADO: Endpoint inteligente para o Front recuperar o quiosque do usuário logado
-    // ---------------------------------------------------------------------------
     [HttpGet("user")]
     [Authorize]
     public async Task<IActionResult> GetByUserId()
     {
         try
         {
-            _logger.LogInformation("Buscando o empreendimento do usuário autenticado via Token JWT.");
-
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
-            if (string.IsNullOrEmpty(userIdClaim))
-            {
-                return Unauthorized(new { Message = "Usuário não identificado no token de autenticação." });
-            }
+            if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
 
             var userId = Guid.Parse(userIdClaim);
-
-            // Instancia a paginação mínima exigida pela assinatura do seu serviço
             var paginationRequest = new PaginationRequest { Page = 1, PageSize = 1 };
             var pagedResponse = await _service.GetByUserIdAsync(userId, paginationRequest);
 
             if (pagedResponse.Items is null || !pagedResponse.Items.Any())
+                return NotFound(new { Message = "Nenhum negócio." });
+
+            var b = pagedResponse.Items.First();
+
+            // Mapeamento corrigido com a propriedade Wifi inclusa!
+            var response = new BusinessResponse
             {
-                return NotFound(new { Message = "Nenhum negócio cadastrado para este empreendedor." });
-            }
+                Id = b.Id,
+                Name = b.Name,
+                ServiceType = b.ServiceType,
+                Address = b.Address,
+                Latitude = b.Latitude,
+                Longitude = b.Longitude,
+                BusinessPhotoUrl = b.BusinessPhotoUrl ?? "",
+                Horario = b.Horario ?? "", 
+                Cartao = b.Cartao,
+                Pix = b.Pix,
+                Dinheiro = b.Dinheiro,
+                Chuveiro = b.Chuveiro,
+                Estacionamento = b.Estacionamento,
+                Cadeira = b.Cadeira,
+                PetFriendly = b.PetFriendly,
+                Acessibilidade = b.Acessibilidade,
+                Wifi = b.Wifi // <-- LINHA CORRIGIDA BEM AQUI
+            };
 
-            // Retorna o primeiro e único item encontrado (A Barraca do Açaí)
-            var business = pagedResponse.Items.First();
-            return Ok(business);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro interno ao buscar o negócio do usuário logado.");
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new { Message = "Erro interno do servidor." });
-        }
-    }
-    // ---------------------------------------------------------------------------
+            Console.WriteLine($"DEBUG: Enviando para o front -> Id: {response.Id}, Horario: '{response.Horario}', Wifi: {response.Wifi}");
 
-    [HttpGet("search")]
-    public async Task<IActionResult> Search([FromQuery] SearchBusinessRequest request)
-    {
-        try
-        {
-            _logger.LogInformation("Recebida requisição de busca paginada de empreendimentos.");
-            var response = await _service.SearchAsync(request);
             return Ok(response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro interno ao buscar empreendimentos.");
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new { Message = "Erro interno do servidor." });
+            _logger.LogError(ex, "Erro ao buscar negócio do usuário.");
+            return StatusCode(500, new { Message = "Erro interno ao processar dados." });
         }
     }
 
+    [HttpGet("search")]
+    public async Task<IActionResult> Search([FromQuery] SearchBusinessRequest request)
+    {
+        try { var response = await _service.SearchAsync(request); return Ok(response); }
+        catch (Exception ex) { _logger.LogError(ex, "Erro."); return StatusCode(500, new { Message = "Erro." }); }
+    }
+
     [HttpPost]
-    [Authorize] // Garante que apenas usuários autenticados com JWT criem negócios
+    [Authorize] 
     public async Task<IActionResult> Create([FromBody] CreateBusinessRequest request)
     {
         try
         {
-            _logger.LogInformation("Recebida requisição para cadastrar novo empreendimento: {Name}", request.Name);
-            
-            // Extrai o ID do usuário autenticado no token (Claim NameIdentifier)
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
-            if (string.IsNullOrEmpty(userIdClaim))
-            {
-                return Unauthorized(new { Message = "Usuário não identificado no token de autenticação." });
-            }
-
-            var userId = Guid.Parse(userIdClaim);
-
-            // Ajustado: Passando o request e o userId obtido com segurança
-            var response = await _service.CreateAsync(request, userId);
-            
-            // Retorna o status 201 Created apontando para o endpoint do GetById com o novo id gerado
+            if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+            var response = await _service.CreateAsync(request, Guid.Parse(userIdClaim));
             return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
         }
-        catch (Exception ex)
+        catch (Exception ex) { _logger.LogError(ex, "Erro."); return StatusCode(500, new { Message = "Erro." }); }
+    }
+
+    [HttpPut("{id:guid}")]
+    [Authorize] 
+    public async Task<IActionResult> Update(Guid id, [FromBody] CreateBusinessRequest request)
+    {
+        try
         {
-            _logger.LogError(ex, "Erro interno ao cadastrar empreendimento.");
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new { Message = "Erro interno do servidor." });
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+            await _service.UpdateAsync(id, request, Guid.Parse(userIdClaim));
+            return NoContent();
         }
+        catch (Exception ex) { _logger.LogError(ex, "Erro."); return StatusCode(500, new { Message = "Erro ao salvar." }); }
     }
 }

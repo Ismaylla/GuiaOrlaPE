@@ -14,4 +14,6 @@ public interface IBusinessService
     Task<PagedResponse<BusinessResponse>> GetByUserIdAsync(Guid userId, PaginationRequest request);
 
     Task<BusinessResponse> CreateAsync(CreateBusinessRequest request, Guid userId);
+
+    Task UpdateAsync(Guid id, CreateBusinessRequest request, Guid userId);
 }

@@ -16,5 +16,7 @@ public interface IBusinessRepository
 
     Task AddAsync(Business business);
 
+    Task UpdateAsync(Business business);
+
     
 }

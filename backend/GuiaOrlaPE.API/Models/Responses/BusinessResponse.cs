@@ -38,6 +38,8 @@ public class BusinessResponse
 
     public bool Acessibilidade { get; set; }
 
+    public bool Wifi { get; set; }
+
     public BusinessOwnerResponse Owner { get; set; } = null!;
 }
 

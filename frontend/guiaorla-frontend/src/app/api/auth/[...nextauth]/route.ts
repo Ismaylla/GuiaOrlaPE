@@ -15,15 +15,19 @@ export const authOptions: NextAuthOptions = {
         try {
           if (!credentials) return null;
 
+          // CORRIGIDO: Forçamos o 'as any' aqui para o TypeScript aceitar a resposta da API do C#
           const data = await login({
             email: credentials.email,
             password: credentials.password,
-          });
+          }) as any;
 
+          // Alinhando o mapeamento com os nomes reais do seu backend C#
           const userId = data?.user?.id || "mock-id";
           const userName = data?.user?.name || "Usuário";
           const userEmail = data?.email || credentials.email;
-          const userToken = data?.token || "mock-token";
+          
+          // Captura 'accessToken' (do C#) e aceita 'token' apenas como segunda opção
+          const userToken = data?.accessToken || data?.token || "mock-token";
           const userPerfil = data?.user?.profile || "BUSINESS_OWNER";
 
           return {
@@ -31,7 +35,7 @@ export const authOptions: NextAuthOptions = {
             name: userName,
             email: userEmail,
             perfil: userPerfil,
-            token: userToken,
+            token: userToken, // Esse cara vai ser repassado para o token.accessToken abaixo
           } as any;
         } catch (error) {
           console.error("Erro na autorização do NextAuth:", error);
@@ -52,7 +56,7 @@ export const authOptions: NextAuthOptions = {
         token.name = user.name;
         token.email = user.email;
         token.perfil = user.perfil;
-        token.accessToken = user.token;
+        token.accessToken = user.token; // Pega o userToken correto lá de cima
       }
       return token;
     },
@@ -63,7 +67,7 @@ export const authOptions: NextAuthOptions = {
         session.user.name = token.name;
         session.user.email = token.email;
         session.user.perfil = token.perfil;
-        session.accessToken = token.accessToken;
+        session.accessToken = token.accessToken; // Torna o token real visível no useSession()
       }
       return session;
     },
@@ -73,8 +77,6 @@ export const authOptions: NextAuthOptions = {
     signIn: "/empreendedor/login-empreendedor",
   },
 
-  // Forçamos uma string fixa diretamente aqui. Se o arquivo .env estiver ausente,
-  // essa string garante que o NextAuth monte o servidor sem dar erro de configuração.
   secret: "guia-orla-pe-secret-key-temporary-123456789",
 };
 
