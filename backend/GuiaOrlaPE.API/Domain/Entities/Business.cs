@@ -33,10 +33,9 @@ public class Business
     [MaxLength(500)]
     public string BusinessPhotoUrl { get; set; } = string.Empty;
 
-    /// <summary>
-    /// true = ativo
-    /// false = inativo
-    /// </summary>
+    [MaxLength(500)]
+    public string CoverPhotoUrl { get; set; } = string.Empty;
+
     [Required]
     public bool Status { get; set; }
 

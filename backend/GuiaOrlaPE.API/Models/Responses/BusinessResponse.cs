@@ -21,6 +21,9 @@ public class BusinessResponse
 
     public string BusinessPhotoUrl { get; set; } = string.Empty;
 
+    public string CoverPhotoUrl { get; set; } = string.Empty;
+
+
     public string Horario { get; set; } = string.Empty;
 
     // Campos de pagamento
