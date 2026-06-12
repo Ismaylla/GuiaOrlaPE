@@ -29,9 +29,10 @@ interface BusinessData {
     cadeira: boolean;
     petFriendly: boolean;
     acessibilidade: boolean;
-    wifi: boolean; // Campo wifi incluído
+    wifi: boolean;
 }
 
+// CORRIGIDO: Tipo alterado de React.RefNode para React.ReactNode
 const MenuOption = ({ icon, title, description, onClick }: { 
     icon: React.ReactNode, title: string, description: string, onClick?: () => void 
 }) => (
@@ -87,7 +88,6 @@ export const GerenciarNegocioScreen = () => {
                 setIsLoading(true);
                 const token = (session as any).accessToken || (session as any).token;
                 
-                // ALTERAÇÃO: timestamp anexado na URL e cache desativado no-store
                 const response = await fetch(`http://localhost:5148/api/business/user?t=${new Date().getTime()}`, {
                     method: "GET",
                     cache: "no-store",
@@ -114,7 +114,6 @@ export const GerenciarNegocioScreen = () => {
                         cadeira: !!(d.cadeira ?? d.Cadeira),
                         petFriendly: !!(d.petFriendly ?? d.PetFriendly),
                         acessibilidade: !!(d.acessibilidade ?? d.Acessibilidade),
-                        // Garantindo que capture o valor independente do formato do JSON
                         wifi: d.wifi === true || d.Wifi === true,
                     });
                 }
@@ -196,7 +195,14 @@ export const GerenciarNegocioScreen = () => {
             }} />
             <ModalHorario isOpen={activeModal === "horario"} onClose={() => setActiveModal(null)} valorAtual={business.horario} onSave={(v) => atualizarEPersistir({ horario: v })} />
             <ModalLocalizacao isOpen={activeModal === "localizacao"} onClose={() => setActiveModal(null)} enderecoAtual={business.address} latitudeAtual={business.latitude} longitudeAtual={business.longitude} onSave={(l: any) => atualizarEPersistir({ address: l.endereco, latitude: l.coords.lat, longitude: l.coords.lng })} />
-            <ModalPagamentos isOpen={activeModal === "pagamentos"} onClose={() => setActiveModal(null)} pagamentosAtuais={[...(business.pix ? ["Pix"] : []), ...(business.cartao ? ["Cartão de Crédito"] : []), ...(business.dinheiro ? ["Dinheiro"] : [])]} onSave={(v) => atualizarEPersistir({ pix: v.includes("Pix"), cartao: v.includes("Cartão de Crédito"), dinheiro: v.includes("Dinheiro") })} />
+            
+            <ModalPagamentos 
+                isOpen={activeModal === "pagamentos"} 
+                onClose={() => setActiveModal(null)} 
+                pagamentosAtuais={[...(business.pix ? ["Pix"] : []), ...(business.cartao ? ["Cartão"] : []), ...(business.dinheiro ? ["Dinheiro"] : [])]} 
+                onSave={(v) => atualizarEPersistir({ pix: v.includes("Pix"), cartao: v.includes("Cartão"), dinheiro: v.includes("Dinheiro") })} 
+            />
+            
             <ModalComodidades isOpen={activeModal === "comodidades"} onClose={() => setActiveModal(null)} comodidadesAtuais={[...(business.chuveiro ? ["Ducha/Chuveiro"] : []), ...(business.estacionamento ? ["Estacionamento"] : []), ...(business.cadeira ? ["Guarda-sol"] : []), ...(business.petFriendly ? ["Pet Friendly"] : []), ...(business.acessibilidade ? ["Acessibilidade"] : []), ...(business.wifi ? ["Wi-fi Grátis"] : [])]} onSave={(v) => atualizarEPersistir({ chuveiro: v.includes("Ducha/Chuveiro"), estacionamento: v.includes("Estacionamento"), cadeira: v.includes("Guarda-sol"), petFriendly: v.includes("Pet Friendly"), acessibilidade: v.includes("Acessibilidade"), wifi: v.includes("Wi-fi Grátis") })} />
         </main>
     );
