@@ -1,41 +1,59 @@
 "use client";
 import Image from "next/image";
-import { MapPin, Camera } from "lucide-react";
+import { MapPin, Camera, User } from "lucide-react";
+
 
 interface PerfilHeaderProps {
   podeEditar?: boolean;
-  onEditCover?: () => void; 
-  onEditProfile?: () => void; // 🔥 ADICIONADO: Gatilho para editar a foto de perfil
+  onEditCover?: () => void;
+  onEditProfile?: () => void; //  ADICIONADO: Gatilho para editar a foto de perfil
   nomeNegocio?: string;
   fotoCapa?: string;
-  fotoPerfil?: string; 
+  fotoPerfil?: string;
   localizacao?: string;
 }
 
 const obtenerCapaValida = (src: string | undefined) => {
-  if (!src) return "/images/capa-exemplo.jpg";
-  const ehValido = src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://");
-  return ehValido ? src : "/images/capa-exemplo.jpg";
+  if (!src || src.trim() === "") return "";
+
+  const ehValido =
+    src.startsWith("/") ||
+    src.startsWith("http://") ||
+    src.startsWith("https://");
+
+  return ehValido ? src : "";
 };
 
 const obtenerPerfilValido = (src: string | undefined) => {
-  if (!src) return "/images/perfil-exemplo.jpg";
-  const ehValido = src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://");
-  return ehValido ? src : "/images/perfil-exemplo.jpg";
+  if (!src || src.trim() === "") return "";
+
+  const ehValido =
+    src.startsWith("/") ||
+    src.startsWith("http://") ||
+    src.startsWith("https://");
+
+  return ehValido ? src : "";
 };
 
-export const PerfilHeader = ({ 
-  podeEditar = false, 
+export const PerfilHeader = ({
+  podeEditar = false,
   onEditCover,
   onEditProfile, // 🔥 ADICIONADO
   nomeNegocio,
   fotoCapa,
   fotoPerfil,
-  localizacao 
+  localizacao
 }: PerfilHeaderProps) => {
 
   const imagemCapa = obtenerCapaValida(fotoCapa);
-  const imagemPerfil = obtenerPerfilValido(fotoPerfil); 
+  const imagemPerfil = obtenerPerfilValido(fotoPerfil);
+
+  console.log({
+    fotoPerfilRecebida: fotoPerfil,
+    imagemPerfilFinal: imagemPerfil
+  });
+
+
   const nomeExibicao = nomeNegocio || "Raio de Sol: Cocos e Frutas";
   const localizacaoExibicao = localizacao || "Praia de Gaibu, Cabo de Santo Agostinho";
 
@@ -43,18 +61,21 @@ export const PerfilHeader = ({
     <div className="bg-white shadow-sm rounded-b-2xl overflow-hidden border-x border-b border-gray-200">
       {/* SEÇÃO DA CAPA */}
       <div className="relative h-[180px] md:h-[300px] w-full bg-gradient-to-r from-gray-200 to-gray-300">
-        <Image 
-          src={imagemCapa} 
-          alt={`Capa de ${nomeExibicao}`} 
-          fill 
-          className="object-cover"
-        />
-        
+        {imagemCapa ? (
+          <img
+            src={imagemCapa}
+            alt={`Capa de ${nomeExibicao}`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-gray-200 to-gray-300" />
+        )}
+
         {/* BOTÃO EDITAR CAPA */}
         {podeEditar && (
-          <button 
+          <button
             type="button"
-            onClick={onEditCover} 
+            onClick={onEditCover}
             className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm font-bold text-[#1398D4] hover:underline transition-all shadow-sm z-10"
           >
             <Camera size={18} />
@@ -66,15 +87,32 @@ export const PerfilHeader = ({
       {/* CONTEÚDO DO PERFIL (TEXTOS E FOTO) */}
       <div className="max-w-[1050px] mx-auto px-4 pb-6">
         <div className="relative flex flex-col md:flex-row items-center md:items-end gap-5 -mt-10 md:-mt-14">
-          
+
           {/* FOTO DE PERFIL COM BOTÃO DE EDIÇÃO */}
-          <div className="relative h-28 w-28 md:h-36 md:w-36 rounded-full border-4 border-white bg-gray-100 shadow-md overflow-hidden shrink-0 group">
-            <Image 
-              src={imagemPerfil} 
-              alt="Foto de Perfil" 
-              fill 
-              className="object-cover"
+          <div
+            className="relative h-28 w-28 md:h-36 md:w-36 rounded-full border-4 border-white bg-gray-100 shadow-md overflow-hidden shrink-0 group"
+            style={{ lineHeight: 0 }}
+          >
+
+            <img
+              src={imagemPerfil}
+              alt="Foto de Perfil"
+              className="w-full h-full object-cover block relative z-10"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+
+                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+
+                if (fallback) {
+                  fallback.style.display = "flex";
+                }
+              }}
             />
+
+            <div className="absolute inset-0 items-center justify-center bg-gray-200 z-0 hidden">
+              <User size={58} strokeWidth={1.7} className="text-gray-500" />
+            </div>
+
             {/* ADICIONADO: Overlay escuro com ícone de câmera que aparece no hover se for o dono */}
             {podeEditar && (
               <button

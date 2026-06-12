@@ -74,10 +74,12 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                     comodidades: comodidadesLista.length > 0 ? comodidadesLista : ["Nenhuma comodidade informada"],
                     nota: media, 
                     totalAvaliacoes: total, 
-                    fotoCapa: "/images/capa-exemplo.jpg", 
-                    fotoPerfil: dados.businessPhotoUrl || dados.BusinessPhotoUrl || "/images/perfil-exemplo.jpg", 
+                    fotoCapa: "", 
+                    // fotoPerfil: dados.businessPhotoUrl || dados.BusinessPhotoUrl || "/images/perfil-exemplo.jpg", 
+                    fotoPerfil: dados.businessPhotoUrl ? `http://localhost:5148${dados.businessPhotoUrl}` : dados.BusinessPhotoUrl ? `http://localhost:5148${dados.BusinessPhotoUrl}` : "",
                     description: dados.description ?? dados.Description ?? "", 
-                    galleryPhotos: dados.galleryPhotos ?? dados.GalleryPhotos ?? [] 
+                    // galleryPhotos: dados.galleryPhotos ?? dados.GalleryPhotos ?? [] 
+                    galleryPhotos: (dados.galleryPhotos ?? dados.GalleryPhotos ?? []).map((foto: string) => foto.startsWith("http") ? foto : `http://localhost:5148${foto}`)
                 });
             } catch (error) {
                 console.error("Erro ao carregar o perfil do negócio:", error);
@@ -237,7 +239,8 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                     setNegocio((prev: any) => ({ ...prev, description: novo }));
                 }} 
             />
-            <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} />
+            {/* <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} /> */}
+            <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} businessId={negocio.id} onSuccess={(newUrl) => { const fullUrl = `http://localhost:5148${newUrl}`; setNegocio((prev: any) => ({ ...prev, fotoPerfil: uploadType === "profile" ? fullUrl : prev.fotoPerfil, fotoCapa: uploadType === "header" ? fullUrl : prev.fotoCapa, galleryPhotos: uploadType === "galeria" ? [...prev.galleryPhotos, fullUrl] : prev.galleryPhotos })); }} />
         </main>
     );
 };
