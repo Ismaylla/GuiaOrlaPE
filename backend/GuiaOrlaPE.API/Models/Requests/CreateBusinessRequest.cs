@@ -38,5 +38,8 @@ public class CreateBusinessRequest
 
     public bool Wifi { get; set; }
 
+    public string Description { get; set; } = string.Empty;
+    public string CoverPhotoUrl { get; set; } = string.Empty;
+
 
 }
