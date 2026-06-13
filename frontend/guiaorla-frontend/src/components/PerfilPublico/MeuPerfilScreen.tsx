@@ -47,7 +47,7 @@ export const MeuPerfilScreen = () => {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [uploadType, setUploadType] = useState<"galeria" | "header" | "profile">("galeria");
     
-    // 🌟 ESTADOS DO MODAL DE EXCLUSÃO
+    // ESTADOS DO MODAL DE EXCLUSÃO
     const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
     const [deleteType, setDeleteType] = useState<"header" | "profile" | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -96,7 +96,7 @@ export const MeuPerfilScreen = () => {
         setIsUploadModalOpen(false);
     };
 
-    // 🌟 NOVA FUNÇÃO: Dispara a requisição DELETE para o Backend
+    // NOVA FUNÇÃO: Dispara a requisição DELETE para o Backend (Perfil e Capa)
     const handleConfirmDelete = async () => {
         if (!business || !deleteType) return;
         
@@ -133,7 +133,39 @@ export const MeuPerfilScreen = () => {
         }
     };
 
-    // 🌟 NOVA FUNÇÃO: Abre o modal de confirmação guardando o tipo
+    // 🌟 NOVA FUNÇÃO: Exclusão em massa da Galeria
+    const handleDeleteGalleryPhotos = async (urlsToDelete: string[]) => {
+        if (!business) return;
+        
+        try {
+            const token = (session as any).accessToken || (session as any).token;
+
+            const response = await fetch(`http://localhost:5148/api/business/${business.id}/photo/gallery`, {
+                method: "DELETE",
+                headers: { 
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json" 
+                },
+                body: JSON.stringify({ urls: urlsToDelete })
+            });
+
+            if (response.ok) {
+                setBusiness(prev => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        galleryPhotos: prev.galleryPhotos.filter(foto => !urlsToDelete.includes(foto))
+                    };
+                });
+            } else {
+                console.error("Erro ao deletar fotos da galeria no backend.");
+            }
+        } catch (error) {
+            console.error("Erro de rede ao deletar da galeria:", error);
+        }
+    };
+
+    // NOVA FUNÇÃO: Abre o modal de confirmação guardando o tipo
     const handleOpenDelete = (tipo: "header" | "profile") => {
         setDeleteType(tipo);
         setIsConfirmDeleteOpen(true);
@@ -286,7 +318,12 @@ export const MeuPerfilScreen = () => {
                                 <button onClick={() => handleOpenUpload("galeria")} className="text-sm font-bold text-[#1398D4] hover:underline">+ Adicionar Fotos</button>
                             </div>
 
-                            <GaleriaViewer fotos={business.galleryPhotos} />
+                            {/* VÍNCULO FEITO: Enviando as funções para habilitar a edição e exclusão */}
+                            <GaleriaViewer 
+                                fotos={business.galleryPhotos} 
+                                podeEditar={true}
+                                onDeleteMultiple={handleDeleteGalleryPhotos}
+                            />
                         </div>
                         <SecaoFeedback nota={business.nota} totalAvaliacoes={business.totalAvaliacoes} exibirBotaoAvaliar={false} />
                     </section>
@@ -303,7 +340,7 @@ export const MeuPerfilScreen = () => {
             />
             <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} businessId={business.id} onSuccess={handleImageUpdate} />
             
-            {/* 🌟 NOVO MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
+            {/* NOVO MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
             {isConfirmDeleteOpen && (
                 <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => !isDeleting && setIsConfirmDeleteOpen(false)}>
                     <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>

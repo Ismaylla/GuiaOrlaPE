@@ -144,7 +144,7 @@ public class BusinessController(
             if (businessDto == null)
                 return NotFound(new { message = "Estabelecimento não encontrado." });
 
-            // 🌟 FAXINA AUTOMÁTICA: Se for trocar a foto de Perfil ou Capa, apaga fisicamente a antiga antes
+            // FAXINA AUTOMÁTICA: Se for trocar a foto de Perfil ou Capa, apaga fisicamente a antiga antes
             if (tipoNormalizado == "profile" && !string.IsNullOrEmpty(businessDto.BusinessPhotoUrl))
             {
                 EliminarArquivoFisico(businessDto.BusinessPhotoUrl);
@@ -214,7 +214,6 @@ public class BusinessController(
         }
     }
 
-    // 🌟 NOVA ROTA ADICIONADA: Permite apagar a foto de perfil ou capa completamente via DELETE
     [HttpDelete("{id:guid}/photo")]
     [Authorize]
     public async Task<IActionResult> DeletePhoto(Guid id, [FromQuery] string type)
@@ -270,7 +269,54 @@ public class BusinessController(
         }
     }
 
-    // 🌟 MÉTODO AUXILIAR PRIVADO: Executa a destruição física do arquivo na pasta uploads
+    // NOVA ROTA ADICIONADA: Permite apagar múltiplas fotos da galeria
+    [HttpDelete("{id:guid}/photo/gallery")]
+    [Authorize]
+    public async Task<IActionResult> DeleteGalleryPhotos(Guid id, [FromBody] DeleteGalleryPhotosRequest request)
+    {
+        try
+        {
+            if (request == null || request.Urls == null || !request.Urls.Any())
+                return BadRequest(new { message = "Nenhuma URL fornecida para exclusão." });
+
+            var businessDto = await _service.GetByIdAsync(id);
+            if (businessDto == null) 
+                return NotFound(new { message = "Estabelecimento não encontrado." });
+
+            // 1. Filtra a lista da galeria, mantendo apenas as fotos que NÃO foram enviadas no body para exclusão
+            var novaLista = businessDto.GalleryPhotos?.Where(p => !request.Urls.Contains(p)).ToList() ?? new List<string>();
+
+            // 2. Destrói os arquivos físicos um por um
+            foreach (var url in request.Urls)
+            {
+                EliminarArquivoFisico(url);
+            }
+
+            // 3. Monta o request de atualização com a nova lista de fotos
+            var requestUpdate = new CreateBusinessRequest
+            {
+                Name = businessDto.Name, ServiceType = businessDto.ServiceType, Address = businessDto.Address,
+                Latitude = businessDto.Latitude, Longitude = businessDto.Longitude, Horario = businessDto.Horario,
+                Cartao = businessDto.Cartao, Pix = businessDto.Pix, Dinheiro = businessDto.Dinheiro,
+                Chuveiro = businessDto.Chuveiro, Estacionamento = businessDto.Estacionamento, Cadeira = businessDto.Cadeira,
+                PetFriendly = businessDto.PetFriendly, Acessibilidade = businessDto.Acessibilidade, Wifi = businessDto.Wifi,
+                Description = businessDto.Description, CoverPhotoUrl = businessDto.CoverPhotoUrl,
+                BusinessPhotoUrl = businessDto.BusinessPhotoUrl, GalleryPhotos = novaLista
+            };
+
+            // 4. Salva a atualização no banco de dados
+            await _service.UpdateAsync(id, requestUpdate, businessDto.UserId);
+            
+            return Ok(new { message = "Fotos da galeria removidas com sucesso!" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao remover fotos da galeria.");
+            return StatusCode(500, new { message = $"Erro interno: {ex.Message}" });
+        }
+    }
+
+    // MÉTODO AUXILIAR PRIVADO: Executa a destruição física do arquivo na pasta uploads
     private void EliminarArquivoFisico(string urlAmigavel)
     {
         try
@@ -296,4 +342,10 @@ public class BusinessController(
 public class UploadImageRequest
 {
     public IFormFile File { get; set; } = null!;
+}
+
+// 🌟 NOVA CLASSE DTO: Para receber o JSON com as URLs a serem deletadas
+public class DeleteGalleryPhotosRequest
+{
+    public List<string> Urls { get; set; } = new();
 }
