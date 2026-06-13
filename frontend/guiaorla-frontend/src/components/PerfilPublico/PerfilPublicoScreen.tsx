@@ -6,7 +6,7 @@ import Image from "next/image";
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
 import { PerfilHeader } from "@/components/PerfilPublico/PerfilHeader";
 import { SecaoFeedback } from "@/components/PerfilPublico/SecaoFeedback";
-import { Clock, MapPin, CreditCard, Sparkles, Star } from "lucide-react";
+import { Clock, MapPin, CreditCard, Sparkles, Star, Loader2 } from "lucide-react";
 import { buscarNegocioPorId, listarAvaliacoesDoNegocio } from "@/services/businessService";
 
 import { ModalUpload } from "./ModalUpload";
@@ -74,11 +74,9 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                     comodidades: comodidadesLista.length > 0 ? comodidadesLista : ["Nenhuma comodidade informada"],
                     nota: media, 
                     totalAvaliacoes: total, 
-                    fotoCapa: "", 
-                    // fotoPerfil: dados.businessPhotoUrl || dados.BusinessPhotoUrl || "/images/perfil-exemplo.jpg", 
-                    fotoPerfil: dados.businessPhotoUrl ? `http://localhost:5148${dados.businessPhotoUrl}` : dados.BusinessPhotoUrl ? `http://localhost:5148${dados.BusinessPhotoUrl}` : "",
+                    fotoCapa: (dados.coverPhotoUrl ?? dados.CoverPhotoUrl) ? `http://localhost:5148${dados.coverPhotoUrl ?? dados.CoverPhotoUrl}` : "",
+                    fotoPerfil: (dados.businessPhotoUrl ?? dados.BusinessPhotoUrl) ? `http://localhost:5148${dados.businessPhotoUrl ?? dados.BusinessPhotoUrl}` : "",
                     description: dados.description ?? dados.Description ?? "", 
-                    // galleryPhotos: dados.galleryPhotos ?? dados.GalleryPhotos ?? [] 
                     galleryPhotos: (dados.galleryPhotos ?? dados.GalleryPhotos ?? []).map((foto: string) => foto.startsWith("http") ? foto : `http://localhost:5148${foto}`)
                 });
             } catch (error) {
@@ -134,7 +132,7 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
     if (carregando) {
         return (
             <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center gap-3">
-                <div className="w-10 h-10 border-4 border-[#0A4F6E] border-t-transparent rounded-full animate-spin"></div>
+                <Loader2 className="animate-spin text-[#0A4F6E]" size={40} />
                 <p className="text-gray-500 italic text-sm">Carregando dados do perfil...</p>
             </div>
         );
@@ -145,8 +143,7 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
             <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-6">
                 <div className="bg-white p-8 rounded-2xl shadow-md border border-red-100 text-center max-w-md">
                     <p className="text-red-600 font-bold">Perfil não encontrado</p>
-                    <p className="text-gray-500 text-xs mt-2 mb-4">Verifique se o ID do comércio existe no seu PostgreSQL local.</p>
-                    <button onClick={() => router.back()} className="px-4 py-2 bg-[#0A4F6E] text-white rounded-xl text-xs font-bold">Voltar</button>
+                    <button onClick={() => router.back()} className="mt-4 px-4 py-2 bg-[#0A4F6E] text-white rounded-xl text-xs font-bold">Voltar</button>
                 </div>
             </div>
         );
@@ -159,6 +156,7 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
 
             <div className="max-w-[1100px] mx-auto">
                 <PerfilHeader 
+                    key={`${negocio.fotoPerfil}-${negocio.fotoCapa}`}
                     podeEditar={isOwner} 
                     onEditCover={() => handleOpenUpload("header")}
                     onEditProfile={() => handleOpenUpload("profile")}
@@ -187,10 +185,9 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                             </div>
                             <p className="text-gray-600 text-sm leading-relaxed font-medium">
                                 <span className="font-bold text-[#0A4F6E]">{negocio.nome}:</span>{" "}
-                                {negocio.description || "Venha conhecer nosso espaço na orla! Oferecemos uma ótima experiência gastronômica e de lazer na praia."}
+                                {negocio.description || "Venha conhecer nosso espaço na orla!"}
                             </p>
                         </div>
-
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-5">
                             <h3 className="font-bold text-[#0A4F6E] text-lg">Informações</h3>
                             <InfoRow icon={<Clock size={18} className="text-[#1398D4]" />} label="Funcionamento" value={negocio.horario} />
@@ -215,17 +212,16 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {negocio.galleryPhotos.map((foto: string, idx: number) => (
                                         <div key={idx} className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
-                                            <Image src={foto} alt={`Foto ${idx + 1} de ${negocio.nome}`} fill className="object-cover" />
+                                            <Image src={foto} alt={`Foto ${idx + 1}`} fill className="object-cover" />
                                         </div>
                                     ))}
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl p-8 min-h-[220px] bg-gray-50/50">
-                                    <p className="text-sm font-semibold text-gray-400">Nenhuma foto adicionada à galeria ainda.</p>
+                                    <p className="text-sm font-semibold text-gray-400">Nenhuma foto adicionada.</p>
                                 </div>
                             )}
                         </div>
-
                         <SecaoFeedback nota={negocio.nota} totalAvaliacoes={negocio.totalAvaliacoes} exibirBotaoAvaliar={!isOwner} />
                     </section>
                 </div>
@@ -235,12 +231,23 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                 isOpen={isModalSobreOpen} 
                 onClose={() => setIsModalSobreOpen(false)} 
                 valorAtual={negocio.description} 
-                onSave={(novo: string) => { 
-                    setNegocio((prev: any) => ({ ...prev, description: novo }));
+                onSave={(novo: string) => setNegocio((prev: any) => ({ ...prev, description: novo }))} 
+            />
+            <ModalUpload 
+                isOpen={isUploadModalOpen} 
+                onClose={() => setIsUploadModalOpen(false)} 
+                tipo={uploadType} 
+                businessId={negocio.id} 
+                onSuccess={(newUrl) => { 
+                    const fullUrl = newUrl.startsWith("http") ? newUrl : `http://localhost:5148${newUrl}`;
+                    setNegocio((prev: any) => ({ 
+                        ...prev, 
+                        fotoPerfil: uploadType === "profile" ? fullUrl : prev.fotoPerfil, 
+                        fotoCapa: uploadType === "header" ? fullUrl : prev.fotoCapa, 
+                        galleryPhotos: uploadType === "galeria" ? [...prev.galleryPhotos, fullUrl] : prev.galleryPhotos 
+                    })); 
                 }} 
             />
-            {/* <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} /> */}
-            <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} businessId={negocio.id} onSuccess={(newUrl) => { const fullUrl = `http://localhost:5148${newUrl}`; setNegocio((prev: any) => ({ ...prev, fotoPerfil: uploadType === "profile" ? fullUrl : prev.fotoPerfil, fotoCapa: uploadType === "header" ? fullUrl : prev.fotoCapa, galleryPhotos: uploadType === "galeria" ? [...prev.galleryPhotos, fullUrl] : prev.galleryPhotos })); }} />
         </main>
     );
 };

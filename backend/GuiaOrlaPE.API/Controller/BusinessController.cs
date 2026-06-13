@@ -118,13 +118,13 @@ public class BusinessController(
         catch (Exception ex) { _logger.LogError(ex, "Erro."); return StatusCode(500, new { Message = "Erro ao salvar." }); }
     }
 
-    // 🛠️ MAPEAMENTO CORRIGIDO USANDO O NOVO DTO UploadImageRequest
     [HttpPost("{id:guid}/upload")]
     [Authorize]
     public async Task<IActionResult> UploadImage(Guid id, [FromForm] UploadImageRequest request, [FromQuery] string type)
     {
         try
         {
+            // Validações básicas de upload de arquivos
             if (request == null || request.File == null || request.File.Length == 0)
                 return BadRequest(new { message = "Nenhum arquivo enviado." });
 
@@ -136,10 +136,17 @@ public class BusinessController(
             if (string.IsNullOrEmpty(type))
                 return BadRequest(new { message = "O parâmetro 'type' é obrigatório." });
 
+            // Validações de tipo aceito antes de criar o arquivo físico em disco para economizar armazenamento
+            var tipoNormalizado = type.ToLower();
+            var tiposValidos = new[] { "profile", "header", "galeria" };
+            if (!tiposValidos.Contains(tipoNormalizado))
+                return BadRequest(new { message = "Tipo inválido. Use 'profile', 'header' ou 'galeria'." });
+
             var businessDto = await _service.GetByIdAsync(id);
             if (businessDto == null)
                 return NotFound(new { message = "Estabelecimento não encontrado." });
 
+            // Processamento físico de armazenamento das imagens estáticas
             var caminhoPasta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
             var nomeArquivoUnico = $"{Guid.NewGuid()}{extensao}";
             var caminhoCompleto = Path.Combine(caminhoPasta, nomeArquivoUnico);
@@ -151,6 +158,7 @@ public class BusinessController(
 
             var urlImagemSalva = $"/uploads/{nomeArquivoUnico}";
 
+            // Instanciação e cópia do DTO para persistência das propriedades existentes do negócio
             var requestUpdate = new CreateBusinessRequest
             {
                 Name = businessDto.Name,
@@ -170,15 +178,27 @@ public class BusinessController(
                 Wifi = businessDto.Wifi,
                 Description = businessDto.Description,
                 CoverPhotoUrl = businessDto.CoverPhotoUrl,
-                BusinessPhotoUrl = businessDto.BusinessPhotoUrl
+                BusinessPhotoUrl = businessDto.BusinessPhotoUrl,
+                // CORRIGIDO: Copia a lista atual de fotos da galeria para evitar que ela seja limpa no update
+                GalleryPhotos = businessDto.GalleryPhotos ?? []
             };
 
-            if (type.ToLower() == "profile")
+            // Bloco lógico de roteamento de propriedades de acordo com o tipo recebido por QueryString
+            if (tipoNormalizado == "profile")
+            {
                 requestUpdate.BusinessPhotoUrl = urlImagemSalva;
-            else if (type.ToLower() == "header")
+            }
+            else if (tipoNormalizado == "header")
+            {
                 requestUpdate.CoverPhotoUrl = urlImagemSalva;
-            else
-                return BadRequest(new { message = "Tipo inválido. Use 'profile' ou 'header'." });
+            }
+            else if (tipoNormalizado == "galeria")
+            {
+                // ADICIONADO: Se for galeria, adiciona o novo caminho de arquivo ao array existente de imagens
+                var listaFotos = requestUpdate.GalleryPhotos.ToList();
+                listaFotos.Add(urlImagemSalva);
+                requestUpdate.GalleryPhotos = listaFotos;
+            }
 
             await _service.UpdateAsync(id, requestUpdate, businessDto.UserId);
 
@@ -192,7 +212,6 @@ public class BusinessController(
     }
 }
 
-// 📦 DTO AUXILIAR PARA CORREÇÃO DO SWAGGER COM IFORMFILE
 public class UploadImageRequest
 {
     public IFormFile File { get; set; } = null!;

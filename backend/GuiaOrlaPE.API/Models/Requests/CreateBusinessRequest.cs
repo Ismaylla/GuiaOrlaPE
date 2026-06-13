@@ -39,7 +39,9 @@ public class CreateBusinessRequest
     public bool Wifi { get; set; }
 
     public string Description { get; set; } = string.Empty;
+    
     public string CoverPhotoUrl { get; set; } = string.Empty;
 
-
+    //  ADICIONADO: Lista contendo os caminhos das imagens da galeria de fotos do estabelecimento
+    public List<string> GalleryPhotos { get; set; } = new();
 }
