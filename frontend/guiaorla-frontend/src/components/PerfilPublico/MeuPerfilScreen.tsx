@@ -1,12 +1,12 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react"; 
-import Image from "next/image"; 
+import { useSession } from "next-auth/react";
+import Image from "next/image";
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
 import { PerfilHeader } from "@/components/PerfilPublico/PerfilHeader";
 import { ModalUpload } from "./ModalUpload";
-import { ModalSobre } from "./ModalSobre"; 
+import { ModalSobre } from "./ModalSobre";
 import { SecaoFeedback } from "@/components/PerfilPublico/SecaoFeedback";
 import { Clock, MapPin, CreditCard, Sparkles, Store, Loader2 } from "lucide-react";
 
@@ -36,7 +36,7 @@ interface BusinessData {
 
 export const MeuPerfilScreen = () => {
     const router = useRouter();
-    const { data: session, status } = useSession(); 
+    const { data: session, status } = useSession();
 
     const [scrolled, setScrolled] = useState(false);
     const [business, setBusiness] = useState<BusinessData | null>(null);
@@ -78,7 +78,7 @@ export const MeuPerfilScreen = () => {
         setBusiness(prev => {
             if (!prev) return null;
             if (uploadType === "profile") return { ...prev, businessPhotoUrl: fullUrl };
-            if (uploadType === "header") return { ...prev, coverPhotoUrl: fullUrl }; 
+            if (uploadType === "header") return { ...prev, coverPhotoUrl: fullUrl };
             if (uploadType === "galeria") {
                 //  PROTEÇÃO: Evita que itens duplicados entrem no array do estado local do React
                 const galeriaAtualizada = prev.galleryPhotos.includes(fullUrl)
@@ -101,15 +101,15 @@ export const MeuPerfilScreen = () => {
                 const response = await fetch(`http://localhost:5148/api/business/user?t=${new Date().getTime()}`, {
                     method: "GET",
                     cache: "no-store",
-                    headers: { 
-                        "Authorization": `Bearer ${token}`, 
-                        "Content-Type": "application/json" 
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
                     }
                 });
 
                 if (response.ok) {
                     const d = await response.json();
-                    
+
                     setBusiness({
                         id: d.id ?? d.Id,
                         name: d.name ?? d.Name ?? "",
@@ -130,7 +130,7 @@ export const MeuPerfilScreen = () => {
                         coverPhotoUrl: (d.coverPhotoUrl ?? d.CoverPhotoUrl) ? `http://localhost:5148${d.coverPhotoUrl ?? d.CoverPhotoUrl}` : "",
                         description: d.description ?? d.Description ?? "",
                         galleryPhotos: (d.galleryPhotos ?? d.GalleryPhotos ?? []).map((p: string) => p.startsWith("http") ? p : `http://localhost:5148${p}`),
-                        nota: 5.0, 
+                        nota: 5.0,
                         totalAvaliacoes: 0
                     });
                 }
@@ -187,34 +187,34 @@ export const MeuPerfilScreen = () => {
 
     return (
         <main className="min-h-screen bg-[#F0F2F5] font-sans pb-20 text-left">
-            <HeaderListagem isEmpreendedor={true} forceBlue={true} scrolled={scrolled} categoriaAtiva="" setCategoriaAtiva={handleCategoryClick} showFilter={false} setIsFilterOpen={() => {}} navRef={navRef} handleMouseDown={handleMouseDown} />
+            <HeaderListagem isEmpreendedor={true} forceBlue={true} scrolled={scrolled} categoriaAtiva="" setCategoriaAtiva={handleCategoryClick} showFilter={false} setIsFilterOpen={() => { }} navRef={navRef} handleMouseDown={handleMouseDown} />
             <div className="h-16"></div>
 
             <div className="max-w-[1100px] mx-auto">
                 {/* CORRIGIDO: Adicionado suporte à chave combinada e vinculada a fotoCapa reativa */}
-                <PerfilHeader 
+                <PerfilHeader
                     key={`${business.businessPhotoUrl}-${business.coverPhotoUrl}`} // Se a foto de perfil ou a de capa mudarem, renderiza na hora!
-                    podeEditar={true} 
-                    onEditCover={() => handleOpenUpload("header")} 
+                    podeEditar={true}
+                    onEditCover={() => handleOpenUpload("header")}
                     onEditProfile={() => handleOpenUpload("profile")}
                     nomeNegocio={business.name}
                     fotoCapa={business.coverPhotoUrl} // CORRIGIDO: Tirado a string vazia fixa e associado ao estado real
                     fotoPerfil={business.businessPhotoUrl}
                     localizacao={business.address}
                 />
-                
+
                 <div className="px-4 grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 mt-4">
                     <aside className="flex flex-col gap-4">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                             <div className="flex justify-between items-center mb-3">
+                            <div className="flex justify-between items-center mb-3">
                                 <h3 className="font-bold text-[#0A4F6E] text-lg">Sobre meu Negócio</h3>
                                 <button onClick={() => setIsModalSobreOpen(true)} className="text-xs font-bold text-[#1398D4] hover:underline">Editar Bio</button>
-                             </div>
-                             <p className="text-gray-600 text-sm leading-relaxed font-medium">
+                            </div>
+                            <p className="text-gray-600 text-sm leading-relaxed font-medium">
                                 {business.description || "Nenhuma descrição adicionada. Clique em 'Editar Bio' para contar sobre o seu estabelecimento!"}
-                             </p>
+                            </p>
                         </div>
-                        
+
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-5">
                             <h3 className="font-bold text-[#0A4F6E] text-lg">Dados Operacionais</h3>
                             <InfoRow icon={<Store size={18} className="text-[#FF7620]" />} label="Categoria" value={getCategoriaTexto(business.serviceType)} />
@@ -231,16 +231,20 @@ export const MeuPerfilScreen = () => {
                                 <h3 className="font-bold text-[#0A4F6E] text-xl italic">Minha Galeria</h3>
                                 <button onClick={() => handleOpenUpload("galeria")} className="text-sm font-bold text-[#1398D4] hover:underline">+ Adicionar Fotos</button>
                             </div>
-                            
+
                             {business.galleryPhotos.length > 0 ? (
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {business.galleryPhotos.map((foto, idx) => (
                                         <div key={idx} className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
-                                            <Image 
-                                                src={foto} 
-                                                alt={`Foto ${idx + 1} da galeria`} 
-                                                fill 
-                                                className="object-cover" 
+                                            <Image
+                                                src={foto}
+                                                alt={`Foto ${idx + 1} da galeria`}
+                                                fill
+                                                className="object-cover"
+                                                unoptimized={true} 
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = "none";
+                                                }}
                                             />
                                         </div>
                                     ))}
@@ -256,13 +260,13 @@ export const MeuPerfilScreen = () => {
                 </div>
             </div>
 
-            <ModalSobre 
-                isOpen={isModalSobreOpen} 
-                onClose={() => setIsModalSobreOpen(false)} 
-                valorAtual={business.description} 
-                onSave={(novo: string) => { 
+            <ModalSobre
+                isOpen={isModalSobreOpen}
+                onClose={() => setIsModalSobreOpen(false)}
+                valorAtual={business.description}
+                onSave={(novo: string) => {
                     setBusiness((prev: any) => ({ ...prev, description: novo }));
-                }} 
+                }}
             />
             <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} businessId={business.id} onSuccess={handleImageUpdate} />
         </main>

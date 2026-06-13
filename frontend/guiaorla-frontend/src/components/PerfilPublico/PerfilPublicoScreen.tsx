@@ -212,7 +212,17 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {negocio.galleryPhotos.map((foto: string, idx: number) => (
                                         <div key={idx} className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
-                                            <Image src={foto} alt={`Foto ${idx + 1}`} fill className="object-cover" />
+                                            {/* 🌟 AJUSTADO: unoptimized e fallback de erro para imagens da galeria */}
+                                            <Image 
+                                                src={foto} 
+                                                alt={`Foto ${idx + 1}`} 
+                                                fill 
+                                                className="object-cover" 
+                                                unoptimized={true}
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = "none";
+                                                }}
+                                            />
                                         </div>
                                     ))}
                                 </div>

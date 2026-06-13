@@ -26,7 +26,7 @@ public class BusinessService(
                 Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
                 Latitude = x.Latitude, Longitude = x.Longitude, 
                 BusinessPhotoUrl = x.BusinessPhotoUrl,
-                CoverPhotoUrl = x.CoverPhotoUrl, // 👈 ADICIONADO
+                CoverPhotoUrl = x.CoverPhotoUrl,
                 Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
                 Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
                 PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
@@ -53,7 +53,7 @@ public class BusinessService(
                 Name = business.Name, ServiceType = business.ServiceType, Address = business.Address,
                 Latitude = business.Latitude, Longitude = business.Longitude, 
                 BusinessPhotoUrl = business.BusinessPhotoUrl,
-                CoverPhotoUrl = business.CoverPhotoUrl, // 👈 ADICIONADO
+                CoverPhotoUrl = business.CoverPhotoUrl,
                 Horario = business.Horario, Cartao = business.Cartao, Pix = business.Pix, Dinheiro = business.Dinheiro,
                 Chuveiro = business.Chuveiro, Estacionamento = business.Estacionamento, Cadeira = business.Cadeira,
                 PetFriendly = business.PetFriendly, Acessibilidade = business.Acessibilidade, Wifi = business.Wifi,
@@ -77,7 +77,7 @@ public class BusinessService(
                 Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
                 Latitude = x.Latitude, Longitude = x.Longitude, 
                 BusinessPhotoUrl = x.BusinessPhotoUrl,
-                CoverPhotoUrl = x.CoverPhotoUrl, // 👈 ADICIONADO
+                CoverPhotoUrl = x.CoverPhotoUrl,
                 Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
                 Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
                 PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
@@ -106,7 +106,7 @@ public class BusinessService(
                     Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
                     Latitude = x.Latitude, Longitude = x.Longitude, 
                     BusinessPhotoUrl = x.BusinessPhotoUrl,
-                    CoverPhotoUrl = x.CoverPhotoUrl, // 👈 ADICIONADO
+                    CoverPhotoUrl = x.CoverPhotoUrl,
                     Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
                     Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
                     PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
@@ -132,7 +132,7 @@ public class BusinessService(
                 Id = Guid.NewGuid(), UserId = userId, Name = request.Name, ServiceType = request.ServiceType,
                 Address = request.Address, Latitude = request.Latitude, Longitude = request.Longitude,
                 BusinessPhotoUrl = request.BusinessPhotoUrl,
-                CoverPhotoUrl = string.Empty, // 👈 ADICIONADO: Nasce vazia no banco
+                CoverPhotoUrl = string.Empty,
                 Status = true, Horario = request.Horario,
                 Cartao = request.Cartao, Pix = request.Pix, Dinheiro = request.Dinheiro,
                 Chuveiro = request.Chuveiro, Estacionamento = request.Estacionamento, Cadeira = request.Cadeira,
@@ -164,6 +164,21 @@ public class BusinessService(
             business.Wifi = request.Wifi;
             business.Description = request.Description ?? string.Empty;
             business.CoverPhotoUrl = request.CoverPhotoUrl ?? string.Empty;
+
+            if (request.GalleryPhotos != null)
+            {
+                var galeriaSanitizada = request.GalleryPhotos
+                    .Select(url => url.Replace("http://localhost:5148", ""))
+                    .ToList();
+
+                var novasFotos = galeriaSanitizada.Select(url => new BusinessPhoto
+                {
+                    BusinessId = business.Id,
+                    PhotoUrl = url
+                }).ToList();
+
+                business.Photos = novasFotos;
+            }
 
             await _repository.UpdateAsync(business);
         }

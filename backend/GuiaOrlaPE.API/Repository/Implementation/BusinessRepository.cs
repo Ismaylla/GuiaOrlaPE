@@ -26,7 +26,7 @@ public class BusinessRepository : IBusinessRepository
         return await _context.Businesses
             .AsNoTracking()
             .Include(x => x.User)
-            .Include(x => x.Photos) // 👈 ADICIONADO: Traz as fotos da galeria
+            .Include(x => x.Photos)
             .OrderBy(x => x.Name)
             .ToListAsync();
     }
@@ -35,7 +35,7 @@ public class BusinessRepository : IBusinessRepository
     {
         return await _context.Businesses
             .Include(x => x.User)
-            .Include(x => x.Photos) // 👈 ADICIONADO: Traz as fotos da galeria para o Perfil Público
+            .Include(x => x.Photos)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
@@ -44,7 +44,7 @@ public class BusinessRepository : IBusinessRepository
         var query = _context.Businesses
             .AsNoTracking()
             .Include(x => x.User)
-            .Include(x => x.Photos) // 👈 ADICIONADO: Traz as fotos da galeria na busca
+            .Include(x => x.Photos)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.Search))
@@ -89,7 +89,7 @@ public class BusinessRepository : IBusinessRepository
         var query = _context.Businesses
             .AsNoTracking()
             .Include(x => x.User)
-            .Include(x => x.Photos) // 👈 ADICIONADO: Traz as fotos na listagem do Dono
+            .Include(x => x.Photos)
             .Where(x => x.UserId == userId);
 
         var totalItems = await query.CountAsync();
@@ -105,7 +105,49 @@ public class BusinessRepository : IBusinessRepository
 
     public async Task UpdateAsync(Business business)
     {
-        _context.Businesses.Update(business);
+        // 1. Busca a entidade original diretamente rastreada pelo DbContext atual do request
+        var dbBusiness = await _context.Businesses
+            .Include(x => x.Photos)
+            .FirstOrDefaultAsync(x => x.Id == business.Id);
+
+        if (dbBusiness == null)
+            throw new KeyNotFoundException("Estabelecimento não encontrado no repositório.");
+
+        // 2. Sincroniza apenas os valores primitivos escalares na tabela pai (evita chamar o .Update global)
+        _context.Entry(dbBusiness).CurrentValues.SetValues(business);
+
+        // 3. ATUALIZADO: Sincronização manual e controlada das fotos da galeria
+        if (business.Photos != null)
+        {
+            var novasUrls = business.Photos.Select(p => p.PhotoUrl).ToList();
+
+            // Identifica o que foi removido e deleta explicitamente da tabela filha
+            var fotosRemovidas = dbBusiness.Photos
+                .Where(p => !novasUrls.Contains(p.PhotoUrl))
+                .ToList();
+
+            foreach (var foto in fotosRemovidas)
+            {
+                _context.Set<BusinessPhoto>().Remove(foto);
+            }
+
+            // Identifica o que é verdadeiramente inédito
+            var urlsAtuais = dbBusiness.Photos.Select(p => p.PhotoUrl).ToList();
+            var urlsParaAdicionar = novasUrls.Where(url => !urlsAtuais.Contains(url)).ToList();
+
+            // Adiciona como novas entidades em estado limpo "Added"
+            foreach (var url in urlsParaAdicionar)
+            {
+                dbBusiness.Photos.Add(new BusinessPhoto
+                {
+                    Id = Guid.NewGuid(),
+                    BusinessId = dbBusiness.Id,
+                    PhotoUrl = url
+                });
+            }
+        }
+
+        // 4. Executa a gravação cirúrgica atômica
         await _context.SaveChangesAsync();
     }
 }
