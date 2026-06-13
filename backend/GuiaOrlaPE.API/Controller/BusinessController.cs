@@ -124,7 +124,6 @@ public class BusinessController(
     {
         try
         {
-            // Validações básicas de upload de arquivos
             if (request == null || request.File == null || request.File.Length == 0)
                 return BadRequest(new { message = "Nenhum arquivo enviado." });
 
@@ -136,7 +135,6 @@ public class BusinessController(
             if (string.IsNullOrEmpty(type))
                 return BadRequest(new { message = "O parâmetro 'type' é obrigatório." });
 
-            // Validações de tipo aceito antes de criar o arquivo físico em disco para economizar armazenamento
             var tipoNormalizado = type.ToLower();
             var tiposValidos = new[] { "profile", "header", "galeria" };
             if (!tiposValidos.Contains(tipoNormalizado))
@@ -146,7 +144,16 @@ public class BusinessController(
             if (businessDto == null)
                 return NotFound(new { message = "Estabelecimento não encontrado." });
 
-            // Processamento físico de armazenamento das imagens estáticas
+            // 🌟 FAXINA AUTOMÁTICA: Se for trocar a foto de Perfil ou Capa, apaga fisicamente a antiga antes
+            if (tipoNormalizado == "profile" && !string.IsNullOrEmpty(businessDto.BusinessPhotoUrl))
+            {
+                EliminarArquivoFisico(businessDto.BusinessPhotoUrl);
+            }
+            else if (tipoNormalizado == "header" && !string.IsNullOrEmpty(businessDto.CoverPhotoUrl))
+            {
+                EliminarArquivoFisico(businessDto.CoverPhotoUrl);
+            }
+
             var caminhoPasta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
             var nomeArquivoUnico = $"{Guid.NewGuid()}{extensao}";
             var caminhoCompleto = Path.Combine(caminhoPasta, nomeArquivoUnico);
@@ -158,7 +165,6 @@ public class BusinessController(
 
             var urlImagemSalva = $"/uploads/{nomeArquivoUnico}";
 
-            // Instanciação e cópia do DTO para persistência das propriedades existentes do negócio
             var requestUpdate = new CreateBusinessRequest
             {
                 Name = businessDto.Name,
@@ -179,11 +185,9 @@ public class BusinessController(
                 Description = businessDto.Description,
                 CoverPhotoUrl = businessDto.CoverPhotoUrl,
                 BusinessPhotoUrl = businessDto.BusinessPhotoUrl,
-                // CORRIGIDO: Copia a lista atual de fotos da galeria para evitar que ela seja limpa no update
                 GalleryPhotos = businessDto.GalleryPhotos ?? []
             };
 
-            // Bloco lógico de roteamento de propriedades de acordo com o tipo recebido por QueryString
             if (tipoNormalizado == "profile")
             {
                 requestUpdate.BusinessPhotoUrl = urlImagemSalva;
@@ -194,7 +198,6 @@ public class BusinessController(
             }
             else if (tipoNormalizado == "galeria")
             {
-                // ADICIONADO: Se for galeria, adiciona o novo caminho de arquivo ao array existente de imagens
                 var listaFotos = requestUpdate.GalleryPhotos.ToList();
                 listaFotos.Add(urlImagemSalva);
                 requestUpdate.GalleryPhotos = listaFotos;
@@ -208,6 +211,84 @@ public class BusinessController(
         {
             _logger.LogError(ex, "Erro ao realizar upload da imagem.");
             return StatusCode(500, new { message = $"Erro interno: {ex.Message}" });
+        }
+    }
+
+    // 🌟 NOVA ROTA ADICIONADA: Permite apagar a foto de perfil ou capa completamente via DELETE
+    [HttpDelete("{id:guid}/photo")]
+    [Authorize]
+    public async Task<IActionResult> DeletePhoto(Guid id, [FromQuery] string type)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(type))
+                return BadRequest(new { message = "O parâmetro 'type' é obrigatório." });
+
+            var tipoNormalizado = type.ToLower();
+            if (tipoNormalizado != "profile" && tipoNormalizado != "header")
+                return BadRequest(new { message = "Tipo inválido para exclusão direta. Use 'profile' ou 'header'." });
+
+            var businessDto = await _service.GetByIdAsync(id);
+            if (businessDto == null)
+                return NotFound(new { message = "Estabelecimento não encontrado." });
+
+            var requestUpdate = new CreateBusinessRequest
+            {
+                Name = businessDto.Name, ServiceType = businessDto.ServiceType, Address = businessDto.Address,
+                Latitude = businessDto.Latitude, Longitude = businessDto.Longitude, Horario = businessDto.Horario,
+                Cartao = businessDto.Cartao, Pix = businessDto.Pix, Dinheiro = businessDto.Dinheiro,
+                Chuveiro = businessDto.Chuveiro, Estacionamento = businessDto.Estacionamento, Cadeira = businessDto.Cadeira,
+                PetFriendly = businessDto.PetFriendly, Acessibilidade = businessDto.Acessibilidade, Wifi = businessDto.Wifi,
+                Description = businessDto.Description, CoverPhotoUrl = businessDto.CoverPhotoUrl,
+                BusinessPhotoUrl = businessDto.BusinessPhotoUrl, GalleryPhotos = businessDto.GalleryPhotos ?? []
+            };
+
+            if (tipoNormalizado == "profile")
+            {
+                if (!string.IsNullOrEmpty(businessDto.BusinessPhotoUrl))
+                {
+                    EliminarArquivoFisico(businessDto.BusinessPhotoUrl);
+                    requestUpdate.BusinessPhotoUrl = string.Empty; // Reseta no banco
+                }
+            }
+            else if (tipoNormalizado == "header")
+            {
+                if (!string.IsNullOrEmpty(businessDto.CoverPhotoUrl))
+                {
+                    EliminarArquivoFisico(businessDto.CoverPhotoUrl);
+                    requestUpdate.CoverPhotoUrl = string.Empty; // Reseta no banco
+                }
+            }
+
+            await _service.UpdateAsync(id, requestUpdate, businessDto.UserId);
+            return Ok(new { message = "Foto removida com sucesso física e logicamente!" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao remover imagem do estabelecimento.");
+            return StatusCode(500, new { message = $"Erro interno: {ex.Message}" });
+        }
+    }
+
+    // 🌟 MÉTODO AUXILIAR PRIVADO: Executa a destruição física do arquivo na pasta uploads
+    private void EliminarArquivoFisico(string urlAmigavel)
+    {
+        try
+        {
+            // Transforma o caminho relativo "/uploads/nome.jpg" em caminho físico completo do Windows
+            var nomeArquivo = Path.GetFileName(urlAmigavel);
+            var caminhoFisico = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", nomeArquivo);
+
+            if (System.IO.File.Exists(caminhoFisico))
+            {
+                System.IO.File.Delete(caminhoFisico);
+                _logger.LogInformation("--- ARQUIVO DELETADO FISICAMENTE: {caminho} ---", caminhoFisico);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Loga o erro mas não quebra a requisição do usuário se o arquivo já tiver sumido por fora
+            _logger.LogError(ex, "Não foi possível apagar o arquivo físico: {url}", urlAmigavel);
         }
     }
 }

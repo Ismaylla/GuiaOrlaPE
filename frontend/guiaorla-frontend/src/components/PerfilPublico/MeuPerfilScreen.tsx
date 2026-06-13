@@ -10,7 +10,8 @@ import { ModalSobre } from "./ModalSobre";
 import { SecaoFeedback } from "@/components/PerfilPublico/SecaoFeedback";
 import { Clock, MapPin, CreditCard, Sparkles, Store, Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
 
-// Adicionado coverPhotoUrl na interface de tipagem dos dados do estabelecimento
+import { GaleriaViewer } from "./GaleriaViewer"; 
+
 interface BusinessData {
     id: string;
     name: string;
@@ -27,7 +28,7 @@ interface BusinessData {
     acessibilidade: boolean;
     wifi: boolean;
     businessPhotoUrl: string;
-    coverPhotoUrl: string; //  Adicionado para persistir a foto de capa no estado
+    coverPhotoUrl: string; 
     description: string;
     galleryPhotos: string[];
     nota: number;
@@ -46,9 +47,12 @@ export const MeuPerfilScreen = () => {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [uploadType, setUploadType] = useState<"galeria" | "header" | "profile">("galeria");
     
-    // 🌟 ADICIONADO: Estado que controla qual foto da galeria está aberta em tela cheia
-    const [indexAberto, setIndexAberto] = useState<number | null>(null);
+    // 🌟 ESTADOS DO MODAL DE EXCLUSÃO
+    const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+    const [deleteType, setDeleteType] = useState<"header" | "profile" | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
+    const [indexAberto, setIndexAberto] = useState<number | null>(null);
     const navRef = useRef<HTMLDivElement>(null);
 
     const getCategoriaTexto = (type: number) => {
@@ -75,7 +79,6 @@ export const MeuPerfilScreen = () => {
         return list.length > 0 ? list : ["Nenhuma comodidade informada"];
     };
 
-    // CORRIGIDO: Função lida reativamente com perfil, galeria E foto de capa (header)
     const handleImageUpdate = (newUrl: string) => {
         const fullUrl = newUrl.startsWith("http") ? newUrl : `http://localhost:5148${newUrl}`;
         setBusiness(prev => {
@@ -83,7 +86,6 @@ export const MeuPerfilScreen = () => {
             if (uploadType === "profile") return { ...prev, businessPhotoUrl: fullUrl };
             if (uploadType === "header") return { ...prev, coverPhotoUrl: fullUrl };
             if (uploadType === "galeria") {
-                //  PROTEÇÃO: Evita que itens duplicados entrem no array do estado local do React
                 const galeriaAtualizada = prev.galleryPhotos.includes(fullUrl)
                     ? prev.galleryPhotos
                     : [...prev.galleryPhotos, fullUrl];
@@ -92,6 +94,49 @@ export const MeuPerfilScreen = () => {
             return prev;
         });
         setIsUploadModalOpen(false);
+    };
+
+    // 🌟 NOVA FUNÇÃO: Dispara a requisição DELETE para o Backend
+    const handleConfirmDelete = async () => {
+        if (!business || !deleteType) return;
+        
+        try {
+            setIsDeleting(true);
+            const token = (session as any).accessToken || (session as any).token;
+
+            const response = await fetch(`http://localhost:5148/api/business/${business.id}/photo?type=${deleteType}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                // Atualiza a interface instantaneamente apagando a URL
+                setBusiness(prev => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        coverPhotoUrl: deleteType === "header" ? "" : prev.coverPhotoUrl,
+                        businessPhotoUrl: deleteType === "profile" ? "" : prev.businessPhotoUrl
+                    };
+                });
+                setIsConfirmDeleteOpen(false);
+                setDeleteType(null);
+            } else {
+                console.error("Falha ao deletar a imagem no servidor");
+            }
+        } catch (error) {
+            console.error("Erro de rede ao tentar deletar a imagem:", error);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    // 🌟 NOVA FUNÇÃO: Abre o modal de confirmação guardando o tipo
+    const handleOpenDelete = (tipo: "header" | "profile") => {
+        setDeleteType(tipo);
+        setIsConfirmDeleteOpen(true);
     };
 
     useEffect(() => {
@@ -129,7 +174,6 @@ export const MeuPerfilScreen = () => {
                         acessibilidade: !!(d.acessibilidade ?? d.Acessibilidade),
                         wifi: d.wifi === true || d.Wifi === true,
                         businessPhotoUrl: (d.businessPhotoUrl ?? d.BusinessPhotoUrl) ? `http://localhost:5148${d.businessPhotoUrl ?? d.BusinessPhotoUrl}` : "",
-                        // CORRIGIDO: Mapeia dinamicamente o link da capa vindo da API da mesma forma que a foto de perfil
                         coverPhotoUrl: (d.coverPhotoUrl ?? d.CoverPhotoUrl) ? `http://localhost:5148${d.coverPhotoUrl ?? d.CoverPhotoUrl}` : "",
                         description: d.description ?? d.Description ?? "",
                         galleryPhotos: (d.galleryPhotos ?? d.GalleryPhotos ?? []).map((p: string) => p.startsWith("http") ? p : `http://localhost:5148${p}`),
@@ -199,14 +243,16 @@ export const MeuPerfilScreen = () => {
             <div className="h-16"></div>
 
             <div className="max-w-[1100px] mx-auto">
-                {/* CORRIGIDO: Adicionado suporte à chave combinada e vinculada a fotoCapa reativa */}
+                {/* 🌟 VÍNCULO FEITO: Conectando os eventos do componente PerfilHeader com as funções da tela */}
                 <PerfilHeader
-                    key={`${business.businessPhotoUrl}-${business.coverPhotoUrl}`} // Se a foto de perfil ou a de capa mudarem, renderiza na hora!
+                    key={`${business.businessPhotoUrl}-${business.coverPhotoUrl}`} 
                     podeEditar={true}
                     onEditCover={() => handleOpenUpload("header")}
                     onEditProfile={() => handleOpenUpload("profile")}
+                    onDeleteCover={() => handleOpenDelete("header")}
+                    onDeleteProfile={() => handleOpenDelete("profile")}
                     nomeNegocio={business.name}
-                    fotoCapa={business.coverPhotoUrl} // CORRIGIDO: Tirado a string vazia fixa e associado ao estado real
+                    fotoCapa={business.coverPhotoUrl} 
                     fotoPerfil={business.businessPhotoUrl}
                     localizacao={business.address}
                 />
@@ -240,100 +286,7 @@ export const MeuPerfilScreen = () => {
                                 <button onClick={() => handleOpenUpload("galeria")} className="text-sm font-bold text-[#1398D4] hover:underline">+ Adicionar Fotos</button>
                             </div>
 
-                            {business.galleryPhotos.length > 0 ? (
-                                <>
-                                    {/*  AJUSTADO: Grade com limite de 6 imagens e overlay */}
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                        {business.galleryPhotos.slice(0, 6).map((foto, idx) => {
-                                            const isUltima = idx === 5;
-                                            const fotosRestantes = business.galleryPhotos.length - 6;
-
-                                            return (
-                                                <div 
-                                                    key={idx} 
-                                                    onClick={() => setIndexAberto(idx)}
-                                                    className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden border border-gray-200 cursor-pointer group"
-                                                >
-                                                    <Image
-                                                        src={foto}
-                                                        alt={`Foto ${idx + 1} da galeria`}
-                                                        fill
-                                                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                                        unoptimized={true} 
-                                                        onError={() => {
-                                                            // 🌟 CORREÇÃO: Remove a imagem quebrada do estado instantaneamente.
-                                                            // Se todas quebrarem, o React cai no bloco de "Nenhuma foto adicionada" perfeitamente.
-                                                            setBusiness((prev) => {
-                                                                if (!prev) return prev;
-                                                                return {
-                                                                    ...prev,
-                                                                    galleryPhotos: prev.galleryPhotos.filter((p) => p !== foto)
-                                                                };
-                                                            });
-                                                        }}
-                                                    />
-                                                    {isUltima && fotosRestantes > 0 && (
-                                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10 transition-colors group-hover:bg-black/70">
-                                                            <span className="text-white text-3xl font-bold">+{fotosRestantes}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-
-                                    {/*  ADICIONADO: Modal Lightbox para visualização das fotos em tela cheia */}
-                                    {indexAberto !== null && indexAberto < business.galleryPhotos.length && (
-                                        <div 
-                                            className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center backdrop-blur-sm" 
-                                            onClick={() => setIndexAberto(null)}
-                                        >
-                                            <button 
-                                                onClick={() => setIndexAberto(null)} 
-                                                className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors z-50 p-2"
-                                            >
-                                                <X size={36} />
-                                            </button>
-
-                                            {indexAberto > 0 && (
-                                                <button 
-                                                    onClick={(e) => { e.stopPropagation(); setIndexAberto(indexAberto - 1); }} 
-                                                    className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 text-white hover:scale-110 transition-transform z-50 bg-black/50 p-3 rounded-full"
-                                                >
-                                                    <ChevronLeft size={32} />
-                                                </button>
-                                            )}
-
-                                            <div className="relative w-full max-w-6xl h-[85vh] px-16" onClick={(e) => e.stopPropagation()}>
-                                                <Image 
-                                                    src={business.galleryPhotos[indexAberto]} 
-                                                    alt={`Foto ampliada ${indexAberto + 1}`} 
-                                                    fill 
-                                                    className="object-contain" 
-                                                    unoptimized={true}
-                                                />
-                                            </div>
-
-                                            {indexAberto < business.galleryPhotos.length - 1 && (
-                                                <button 
-                                                    onClick={(e) => { e.stopPropagation(); setIndexAberto(indexAberto + 1); }} 
-                                                    className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 text-white hover:scale-110 transition-transform z-50 bg-black/50 p-3 rounded-full"
-                                                >
-                                                    <ChevronRight size={32} />
-                                                </button>
-                                            )}
-                                            
-                                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-sm font-medium tracking-widest bg-black/50 px-4 py-1.5 rounded-full">
-                                                {indexAberto + 1} / {business.galleryPhotos.length}
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl p-8 min-h-[200px] bg-gray-50/50">
-                                    <p className="text-sm font-semibold text-gray-400">Nenhuma foto na sua galeria ainda.</p>
-                                </div>
-                            )}
+                            <GaleriaViewer fotos={business.galleryPhotos} />
                         </div>
                         <SecaoFeedback nota={business.nota} totalAvaliacoes={business.totalAvaliacoes} exibirBotaoAvaliar={false} />
                     </section>
@@ -349,6 +302,34 @@ export const MeuPerfilScreen = () => {
                 }}
             />
             <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} businessId={business.id} onSuccess={handleImageUpdate} />
+            
+            {/* 🌟 NOVO MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
+            {isConfirmDeleteOpen && (
+                <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => !isDeleting && setIsConfirmDeleteOpen(false)}>
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-[#0A4F6E] mb-2">Confirmar Exclusão</h3>
+                        <p className="text-gray-600 text-sm mb-6">
+                            Tem certeza que deseja remover permanentemente a {deleteType === "header" ? "foto de capa" : "foto de perfil"}?
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button 
+                                onClick={() => setIsConfirmDeleteOpen(false)}
+                                disabled={isDeleting}
+                                className="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                onClick={handleConfirmDelete}
+                                disabled={isDeleting}
+                                className="px-4 py-2 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors flex items-center justify-center min-w-[90px] disabled:opacity-70"
+                            >
+                                {isDeleting ? <Loader2 size={16} className="animate-spin" /> : "Sim, excluir"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 };
