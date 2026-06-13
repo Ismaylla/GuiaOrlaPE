@@ -6,7 +6,7 @@ import Image from "next/image";
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
 import { PerfilHeader } from "@/components/PerfilPublico/PerfilHeader";
 import { SecaoFeedback } from "@/components/PerfilPublico/SecaoFeedback";
-import { Clock, MapPin, CreditCard, Sparkles, Star, Loader2 } from "lucide-react";
+import { Clock, MapPin, CreditCard, Sparkles, Star, Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { buscarNegocioPorId, listarAvaliacoesDoNegocio } from "@/services/businessService";
 
 import { ModalUpload } from "./ModalUpload";
@@ -30,6 +30,9 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
     const [isModalSobreOpen, setIsModalSobreOpen] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [uploadType, setUploadType] = useState<"galeria" | "header" | "profile">("galeria");
+
+    //  ADICIONADO: Estado que controla qual foto da galeria está aberta em tela cheia
+    const [indexAberto, setIndexAberto] = useState<number | null>(null);
 
     const navRef = useRef<HTMLDivElement>(null);
 
@@ -209,23 +212,92 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                             </div>
                             
                             {negocio.galleryPhotos.length > 0 ? (
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    {negocio.galleryPhotos.map((foto: string, idx: number) => (
-                                        <div key={idx} className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
-                                            {/* 🌟 AJUSTADO: unoptimized e fallback de erro para imagens da galeria */}
-                                            <Image 
-                                                src={foto} 
-                                                alt={`Foto ${idx + 1}`} 
-                                                fill 
-                                                className="object-cover" 
-                                                unoptimized={true}
-                                                onError={(e) => {
-                                                    e.currentTarget.style.display = "none";
-                                                }}
-                                            />
+                                <>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        {negocio.galleryPhotos.slice(0, 6).map((foto: string, idx: number) => {
+                                            const isUltima = idx === 5;
+                                            const fotosRestantes = negocio.galleryPhotos.length - 6;
+
+                                            return (
+                                                <div 
+                                                    key={idx} 
+                                                    onClick={() => setIndexAberto(idx)}
+                                                    className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden border border-gray-200 cursor-pointer group"
+                                                >
+                                                    <Image 
+                                                        src={foto} 
+                                                        alt={`Foto ${idx + 1}`} 
+                                                        fill 
+                                                        className="object-cover transition-transform duration-300 group-hover:scale-105" 
+                                                        unoptimized={true}
+                                                        onError={() => {
+                                                            // 🌟 CORREÇÃO: Remove a imagem quebrada do estado instantaneamente
+                                                            setNegocio((prev: any) => {
+                                                                if (!prev) return prev;
+                                                                return {
+                                                                    ...prev,
+                                                                    galleryPhotos: prev.galleryPhotos.filter((p: string) => p !== foto)
+                                                                };
+                                                            });
+                                                        }}
+                                                    />
+                                                    {isUltima && fotosRestantes > 0 && (
+                                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10 transition-colors group-hover:bg-black/70">
+                                                            <span className="text-white text-3xl font-bold">+{fotosRestantes}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/*  ADICIONADO: Modal Lightbox para visualização das fotos em tela cheia */}
+                                    {indexAberto !== null && indexAberto < negocio.galleryPhotos.length && (
+                                        <div 
+                                            className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center backdrop-blur-sm" 
+                                            onClick={() => setIndexAberto(null)}
+                                        >
+                                            <button 
+                                                onClick={() => setIndexAberto(null)} 
+                                                className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors z-50 p-2"
+                                            >
+                                                <X size={36} />
+                                            </button>
+
+                                            {indexAberto > 0 && (
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); setIndexAberto(indexAberto - 1); }} 
+                                                    className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 text-white hover:scale-110 transition-transform z-50 bg-black/50 p-3 rounded-full"
+                                                >
+                                                    <ChevronLeft size={32} />
+                                                </button>
+                                            )}
+
+                                            <div className="relative w-full max-w-6xl h-[85vh] px-16" onClick={(e) => e.stopPropagation()}>
+                                                <Image 
+                                                    src={negocio.galleryPhotos[indexAberto]} 
+                                                    alt={`Foto ampliada ${indexAberto + 1}`} 
+                                                    fill 
+                                                    className="object-contain" 
+                                                    unoptimized={true}
+                                                />
+                                            </div>
+
+                                            {indexAberto < negocio.galleryPhotos.length - 1 && (
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); setIndexAberto(indexAberto + 1); }} 
+                                                    className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 text-white hover:scale-110 transition-transform z-50 bg-black/50 p-3 rounded-full"
+                                                >
+                                                    <ChevronRight size={32} />
+                                                </button>
+                                            )}
+                                            
+                                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-sm font-medium tracking-widest bg-black/50 px-4 py-1.5 rounded-full">
+                                                {indexAberto + 1} / {negocio.galleryPhotos.length}
+                                            </div>
                                         </div>
-                                    ))}
-                                </div>
+                                    )}
+                                </>
                             ) : (
                                 <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl p-8 min-h-[220px] bg-gray-50/50">
                                     <p className="text-sm font-semibold text-gray-400">Nenhuma foto adicionada.</p>
