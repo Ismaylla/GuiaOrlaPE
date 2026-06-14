@@ -108,12 +108,12 @@ CREATE DATABASE guiaorla;
 cd backend/GuiaOrlaPE.API
 ```
 
-Configure os secrets locais (substitua `SUA_SENHA` pela sua senha do PostgreSQL):
+Configure os secrets locais (substitua `SUA_SENHA` e `senha_jwt_aqui_minimo_32_caracteres` pela sua senha do PostgreSQL e a senha JWT):
 
 ```bash
 dotnet user-secrets init
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=guiaorla;Username=postgres;Password=SUA_SENHA"
-dotnet user-secrets set "Jwt:Key" "GuiaOrlaPE_2026_Secret_Key_Alpha_Omega_1854449"
+dotnet user-secrets set "Jwt:Key" "senha_jwt_aqui_minimo_32_caracteres"
 ```
 
 Crie as tabelas:
