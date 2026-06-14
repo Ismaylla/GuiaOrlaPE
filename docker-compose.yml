@@ -1,3 +1,44 @@
+# services:
+#   db:
+#     image: postgres:15
+#     platform: linux/amd64
+#     container_name: guiaorla_db
+#     restart: always
+#     environment:
+#       POSTGRES_DB: guiaorla
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
+#     ports:
+#       - "5433:5432"
+#     volumes:
+#       - db_data:/var/lib/postgresql/data
+
+#   backend:
+#     build: ./backend/GuiaOrlaPE.API
+#     container_name: guiaorla_backend
+#     depends_on:
+#       - db
+#     ports:
+#       - "5000:8080"
+#     environment:
+#       - ASPNETCORE_ENVIRONMENT=Development
+#       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=guiaorla;Username=postgres;Password=postgres
+
+
+#   frontend:
+#     build: ./frontend/guiaorla-frontend
+#     container_name: guiaorla_frontend
+#     depends_on:
+#       - backend
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - NEXT_PUBLIC_API_URL=http://localhost:5000
+
+# volumes:
+#   db_data:
+
+
 services:
   db:
     image: postgres:15
@@ -7,7 +48,7 @@ services:
     environment:
       POSTGRES_DB: guiaorla
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
     volumes:
@@ -22,8 +63,8 @@ services:
       - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=guiaorla;Username=postgres;Password=postgres
-
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=guiaorla;Username=postgres;Password=${POSTGRES_PASSWORD}
+      - Jwt__Key=${JWT_KEY}
 
   frontend:
     build: ./frontend/guiaorla-frontend
@@ -34,6 +75,7 @@ services:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:5000
+      - API_URL_INTERNAL=http://backend:8080
 
 volumes:
   db_data:

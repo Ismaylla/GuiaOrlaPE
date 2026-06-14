@@ -17,3 +17,6 @@ Thumbs.db
 
 #visualStudio
 .vs
+
+#arquiv env
+.env

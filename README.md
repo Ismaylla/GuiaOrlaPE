@@ -1,269 +1,224 @@
-# 🌊 GuiaOrlaPE — Documentação de Setup
+# 🌊 GuiaOrlaPE
 
-Bem-vindo(a) ao projeto **GuiaOrlaPE** 🚀
-Este repositório contém o sistema completo (frontend, backend e banco de dados) utilizado para conectar turistas a serviços locais em regiões litorâneas de Pernambuco.
-
----
-
-# 📌 Visão Geral do Projeto
-
-O **GuiaOrlaPE** é uma plataforma full-stack que permite:
-
-* Visualização de serviços locais (restaurantes, passeios, hospedagens etc.)
-* Busca e filtros por categoria
-* Interface responsiva para turistas e empreendedores
-* API centralizada para gerenciamento de dados
-* Persistência em banco PostgreSQL
+Plataforma full-stack que conecta turistas a serviços locais em regiões litorâneas de Pernambuco — restaurantes, passeios, hospedagens e muito mais.
 
 ---
 
-# 🧱 Arquitetura
-
-O sistema é dividido em três partes principais:
+## 🧱 Arquitetura
 
 ```
 GuiaOrlaPE/
-│
-├── frontend/   → Next.js (Interface Web)
-├── backend/    → API em .NET
-├── docker/     → Banco de dados PostgreSQL
+├── frontend/        → Next.js (Interface Web)
+├── backend/         → ASP.NET Core 9 (API REST)
+├── docker-compose.yml
+└── .env             → variáveis de ambiente (não vai pro Git)
 ```
 
 ---
 
-# ⚙️ Tecnologias Utilizadas
+## ⚙️ Tecnologias
 
-## Frontend
-
-* Next.js
-* React
-* TypeScript
-* TailwindCSS
-
-## Backend
-
-* .NET 9 (ASP.NET Core)
-* API REST
-
-## Banco de Dados
-
-* PostgreSQL 15
-
-## Infraestrutura
-
-* Docker
-* Docker Compose
+| Camada | Tecnologia |
+|--------|-----------|
+| Frontend | Next.js, React, TypeScript, TailwindCSS |
+| Backend | .NET 9, ASP.NET Core, Entity Framework |
+| Banco | PostgreSQL 15 |
+| Infra | Docker, Docker Compose |
 
 ---
 
-# 🚀 Como rodar o projeto completo
+## 🔗 Endereços após subir
 
-## 📌 Pré-requisitos
-
-Instale antes de começar:
-
-* Node.js (18+)
-* .NET SDK (9+)
-* Docker + Docker Compose
-* Git
+| Serviço | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend / Swagger | http://localhost:5000/swagger |
+| Banco (externo) | localhost:5433 |
 
 ---
 
-## 🐳 1. Rodando tudo com Docker (RECOMENDADO)
+## 🐳 Rodando com Docker (RECOMENDADO)
 
-Na raiz do projeto:
+### Pré-requisitos
 
-```bash id="z7qv5x"
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado e rodando
+- Git
+
+### Passo a passo
+
+**1. Clone o repositório**
+```bash
+git clone <url-do-repositorio>
+cd GuiaOrlaPE
+```
+
+**2. Crie o arquivo `.env` na raiz do projeto**
+
+> ⚠️ Solicite o conteúdo deste arquivo com a equipe — ele não está no repositório por segurança.
+
+```env
+JWT_KEY=sua_chave_jwt_aqui
+POSTGRES_PASSWORD=postgres
+```
+
+**3. Suba tudo com Docker**
+```bash
 docker-compose up --build
 ```
 
-Isso irá subir automaticamente:
+Isso sobe automaticamente o banco, o backend e o frontend.
 
-* 🐘 PostgreSQL
-* ⚙️ Backend (.NET API)
-* 🌐 Frontend (Next.js)
+**4. Acesse**
+- Frontend → http://localhost:3000
+- Swagger → http://localhost:5000/swagger
 
----
-
-## 🌍 Acessos após subir
-
-* Frontend → [http://localhost:3000](http://localhost:3000)
-* Backend → [http://localhost:5000](http://localhost:5000)
-* Banco de dados → localhost:5433
-
----
-
-## 🛑 Parar o sistema
-
-```bash id="k0p9ww"
+### Parar o sistema
+```bash
 docker-compose down
+```
+
+### Reset completo (quando algo dá errado)
+```bash
+docker-compose down --volumes
+docker system prune -f
+docker-compose up --build
 ```
 
 ---
 
-# 💻 2. Rodando localmente (sem Docker)
+## 💻 Rodando localmente (sem Docker)
 
-## 📦 Frontend
+### Pré-requisitos
 
-```bash id="3c9m2q"
+- .NET 9 SDK
+- Node.js LTS
+- PostgreSQL instalado localmente
+
+### 1. Banco de dados
+
+Abra o pgAdmin ou psql e crie o banco:
+
+```sql
+CREATE DATABASE guiaorla;
+```
+
+### 2. Backend
+
+```bash
+cd backend/GuiaOrlaPE.API
+```
+
+Configure os secrets locais (substitua `SUA_SENHA` pela sua senha do PostgreSQL):
+
+```bash
+dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=guiaorla;Username=postgres;Password=SUA_SENHA"
+dotnet user-secrets set "Jwt:Key" "GuiaOrlaPE_2026_Secret_Key_Alpha_Omega_1854449"
+```
+
+Crie as tabelas:
+
+```bash
+dotnet ef database update
+```
+
+Rode a API:
+
+```bash
+dotnet run
+```
+
+API disponível em: http://localhost:5148
+
+### 3. Frontend
+
+Em outro terminal:
+
+```bash
 cd frontend/guiaorla-frontend
 npm install
 npm run dev
 ```
 
-👉 [http://localhost:3000](http://localhost:3000)
+Frontend disponível em: http://localhost:3000
 
----
+### Rodar tudo de uma vez (opcional)
 
-## ⚙️ Backend
-
-```bash id="xq8n1t"
-cd backend/GuiaOrlaPE.API
-dotnet run
-```
-
-👉 [http://localhost:5000](http://localhost:5000)
-
----
-
-## 🐘 Banco de Dados (local)
-
-Você precisa de PostgreSQL rodando:
-
-```bash id="v0p4aa"
-Host: localhost
-Port: 5433
-Database: guiaorla
-User: postgres
-Password: postgres
+```bash
+npx concurrently "cd backend/GuiaOrlaPE.API && dotnet run" "cd frontend/guiaorla-frontend && npm run dev"
 ```
 
 ---
 
-# 🔗 Comunicação entre sistemas
+## 📁 Estrutura de pastas
 
-O frontend consome a API via:
-
-```ts id="7k2q9p"
-API_URL = "http://localhost:5000"
-```
-
-📁 Arquivo:
-
-```
-frontend/src/services/api.ts
-```
-
----
-
-# 📁 Estrutura geral
-
-```
-frontend/
-backend/
-docker-compose.yml
-```
-
----
-
-## Frontend
-
+### Frontend
 ```
 src/
 ├── app/
 ├── components/
 ├── services/
-├── styles/
+│   └── api.ts   → NEXT_PUBLIC_API_URL=http://localhost:5000
+└── styles/
 ```
 
-## Backend
-
+### Backend
 ```
 Controllers/
 Models/
-Services/
+Domain/
+Repository/
+Service/
 Data/
 ```
 
 ---
 
-# 🧠 Regras e boas práticas
+## ⚠️ Problemas comuns
 
-✔ Separação clara entre frontend e backend
-✔ API centralizada (REST)
-✔ Componentes reutilizáveis no frontend
-✔ Tipagem obrigatória (TypeScript)
-✔ Lógica de negócio no backend
-✔ Estilo com TailwindCSS
+**Porta já em uso**
 
----
+Verifique se algo está usando as portas 3000, 5000 ou 5433:
 
-# 🧪 Como validar o sistema
-
-Após subir o projeto:
-
-1. Abrir [http://localhost:3000](http://localhost:3000)
-2. Verificar carregamento do frontend
-3. Testar chamadas para API
-4. Confirmar dados vindo do banco
-5. Validar logs do backend
-
----
-
-# ⚠️ Problemas comuns
-
-## Porta já em uso
-
-* 3000 → frontend
-* 5000 → backend
-* 5433 → banco
-
-Solução:
-
-```bash id="k8n3ld"
+```bash
 docker-compose down
 ```
 
-ou matar processos:
+ou pare o container específico:
 
-```bash id="m2q9zz"
+```bash
 docker ps
-docker stop <container>
+docker stop <id-do-container>
 ```
 
----
+**Conflito com PostgreSQL local**
 
-## Conflito com PostgreSQL local
+O Docker usa a porta `5433` externamente para não conflitar com o PostgreSQL local (porta `5432`). Se mesmo assim houver conflito, pare o serviço local do PostgreSQL.
 
-Se tiver PostgreSQL instalado no Windows, ele pode ocupar a porta 5432.
+**JWT não configurado**
 
-👉 Solução: o projeto já usa 5433 no Docker.
-
----
-
-# 🧹 Reset completo (quando tudo dá errado)
-
-```bash id="r1c9pp"
-docker system prune -a
-```
-
-⚠️ Remove containers, imagens e cache não utilizados.
+Se o backend não subir e mostrar erro de JWT, verifique se o `.env` está na raiz do projeto com o valor de `JWT_KEY` preenchido.
 
 ---
 
-# ✨ Dicas de desenvolvimento
+## 🧪 Validando o sistema
 
-* Use Docker para ambiente completo
-* Use `npm run dev` no frontend para hot reload
-* Use `dotnet watch run` no backend
-* Commits pequenos e frequentes
-* Sempre testar API antes do frontend
+Após subir o projeto:
+
+1. Acesse http://localhost:3000 e verifique o carregamento do frontend
+2. Acesse http://localhost:5000/swagger e teste os endpoints da API
+3. Tente criar uma conta e fazer login
+4. Acompanhe os logs do backend com `docker-compose logs -f backend`
 
 ---
 
-# 📌 Observação final
+## 🧠 Boas práticas do projeto
 
-Este projeto foi estruturado para funcionar tanto:
-
-* em ambiente Docker (produção/dev completo)
-* quanto localmente (desenvolvimento manual)
+- Separação clara entre frontend e backend
+- API centralizada (REST)
+- Componentes reutilizáveis no frontend
+- Tipagem obrigatória com TypeScript
+- Lógica de negócio no backend
+- Estilo com TailwindCSS
+- Commits pequenos e frequentes
+- Nunca versionar o arquivo `.env`

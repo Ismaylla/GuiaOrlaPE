@@ -26,7 +26,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 // ---------------------------------------------------------------------------
 // Sincronização Absoluta com a Chave do Appsettings e NextAuth
 // ---------------------------------------------------------------------------
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "SUA_CHAVE_SUPER_SECRETA_COM_NO_MINIMO_32_CARACTERES";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("A chave JWT não está configurada.");
 
 builder.Services.AddAuthentication(options =>
 {
