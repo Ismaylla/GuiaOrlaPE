@@ -125,3 +125,23 @@ export async function cadastrarNovoNegocio(dadosObjeto: any): Promise<any> {
     throw error;
   }
 }
+
+/**
+ * Atualiza os dados de um negócio existente
+ * @param id O UUID do negócio
+ * @param dados O objeto contendo todos os dados do negócio (CreateBusinessRequest)
+ * @param token O token de autenticação JWT
+ */
+export async function atualizarNegocio(id: string, dados: any, token: string): Promise<any> {
+    try {
+      const response = await api.put<any>(`/api/business/${id}`, dados, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro no service ao atualizar o negócio:", error);
+      throw error;
+    }
+  }

@@ -85,7 +85,9 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                         cadeira: backendItem.cadeira ?? backendItem.Cadeira ?? false, 
                         petFriendly: backendItem.petFriendly ?? backendItem.PetFriendly ?? false,
                         acessibilidade: backendItem.acessibilidade ?? backendItem.Acessibilidade ?? false,
-                        serviceTypeCsharp: String(backendItem.serviceType ?? backendItem.ServiceType ?? backendItem.tipoServico ?? "")
+                        serviceTypeCsharp: String(backendItem.serviceType ?? backendItem.ServiceType ?? backendItem.tipoServico ?? ""),
+                        description: backendItem.description ?? backendItem.Description ?? "",
+                        horario: backendItem.horario ?? backendItem.Horario ?? "08:00 às 18:00",
                     };
                 })
                 .filter((item: any) => {

@@ -1,5 +1,4 @@
 
-
 "use client";
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -44,14 +43,7 @@ export const ModalVerMais = ({ item, onClose, isEmpreendedor = false }: ModalVer
       <div className="relative bg-white w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-[32px] shadow-2xl animate-in fade-in zoom-in-95 duration-300 text-left">
         
         <div className="relative h-56 w-full">
-          <Image 
-            src={imagemExibicao} 
-            alt={item.nome || "Imagem do estabelecimento"} 
-            fill 
-            className="object-cover" 
-            unoptimized //  O SEGREDO ESTÁ AQUI TAMBÉM
-            onError={() => setImgError(true)}
-          />
+          <Image src={imagemExibicao} alt={item.nome || "Imagem do estabelecimento"} fill className="object-cover" unoptimized onError={() => setImgError(true)} />
           <button onClick={onClose} className="absolute top-4 right-4 bg-black/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-black/40 transition-all">
             <X size={20} />
           </button>
@@ -69,7 +61,11 @@ export const ModalVerMais = ({ item, onClose, isEmpreendedor = false }: ModalVer
               </span>
             </div>
             <h3 className="text-[#0A4F6E] font-bold text-sm mb-1 uppercase tracking-wide">Descrição</h3>
-            <p className="text-gray-600 text-sm italic">"{item.nome}: Venha conhecer nosso espaço na orla! Oferecemos uma ótima experiência gastronômica e de lazer na praia."</p>
+            
+            {/* DESCRIÇÃO DINÂMICA AQUI */}
+            <p className="text-gray-600 text-sm italic">
+                {item.description ? `"${item.description}"` : "Nenhuma descrição adicionada pelo estabelecimento."}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -77,7 +73,9 @@ export const ModalVerMais = ({ item, onClose, isEmpreendedor = false }: ModalVer
               <Clock size={18} className="text-[#1398D4]" />
               <div className="flex flex-col">
                 <span className="text-[9px] font-bold text-gray-400 uppercase">Horário</span>
-                <span className="text-[11px] font-medium text-gray-700 italic">08:00 às 18:00</span>
+                
+                {/* HORÁRIO DINÂMICO AQUI */}
+                <span className="text-[11px] font-medium text-gray-700 italic">{item.horario || "Não informado"}</span>
               </div>
             </div>
             
@@ -108,10 +106,7 @@ export const ModalVerMais = ({ item, onClose, isEmpreendedor = false }: ModalVer
               <ChevronRight size={18} />
             </a>
 
-            <Link 
-              href={hrefPerfil} 
-              className="w-full bg-gray-100 text-[#0A4F6E] py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-all border border-gray-200 text-center text-sm"
-            >
+            <Link href={hrefPerfil} className="w-full bg-gray-100 text-[#0A4F6E] py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-all border border-gray-200 text-center text-sm">
               {isOwner ? "Editar Meu Perfil" : "Ver perfil completo"}
               <ExternalLink size={16} />
             </Link>

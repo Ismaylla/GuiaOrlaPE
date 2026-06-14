@@ -12,6 +12,9 @@ import { Clock, MapPin, CreditCard, Sparkles, Store, Loader2, X, ChevronLeft, Ch
 
 import { GaleriaViewer } from "./GaleriaViewer"; 
 
+//  ADICIONADO: Importação do serviço de atualização
+import { atualizarNegocio } from "@/services/businessService";
+
 interface BusinessData {
     id: string;
     name: string;
@@ -34,6 +37,8 @@ interface BusinessData {
     galleryPhotos: string[];
     nota: number;
     totalAvaliacoes: number;
+    latitude?: number;  // Adicionados latitude e longitude para o PUT funcionar completo
+    longitude?: number;
 }
 
 export const MeuPerfilScreen = () => {
@@ -48,10 +53,12 @@ export const MeuPerfilScreen = () => {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [uploadType, setUploadType] = useState<"galeria" | "header" | "profile" | "card">("galeria");
     
-    // ESTADOS DO MODAL DE EXCLUSÃO AJUSTADO PARA ACEITAR "CARD"
     const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
     const [deleteType, setDeleteType] = useState<"header" | "profile" | "card" | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    
+    //  NOVO: Estado de loading para quando estiver salvando a descrição
+    const [isSavingDesc, setIsSavingDesc] = useState(false);
 
     const [indexAberto, setIndexAberto] = useState<number | null>(null);
     const navRef = useRef<HTMLDivElement>(null);
@@ -98,6 +105,51 @@ export const MeuPerfilScreen = () => {
         setIsUploadModalOpen(false);
     };
 
+    //  NOVA FUNÇÃO: Salvar descrição na API
+    const handleSaveDescricao = async (novaDescricao: string) => {
+        if (!business) return;
+        setIsSavingDesc(true);
+        
+        try {
+            const token = (session as any).accessToken || (session as any).token;
+            
+            // Monta o payload esperado pelo backend
+            const payload = {
+                name: business.name,
+                serviceType: business.serviceType,
+                address: business.address,
+                horario: business.horario,
+                cartao: business.cartao,
+                pix: business.pix,
+                dinheiro: business.dinheiro,
+                chuveiro: business.chuveiro,
+                estacionamento: business.estacionamento,
+                cadeira: business.cadeira,
+                petFriendly: business.petFriendly,
+                acessibilidade: business.acessibilidade,
+                wifi: business.wifi,
+                description: novaDescricao, // Apenas este campo é alterado
+                coverPhotoUrl: business.coverPhotoUrl.replace("http://localhost:5148", ""),
+                businessPhotoUrl: business.businessPhotoUrl.replace("http://localhost:5148", ""),
+                cardImageUrl: business.cardImageUrl.replace("http://localhost:5148", ""),
+                latitude: business.latitude || 0,
+                longitude: business.longitude || 0,
+                galleryPhotos: business.galleryPhotos.map(url => url.replace("http://localhost:5148", ""))
+            };
+
+            await atualizarNegocio(business.id, payload, token);
+            
+            // Atualiza a tela se a API confirmar sucesso
+            setBusiness(prev => prev ? { ...prev, description: novaDescricao } : null);
+            setIsModalSobreOpen(false);
+            
+        } catch (error) {
+            alert("Não foi possível salvar a descrição. Tente novamente.");
+        } finally {
+            setIsSavingDesc(false);
+        }
+    };
+
     const handleConfirmDelete = async () => {
         if (!business || !deleteType) return;
         
@@ -113,7 +165,6 @@ export const MeuPerfilScreen = () => {
             });
 
             if (response.ok) {
-                //  Lógica ajustada para zerar a cardImageUrl também
                 setBusiness(prev => {
                     if (!prev) return prev;
                     return {
@@ -194,7 +245,9 @@ export const MeuPerfilScreen = () => {
                         description: d.description ?? d.Description ?? "",
                         galleryPhotos: (d.galleryPhotos ?? d.GalleryPhotos ?? []).map((p: string) => p.startsWith("http") ? p : `http://localhost:5148${p}`),
                         nota: 5.0,
-                        totalAvaliacoes: 0
+                        totalAvaliacoes: 0,
+                        latitude: d.latitude || d.Latitude, // Capturado para não zerar no PUT
+                        longitude: d.longitude || d.Longitude // Capturado para não zerar no PUT
                     });
                 }
             } catch (error) { console.error("Erro:", error); } finally { setIsLoading(false); }
@@ -263,7 +316,6 @@ export const MeuPerfilScreen = () => {
                             </p>
                         </div>
 
-                        {/* VÍNCULO FEITO: Botões de Remover e Alterar alinhados */}
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="font-bold text-[#0A4F6E] text-lg">Foto da Vitrine</h3>
@@ -314,7 +366,15 @@ export const MeuPerfilScreen = () => {
                 </div>
             </div>
 
-            <ModalSobre isOpen={isModalSobreOpen} onClose={() => setIsModalSobreOpen(false)} valorAtual={business.description} onSave={(novo: string) => { setBusiness((prev: any) => ({ ...prev, description: novo })); }} />
+            {/*  MODAL SOBRE ATUALIZADO */}
+            <ModalSobre 
+                isOpen={isModalSobreOpen} 
+                onClose={() => setIsModalSobreOpen(false)} 
+                valorAtual={business.description} 
+                onSave={handleSaveDescricao} //  MUDANÇA AQUI
+                isSaving={isSavingDesc} //  MUDANÇA AQUI
+            />
+            
             <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} businessId={business.id} onSuccess={handleImageUpdate} />
             
             {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
