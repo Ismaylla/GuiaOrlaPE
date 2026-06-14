@@ -64,6 +64,7 @@ public class BusinessController(
                 Longitude = b.Longitude,
                 BusinessPhotoUrl = b.BusinessPhotoUrl ?? "",
                 CoverPhotoUrl = b.CoverPhotoUrl ?? "", 
+                CardImageUrl = b.CardImageUrl ?? "",
                 Horario = b.Horario ?? "", 
                 Cartao = b.Cartao,
                 Pix = b.Pix,
@@ -136,15 +137,16 @@ public class BusinessController(
                 return BadRequest(new { message = "O parâmetro 'type' é obrigatório." });
 
             var tipoNormalizado = type.ToLower();
-            var tiposValidos = new[] { "profile", "header", "galeria" };
+            //  ATUALIZADO: Adicionado 'card' na lista de tipos aceitos
+            var tiposValidos = new[] { "profile", "header", "galeria", "card" };
             if (!tiposValidos.Contains(tipoNormalizado))
-                return BadRequest(new { message = "Tipo inválido. Use 'profile', 'header' ou 'galeria'." });
+                return BadRequest(new { message = "Tipo inválido. Use 'profile', 'header', 'galeria' ou 'card'." });
 
             var businessDto = await _service.GetByIdAsync(id);
             if (businessDto == null)
                 return NotFound(new { message = "Estabelecimento não encontrado." });
 
-            // FAXINA AUTOMÁTICA: Se for trocar a foto de Perfil ou Capa, apaga fisicamente a antiga antes
+            //  FAXINA AUTOMÁTICA: Apaga fisicamente a imagem de card antiga se ela existir
             if (tipoNormalizado == "profile" && !string.IsNullOrEmpty(businessDto.BusinessPhotoUrl))
             {
                 EliminarArquivoFisico(businessDto.BusinessPhotoUrl);
@@ -152,6 +154,10 @@ public class BusinessController(
             else if (tipoNormalizado == "header" && !string.IsNullOrEmpty(businessDto.CoverPhotoUrl))
             {
                 EliminarArquivoFisico(businessDto.CoverPhotoUrl);
+            }
+            else if (tipoNormalizado == "card" && !string.IsNullOrEmpty(businessDto.CardImageUrl))
+            {
+                EliminarArquivoFisico(businessDto.CardImageUrl);
             }
 
             var caminhoPasta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
@@ -167,24 +173,13 @@ public class BusinessController(
 
             var requestUpdate = new CreateBusinessRequest
             {
-                Name = businessDto.Name,
-                ServiceType = businessDto.ServiceType,
-                Address = businessDto.Address,
-                Latitude = businessDto.Latitude,
-                Longitude = businessDto.Longitude,
-                Horario = businessDto.Horario,
-                Cartao = businessDto.Cartao,
-                Pix = businessDto.Pix,
-                Dinheiro = businessDto.Dinheiro,
-                Chuveiro = businessDto.Chuveiro,
-                Estacionamento = businessDto.Estacionamento,
-                Cadeira = businessDto.Cadeira,
-                PetFriendly = businessDto.PetFriendly,
-                Acessibilidade = businessDto.Acessibilidade,
-                Wifi = businessDto.Wifi,
-                Description = businessDto.Description,
-                CoverPhotoUrl = businessDto.CoverPhotoUrl,
-                BusinessPhotoUrl = businessDto.BusinessPhotoUrl,
+                Name = businessDto.Name, ServiceType = businessDto.ServiceType, Address = businessDto.Address,
+                Latitude = businessDto.Latitude, Longitude = businessDto.Longitude, Horario = businessDto.Horario,
+                Cartao = businessDto.Cartao, Pix = businessDto.Pix, Dinheiro = businessDto.Dinheiro,
+                Chuveiro = businessDto.Chuveiro, Estacionamento = businessDto.Estacionamento, Cadeira = businessDto.Cadeira,
+                PetFriendly = businessDto.PetFriendly, Acessibilidade = businessDto.Acessibilidade, Wifi = businessDto.Wifi,
+                Description = businessDto.Description, CoverPhotoUrl = businessDto.CoverPhotoUrl,
+                BusinessPhotoUrl = businessDto.BusinessPhotoUrl, CardImageUrl = businessDto.CardImageUrl,
                 GalleryPhotos = businessDto.GalleryPhotos ?? []
             };
 
@@ -195,6 +190,10 @@ public class BusinessController(
             else if (tipoNormalizado == "header")
             {
                 requestUpdate.CoverPhotoUrl = urlImagemSalva;
+            }
+            else if (tipoNormalizado == "card")
+            {
+                requestUpdate.CardImageUrl = urlImagemSalva; // 🌟 ATUALIZADO AQUI
             }
             else if (tipoNormalizado == "galeria")
             {
@@ -224,8 +223,9 @@ public class BusinessController(
                 return BadRequest(new { message = "O parâmetro 'type' é obrigatório." });
 
             var tipoNormalizado = type.ToLower();
-            if (tipoNormalizado != "profile" && tipoNormalizado != "header")
-                return BadRequest(new { message = "Tipo inválido para exclusão direta. Use 'profile' ou 'header'." });
+            //  ATUALIZADO: Permitir deletar o card diretamente também se necessário no futuro
+            if (tipoNormalizado != "profile" && tipoNormalizado != "header" && tipoNormalizado != "card")
+                return BadRequest(new { message = "Tipo inválido para exclusão direta. Use 'profile', 'header' ou 'card'." });
 
             var businessDto = await _service.GetByIdAsync(id);
             if (businessDto == null)
@@ -239,7 +239,8 @@ public class BusinessController(
                 Chuveiro = businessDto.Chuveiro, Estacionamento = businessDto.Estacionamento, Cadeira = businessDto.Cadeira,
                 PetFriendly = businessDto.PetFriendly, Acessibilidade = businessDto.Acessibilidade, Wifi = businessDto.Wifi,
                 Description = businessDto.Description, CoverPhotoUrl = businessDto.CoverPhotoUrl,
-                BusinessPhotoUrl = businessDto.BusinessPhotoUrl, GalleryPhotos = businessDto.GalleryPhotos ?? []
+                BusinessPhotoUrl = businessDto.BusinessPhotoUrl, CardImageUrl = businessDto.CardImageUrl, 
+                GalleryPhotos = businessDto.GalleryPhotos ?? []
             };
 
             if (tipoNormalizado == "profile")
@@ -247,7 +248,7 @@ public class BusinessController(
                 if (!string.IsNullOrEmpty(businessDto.BusinessPhotoUrl))
                 {
                     EliminarArquivoFisico(businessDto.BusinessPhotoUrl);
-                    requestUpdate.BusinessPhotoUrl = string.Empty; // Reseta no banco
+                    requestUpdate.BusinessPhotoUrl = string.Empty; 
                 }
             }
             else if (tipoNormalizado == "header")
@@ -255,7 +256,15 @@ public class BusinessController(
                 if (!string.IsNullOrEmpty(businessDto.CoverPhotoUrl))
                 {
                     EliminarArquivoFisico(businessDto.CoverPhotoUrl);
-                    requestUpdate.CoverPhotoUrl = string.Empty; // Reseta no banco
+                    requestUpdate.CoverPhotoUrl = string.Empty; 
+                }
+            }
+            else if (tipoNormalizado == "card")
+            {
+                if (!string.IsNullOrEmpty(businessDto.CardImageUrl))
+                {
+                    EliminarArquivoFisico(businessDto.CardImageUrl);
+                    requestUpdate.CardImageUrl = string.Empty; 
                 }
             }
 
@@ -269,7 +278,6 @@ public class BusinessController(
         }
     }
 
-    // NOVA ROTA ADICIONADA: Permite apagar múltiplas fotos da galeria
     [HttpDelete("{id:guid}/photo/gallery")]
     [Authorize]
     public async Task<IActionResult> DeleteGalleryPhotos(Guid id, [FromBody] DeleteGalleryPhotosRequest request)
@@ -283,16 +291,13 @@ public class BusinessController(
             if (businessDto == null) 
                 return NotFound(new { message = "Estabelecimento não encontrado." });
 
-            // 1. Filtra a lista da galeria, mantendo apenas as fotos que NÃO foram enviadas no body para exclusão
             var novaLista = businessDto.GalleryPhotos?.Where(p => !request.Urls.Contains(p)).ToList() ?? new List<string>();
 
-            // 2. Destrói os arquivos físicos um por um
             foreach (var url in request.Urls)
             {
                 EliminarArquivoFisico(url);
             }
 
-            // 3. Monta o request de atualização com a nova lista de fotos
             var requestUpdate = new CreateBusinessRequest
             {
                 Name = businessDto.Name, ServiceType = businessDto.ServiceType, Address = businessDto.Address,
@@ -301,10 +306,10 @@ public class BusinessController(
                 Chuveiro = businessDto.Chuveiro, Estacionamento = businessDto.Estacionamento, Cadeira = businessDto.Cadeira,
                 PetFriendly = businessDto.PetFriendly, Acessibilidade = businessDto.Acessibilidade, Wifi = businessDto.Wifi,
                 Description = businessDto.Description, CoverPhotoUrl = businessDto.CoverPhotoUrl,
-                BusinessPhotoUrl = businessDto.BusinessPhotoUrl, GalleryPhotos = novaLista
+                BusinessPhotoUrl = businessDto.BusinessPhotoUrl, CardImageUrl = businessDto.CardImageUrl,
+                GalleryPhotos = novaLista
             };
 
-            // 4. Salva a atualização no banco de dados
             await _service.UpdateAsync(id, requestUpdate, businessDto.UserId);
             
             return Ok(new { message = "Fotos da galeria removidas com sucesso!" });
@@ -316,12 +321,10 @@ public class BusinessController(
         }
     }
 
-    // MÉTODO AUXILIAR PRIVADO: Executa a destruição física do arquivo na pasta uploads
     private void EliminarArquivoFisico(string urlAmigavel)
     {
         try
         {
-            // Transforma o caminho relativo "/uploads/nome.jpg" em caminho físico completo do Windows
             var nomeArquivo = Path.GetFileName(urlAmigavel);
             var caminhoFisico = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", nomeArquivo);
 
@@ -333,7 +336,6 @@ public class BusinessController(
         }
         catch (Exception ex)
         {
-            // Loga o erro mas não quebra a requisição do usuário se o arquivo já tiver sumido por fora
             _logger.LogError(ex, "Não foi possível apagar o arquivo físico: {url}", urlAmigavel);
         }
     }
@@ -344,7 +346,6 @@ public class UploadImageRequest
     public IFormFile File { get; set; } = null!;
 }
 
-// 🌟 NOVA CLASSE DTO: Para receber o JSON com as URLs a serem deletadas
 public class DeleteGalleryPhotosRequest
 {
     public List<string> Urls { get; set; } = new();

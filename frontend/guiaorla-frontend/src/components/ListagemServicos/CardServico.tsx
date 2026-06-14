@@ -4,12 +4,13 @@ import Image from "next/image";
 
 interface ServicoProps {
     item: {
-        id: number;
+        id: number | string;
         nome: string;
         categoria: string;
-        nota: number | string; // Alterado para aceitar a string "N/A" da API
+        nota: number | string;
         desc: string;
-        img: string;
+        img?: string;
+        cardImageUrl?: string;
         aberto: boolean;
         aceitaCard: boolean;
     };
@@ -18,11 +19,10 @@ interface ServicoProps {
     onOpenModal?: (item: any) => void;
 }
 
-// FUNÇÃO DE SEGURANÇA PARA EVITAR QUE STRINGS INVÁLIDAS QUEBREM O NEXT.JS
-const obterImagemValida = (src: string) => {
+const obterImagemValida = (src?: string | null) => {
     if (!src) return "/images/fundopraia.jpg";
     const ehValido = src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://");
-    return ehValido ? src : "/images/fundopraia.jpg"; // Fallback para imagem segura
+    return ehValido ? src : "/images/fundopraia.jpg";
 };
 
 function DescricaoExpansivel({ texto }: { texto: string }) {
@@ -37,10 +37,15 @@ function DescricaoExpansivel({ texto }: { texto: string }) {
 
 export const CardServico = ({ item, variante, onOpenModal }: ServicoProps) => {
     const [mounted, setMounted] = useState(false);
+    const [imgError, setImgError] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    useEffect(() => {
+        setImgError(false);
+    }, [item.cardImageUrl, item.img]);
 
     const textTitleColor = "text-[#0A4F6E]";
     const notaBg = "bg-[#1398D4]";
@@ -48,15 +53,19 @@ export const CardServico = ({ item, variante, onOpenModal }: ServicoProps) => {
 
     if (!mounted) return null;
 
+    const imagemExibicao = imgError ? "/images/fundopraia.jpg" : obterImagemValida(item.cardImageUrl || item.img);
+
     if (variante === "vertical") {
         return (
             <div className="bg-white rounded-3xl shrink-0 w-[230px] md:w-[220px] shadow-sm border border-gray-100 overflow-hidden snap-center flex flex-col h-[340px] transition-all duration-300 ease-out hover:shadow-lg">
                 <div className="relative h-32 md:h-36 w-full shrink-0">
                     <Image 
-                        src={obterImagemValida(item.img)} 
+                        src={imagemExibicao} 
                         alt={item.nome || "Imagem do serviço"} 
                         fill 
                         className="object-cover" 
+                        unoptimized //  O SEGREDO ESTÁ AQUI
+                        onError={() => setImgError(true)} 
                     />
                     <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2 py-1 rounded-full">
                         <div className={`w-2 h-2 rounded-full ${item.aberto ? 'bg-green-400' : 'bg-gray-400'}`}></div>
@@ -66,7 +75,6 @@ export const CardServico = ({ item, variante, onOpenModal }: ServicoProps) => {
                 <div className="p-4 flex flex-col flex-1">
                     <div className="flex justify-between items-start mb-2 gap-2">
                         <h3 className={`font-bold ${textTitleColor} text-xs md:text-sm leading-tight text-left line-clamp-2`}>{item.nome}</h3>
-                        {/* Tratamento para exibir 'Novo' se a nota for N/A */}
                         <div className={`${notaBg} text-white px-2 py-0.5 font-bold text-[10px] md:text-xs shadow-sm shrink-0`} style={{ borderRadius: '12px 0px 12px 0px' }}>
                             {item.nota === "N/A" ? "Novo" : item.nota}
                         </div>
@@ -75,15 +83,7 @@ export const CardServico = ({ item, variante, onOpenModal }: ServicoProps) => {
                         <DescricaoExpansivel texto={item.desc} />
                     </div>
                     <div className="mt-auto pt-4">
-                        <button 
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation(); 
-                                onOpenModal?.(item);
-                            }}
-                            className="w-full py-2.5 text-white rounded-full font-bold text-[10px] shadow-md transition-transform active:scale-95 flex items-center justify-center cursor-pointer" 
-                            style={{ background: gradientAzul }}
-                        >
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpenModal?.(item); }} className="w-full py-2.5 text-white rounded-full font-bold text-[10px] shadow-md transition-transform active:scale-95 flex items-center justify-center cursor-pointer" style={{ background: gradientAzul }}>
                             VER MAIS
                         </button>
                     </div>
@@ -97,10 +97,12 @@ export const CardServico = ({ item, variante, onOpenModal }: ServicoProps) => {
             <div className="bg-white p-3 md:p-4 rounded-3xl border border-gray-100 shadow-sm flex gap-4 h-full transition-shadow items-start hover:shadow-lg">
                 <div className="relative h-28 w-28 md:h-40 md:w-36 shrink-0">
                     <Image 
-                        src={obterImagemValida(item.img)} 
+                        src={imagemExibicao} 
                         alt={item.nome || "Imagem do serviço"} 
                         fill 
                         className="object-cover rounded-2xl" 
+                        unoptimized //  E AQUI TAMBÉM
+                        onError={() => setImgError(true)} 
                     />
                     <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-white/90 px-1.5 py-0.5 rounded-lg shadow-sm">
                         <div className={`w-1.5 h-1.5 rounded-full ${item.aberto ? 'bg-green-500' : 'bg-gray-400'}`}></div>
@@ -111,7 +113,6 @@ export const CardServico = ({ item, variante, onOpenModal }: ServicoProps) => {
                     <div className="flex flex-col">
                         <div className="flex justify-between items-start mb-2 gap-2">
                             <h3 className={`${textTitleColor} font-bold text-sm md:text-base leading-tight text-left`}>{item.nome}</h3>
-                            {/* Tratamento para exibir 'Novo' no layout horizontal */}
                             <div className={`${notaBg} text-white px-2 py-1 font-bold text-xs shadow-sm shrink-0`} style={{ borderRadius: '15px 0px 15px 0px' }}>
                                 {item.nota === "N/A" ? "Novo" : item.nota}
                             </div>
@@ -119,15 +120,7 @@ export const CardServico = ({ item, variante, onOpenModal }: ServicoProps) => {
                         <DescricaoExpansivel texto={item.desc} />
                     </div>
                     <div className="mt-auto pt-4">
-                        <button 
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onOpenModal?.(item);
-                            }}
-                            className="w-full py-2.5 text-white rounded-full font-bold text-[10px] shadow-md transition-transform active:scale-95 cursor-pointer" 
-                            style={{ background: gradientAzul }}
-                        >
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpenModal?.(item); }} className="w-full py-2.5 text-white rounded-full font-bold text-[10px] shadow-md transition-transform active:scale-95 cursor-pointer" style={{ background: gradientAzul }}>
                             VER MAIS
                         </button>
                     </div>

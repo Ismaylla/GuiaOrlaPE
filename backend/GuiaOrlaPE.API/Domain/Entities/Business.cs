@@ -36,6 +36,10 @@ public class Business
     [MaxLength(500)]
     public string CoverPhotoUrl { get; set; } = string.Empty;
 
+    // ADICIONADO: Foto principal para exibição nos cards da Home/Explorer
+    [MaxLength(500)]
+    public string CardImageUrl { get; set; } = string.Empty;
+
     [Required]
     public bool Status { get; set; }
 
@@ -64,8 +68,7 @@ public class Business
     [Required]
     public bool Acessibilidade { get; set; }
 
-
-    [Required] // Adicione esta linha
+    [Required] 
     public bool Wifi { get; set; }
 
     // Campo de horário que implementei para controlar o funcionamento
@@ -80,7 +83,6 @@ public class Business
     public virtual ICollection<BusinessPhoto> Photos { get; set; } = new List<BusinessPhoto>();
 
     // ---
-
 
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;

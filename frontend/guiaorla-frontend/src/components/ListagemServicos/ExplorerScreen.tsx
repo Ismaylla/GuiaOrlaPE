@@ -8,12 +8,18 @@ import { CardServico } from "@/components/ListagemServicos/CardServico";
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
 import { ModalVerMais } from "@/components/ListagemServicos/ModalVerMais";
 
-// Importação das funções do novo arquivo de serviço
 import { listarTodosOsNegocios, buscarNegociosComFiltros } from "@/services/businessService";
 
 interface ExplorerScreenProps {
     isEmpreendedor: boolean;
 }
+
+//  FUNÇÃO DE FORMATAÇÃO MANTIDA
+const formatarUrlImagem = (url?: string) => {
+    if (!url || typeof url !== "string" || url.trim() === "") return null;
+    if (url.startsWith("http")) return url;
+    return `http://localhost:5148${url}`;
+};
 
 export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
     const searchParams = useSearchParams();
@@ -21,7 +27,6 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
     const [scrolled, setScrolled] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-    // ESTADOS DE INTEGRAÇÃO DA API
     const [listaNegocios, setListaNegocios] = useState<any[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erroApi, setErroApi] = useState(false);
@@ -34,20 +39,11 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
     const temDados = listaNegocios.length > 0;
 
     const [filtros, setFiltros] = useState({
-        localizacao: "",
-        precoMinManual: "",
-        precoMaxManual: "",
-        faixaPreco: "",
-        cartao: true,
-        chuveiro: false,
-        estacionamento: false,
-        cadeira: false,
-        petFriendly: false,
-        acessibilidade: false,
-        melhoresAvaliados: false
+        localizacao: "", precoMinManual: "", precoMaxManual: "", faixaPreco: "",
+        cartao: true, chuveiro: false, estacionamento: false, cadeira: false,
+        petFriendly: false, acessibilidade: false, melhoresAvaliados: false
     });
 
-    // FUNÇÃO CENTRAL: Faz mapeamento e filtro local dinâmico baseado na resposta real do banco
     const carregarNegocios = useCallback(async (
         filtrosAtuais = filtros,
         categoriaFiltro = categoriaAtiva,
@@ -57,64 +53,55 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
             setCarregando(true);
             setErroApi(false);
 
-            // 1. Busca os dados brutos da API C#
             let dados = await listarTodosOsNegocios();
             dados = (dados as any)?.items ? (dados as any).items : (Array.isArray(dados) ? dados : []);
 
             const termo = termoBusca.toLowerCase().trim();
             const categoriaAlvo = categoriaFiltro.toLowerCase().trim();
 
-            // 2. Mapeamento e Filtragem Rígida
             const dadosFormatados = dados
                 .map((backendItem: any) => {
                     const localizacaoReal = backendItem.address || backendItem.location || backendItem.endereco || "Gaibu";
-
-                    // Se o banco trouxer null, undefined ou 0, definimos como "N/A" (Sem Avaliação)
                     const notaBanco = backendItem.rating || backendItem.nota || backendItem.avaliacao;
                     const notaReal = (notaBanco && notaBanco > 0) ? Number(notaBanco).toFixed(1) : "N/A";
 
+                    // BLINDAGEM DE CASING: Pega a imagem independente de como a API envia (Maiúscula ou Minúscula)
+                    const fotoPerfilBackend = backendItem.businessPhotoUrl || backendItem.BusinessPhotoUrl;
+                    const fotoVitrineBackend = backendItem.cardImageUrl || backendItem.CardImageUrl;
+                    const donoIdBackend = backendItem.userId || backendItem.UserId;
+
                     return {
-                        id: backendItem.id,
-                        nome: backendItem.name || backendItem.nome || "Sem Nome",
+                        id: backendItem.id || backendItem.Id,
+                        userId: donoIdBackend, 
+                        nome: backendItem.name || backendItem.nome || backendItem.Name || "Sem Nome",
                         desc: localizacaoReal,
-                        img: backendItem.businessPhotoUrl || "/images/fundopraia.jpg",
-                        nota: notaReal, // Passa "N/A" ou a nota real (ex: 4.5) pro CardServico
+                        img: formatarUrlImagem(fotoPerfilBackend) || "/images/fundopraia.jpg",
+                        cardImageUrl: formatarUrlImagem(fotoVitrineBackend), //  AGORA SIM NÃO VAI ESCAPAR NADA
+                        nota: notaReal, 
                         aberto: backendItem.status ?? true,
-                        aceitaCard: backendItem.cartao ?? backendItem.aceitaCard ?? false,
-                        chuveiro: backendItem.chuveiro ?? false,
-                        estacionamento: backendItem.estacionamento ?? false,
-                        cadeira: backendItem.cadeira ?? false,
-                        petFriendly: backendItem.petFriendly ?? false,
-                        acessibilidade: backendItem.acessibilidade ?? false,
-                        serviceTypeCsharp: String(backendItem.serviceType ?? backendItem.tipoServico ?? "")
+                        aceitaCard: backendItem.cartao ?? backendItem.Cartao ?? backendItem.aceitaCard ?? false,
+                        chuveiro: backendItem.chuveiro ?? backendItem.Chuveiro ?? false, 
+                        estacionamento: backendItem.estacionamento ?? backendItem.Estacionamento ?? false,
+                        cadeira: backendItem.cadeira ?? backendItem.Cadeira ?? false, 
+                        petFriendly: backendItem.petFriendly ?? backendItem.PetFriendly ?? false,
+                        acessibilidade: backendItem.acessibilidade ?? backendItem.Acessibilidade ?? false,
+                        serviceTypeCsharp: String(backendItem.serviceType ?? backendItem.ServiceType ?? backendItem.tipoServico ?? "")
                     };
                 })
                 .filter((item: any) => {
-                    // FILTRO DE BUSCA POR TEXTO
                     if (termo) {
                         const bateNome = item.nome.toLowerCase().includes(termo);
                         const bateLocal = item.desc.toLowerCase().includes(termo);
                         if (!bateNome && !bateLocal) return false;
                     }
+                    if (categoriaAlvo && item.serviceTypeCsharp !== categoriaAlvo) return false;
 
-                    if (categoriaAlvo) {
-                        // Compara direto o ID da URL ("0", "1", "2", "3", "4") com o do banco.
-                        // Se for diferente, o item some da tela na hora!
-                        if (item.serviceTypeCsharp !== categoriaAlvo) {
-                            return false;
-                        }
-                    }
-
-                    // FILTROS LATERAIS (ASIDE)
                     if (filtrosAtuais.chuveiro && !item.chuveiro) return false;
                     if (filtrosAtuais.estacionamento && !item.estacionamento) return false;
                     if (filtrosAtuais.cadeira && !item.cadeira) return false;
                     if (filtrosAtuais.petFriendly && !item.petFriendly) return false;
                     if (filtrosAtuais.acessibilidade && !item.acessibilidade) return false;
-
-                    if (filtrosAtuais.localizacao && !item.desc.toLowerCase().includes(filtrosAtuais.localizacao.toLowerCase())) {
-                        return false;
-                    }
+                    if (filtrosAtuais.localizacao && !item.desc.toLowerCase().includes(filtrosAtuais.localizacao.toLowerCase())) return false;
 
                     return true;
                 });
@@ -122,18 +109,16 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
             setListaNegocios(dadosFormatados);
 
         } catch (error) {
-            console.error("Erro ao carregar dados do GuiaOrlaPE.API:", error);
+            console.error("Erro ao carregar dados da API:", error);
             setErroApi(true);
         } finally {
             setCarregando(false);
         }
     }, [filtros, categoriaAtiva]);
 
-    // Sincroniza a categoria e o texto de busca vinda da URL/Header e refaz a busca automaticamente
     useEffect(() => {
         const catUrl = searchParams.get("categoria") || "";
         const buscaUrl = searchParams.get("search") || "";
-
         setCategoriaAtiva(catUrl);
         carregarNegocios(filtros, catUrl, buscaUrl);
     }, [searchParams, carregarNegocios, filtros]);
@@ -144,77 +129,40 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    useEffect(() => {
-        if (servicoSelecionado) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "auto";
-        }
-    }, [servicoSelecionado]);
+    useEffect(() => { document.body.style.overflow = servicoSelecionado ? "hidden" : "auto"; }, [servicoSelecionado]);
 
     const handleMouseDown = (ref: React.RefObject<HTMLDivElement | null>) => (e: React.MouseEvent) => {
         if (!ref.current || ref.current.scrollWidth <= ref.current.clientWidth) return;
         const ele = ref.current;
         const startX = e.pageX - ele.offsetLeft;
         const scrollLeft = ele.scrollLeft;
-        const handleMouseMove = (le: MouseEvent) => {
-            const x = le.pageX - ele.offsetLeft;
-            const walk = (x - startX) * 2;
-            ele.scrollLeft = scrollLeft - walk;
-        };
-        const handleMouseUp = () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        const handleMouseMove = (le: MouseEvent) => { const x = le.pageX - ele.offsetLeft; ele.scrollLeft = scrollLeft - (x - startX) * 2; };
+        const handleMouseUp = () => { document.removeEventListener('mousemove', handleMouseMove); document.removeEventListener('mouseup', handleMouseUp); };
+        document.addEventListener('mousemove', handleMouseMove); document.addEventListener('mouseup', handleMouseUp);
     };
 
     const scroll = (direction: "left" | "right") => {
         if (scrollRef.current) {
             const { scrollLeft, clientWidth } = scrollRef.current;
-            const moveDistance = clientWidth * 0.8;
-            const scrollTo = direction === "left" ? scrollLeft - moveDistance : scrollLeft + moveDistance;
+            const scrollTo = direction === "left" ? scrollLeft - (clientWidth * 0.8) : scrollLeft + (clientWidth * 0.8);
             scrollRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
         }
     };
 
     return (
         <main className="min-h-screen bg-[#f6f6f6] font-sans pb-20">
-            <HeaderListagem
-                scrolled={scrolled}
-                categoriaAtiva={categoriaAtiva}
-                setCategoriaAtiva={setCategoriaAtiva}
-                setIsFilterOpen={setIsFilterOpen}
-                navRef={navRef}
-                handleMouseDown={handleMouseDown}
-                isEmpreendedor={isEmpreendedor}
-                forceBlue={true}
-            />
-
+            <HeaderListagem scrolled={scrolled} categoriaAtiva={categoriaAtiva} setCategoriaAtiva={setCategoriaAtiva} setIsFilterOpen={setIsFilterOpen} navRef={navRef} handleMouseDown={handleMouseDown} isEmpreendedor={isEmpreendedor} forceBlue={true} />
             <div className="h-16 md:h-20"></div>
 
-            {servicoSelecionado && (
-                <ModalVerMais
-                    item={servicoSelecionado}
-                    isEmpreendedor={isEmpreendedor}
-                    onClose={() => setServicoSelecionado(null)}
-                />
-            )}
+            {servicoSelecionado && <ModalVerMais item={servicoSelecionado} isEmpreendedor={isEmpreendedor} onClose={() => setServicoSelecionado(null)} />}
 
-            {/* MODAL DE FILTROS MOBILE */}
             <div className={`fixed inset-0 z-[100] md:hidden transition-all duration-300 ${isFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
                 <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isFilterOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsFilterOpen(false)}></div>
                 <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] p-6 shadow-2xl transition-all duration-300 ${isFilterOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}>
                     <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
                     <h3 className="text-[#0A4F6E] font-bold text-lg mb-4">Filtros</h3>
                     <FiltrosInterface filtros={filtros} setFiltros={setFiltros} contexto="modal" />
-                    <button
-                        onClick={() => { setIsFilterOpen(false); carregarNegocios(); }}
-                        className="w-full mt-6 py-3.5 bg-[#0A4F6E] text-white rounded-2xl font-bold"
-                    >
-                        Aplicar filtros
-                    </button>
+                    <button onClick={() => { setIsFilterOpen(false); carregarNegocios(); }} className="w-full mt-6 py-3.5 bg-[#0A4F6E] text-white rounded-2xl font-bold">Aplicar filtros</button>
                 </div>
             </div>
 
@@ -230,15 +178,7 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                     <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
                         <h3 className="text-[#0A4F6E] font-bold text-[11px] mb-2 border-b pb-1 uppercase tracking-tighter">Refinar busca</h3>
                         <FiltrosInterface filtros={filtros} setFiltros={setFiltros} contexto="aside" />
-                        <button
-                            onClick={() => {
-                                const buscaUrl = searchParams.get("search") || "";
-                                carregarNegocios(filtros, categoriaAtiva, buscaUrl);
-                            }}
-                            className="w-full mt-3 py-2 bg-[#0A4F6E] text-white rounded-lg font-bold hover:bg-[#083d55] transition-colors shadow-sm text-[11px]"
-                        >
-                            Aplicar filtros
-                        </button>
+                        <button onClick={() => { const buscaUrl = searchParams.get("search") || ""; carregarNegocios(filtros, categoriaAtiva, buscaUrl); }} className="w-full mt-3 py-2 bg-[#0A4F6E] text-white rounded-lg font-bold hover:bg-[#083d55] transition-colors shadow-sm text-[11px]">Aplicar filtros</button>
                     </div>
                 </aside>
 
@@ -259,41 +199,23 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                                 <h2 className="text-[#0A4F6E] text-lg md:text-xl font-bold italic mb-4 md:mb-6 text-center md:text-left tracking-tight">Próximos de você</h2>
                                 {temDados ? (
                                     <div className="relative flex items-start pt-2 px-0 md:px-10 group">
-
-                                        {/* SETA ESQUERDA: Só aparece no Desktop E se houver mais de 4 itens na lista */}
                                         {listaNegocios.length > 4 && (
-                                            <button
-                                                onClick={() => scroll("left")}
-                                                className="absolute left-0 top-[40%] -translate-y-1/2 z-20 p-2 bg-white/80 hover:bg-white rounded-full shadow-md text-[#0A4F6E] hover:scale-110 transition-all hidden md:flex items-center justify-center border border-gray-100"
-                                            >
+                                            <button onClick={() => scroll("left")} className="absolute left-0 top-[40%] -translate-y-1/2 z-20 p-2 bg-white/80 hover:bg-white rounded-full shadow-md text-[#0A4F6E] hover:scale-110 transition-all hidden md:flex items-center justify-center border border-gray-100">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                                             </button>
                                         )}
 
-                                        <div ref={scrollRef} onMouseDown={handleMouseDown(scrollRef)}
-                                            className="flex overflow-x-auto gap-4 md:gap-5 w-full pb-6 scrollbar-hide snap-x items-start cursor-grab active:cursor-grabbing"
-                                        >
+                                        <div ref={scrollRef} onMouseDown={handleMouseDown(scrollRef)} className="flex overflow-x-auto gap-4 md:gap-5 w-full pb-6 scrollbar-hide snap-x items-start cursor-grab active:cursor-grabbing">
                                             {listaNegocios.map((item) => (
-                                                <CardServico
-                                                    key={item.id}
-                                                    item={item}
-                                                    variante="vertical"
-                                                    isEmpreendedor={isEmpreendedor}
-                                                    onOpenModal={(item) => setServicoSelecionado(item)}
-                                                />
+                                                <CardServico key={item.id} item={item} variante="vertical" isEmpreendedor={isEmpreendedor} onOpenModal={(item) => setServicoSelecionado(item)} />
                                             ))}
                                         </div>
 
-                                        {/* SETA DIREITA: Só aparece no Desktop E se houver mais de 4 itens na lista */}
                                         {listaNegocios.length > 4 && (
-                                            <button
-                                                onClick={() => scroll("right")}
-                                                className="absolute right-0 top-[40%] -translate-y-1/2 z-20 p-2 bg-white/80 hover:bg-white rounded-full shadow-md text-[#0A4F6E] hover:scale-110 transition-all hidden md:flex items-center justify-center border border-gray-100"
-                                            >
+                                            <button onClick={() => scroll("right")} className="absolute right-0 top-[40%] -translate-y-1/2 z-20 p-2 bg-white/80 hover:bg-white rounded-full shadow-md text-[#0A4F6E] hover:scale-110 transition-all hidden md:flex items-center justify-center border border-gray-100">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                                             </button>
                                         )}
-
                                     </div>
                                 ) : (
                                     <div className="text-center p-10 bg-white rounded-2xl border border-dashed border-gray-300">
@@ -310,12 +232,7 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-8">
                                         {listaNegocios.map((item) => (
                                             <div key={item.id} className="h-fit">
-                                                <CardServico
-                                                    item={item}
-                                                    variante="horizontal"
-                                                    isEmpreendedor={isEmpreendedor}
-                                                    onOpenModal={(item) => setServicoSelecionado(item)}
-                                                />
+                                                <CardServico item={item} variante="horizontal" isEmpreendedor={isEmpreendedor} onOpenModal={(item) => setServicoSelecionado(item)} />
                                             </div>
                                         ))}
                                     </div>

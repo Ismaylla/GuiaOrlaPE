@@ -42,6 +42,9 @@ public class CreateBusinessRequest
     
     public string CoverPhotoUrl { get; set; } = string.Empty;
 
+    //  ADICIONADO: URL da foto da vitrine/card
+    public string CardImageUrl { get; set; } = string.Empty;
+
     //  ADICIONADO: Lista contendo os caminhos das imagens da galeria de fotos do estabelecimento
     public List<string> GalleryPhotos { get; set; } = new();
 }

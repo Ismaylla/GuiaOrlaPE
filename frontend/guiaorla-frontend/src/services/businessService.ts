@@ -5,7 +5,14 @@ import { api } from "./api";
  */
 export async function listarTodosOsNegocios(): Promise<any[]> {
   try {
-    const response = await api.get<any[]>("/api/business");
+    const response = await api.get<any[]>("/api/business", {
+      headers: {
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      },
+      params: { _t: new Date().getTime() } //  MÁGICA ANTI-CACHE AQUI
+    });
     return response.data;
   } catch (error) {
     console.error("Erro no service ao executar GetAllAsync:", error);
@@ -27,7 +34,8 @@ export async function buscarNegociosComFiltros(
   try {
     const params: any = {
       page: 1,
-      pageSize: 10
+      pageSize: 10,
+      _t: new Date().getTime() //  MÁGICA ANTI-CACHE AQUI TAMBÉM
     };
 
     // 1. Mapeia a barra de pesquisa de texto
@@ -49,7 +57,13 @@ export async function buscarNegociosComFiltros(
     if (filtrosObjeto.acessibilidade) params.acessibilidade = true;
     if (filtrosObjeto.melhoresAvaliados) params.melhoresAvaliados = true;
 
-    const response = await api.get<any>("/api/business/search", { params });
+    const response = await api.get<any>("/api/business/search", { 
+      params,
+      headers: {
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+      }
+    });
     return response.data;
   } catch (error) {
     console.error("Erro no service ao executar SearchAsync:", error);
@@ -63,7 +77,14 @@ export async function buscarNegociosComFiltros(
  */
 export async function buscarNegocioPorId(id: string): Promise<any> {
   try {
-    const response = await api.get<any>(`/api/business/${id}`);
+    const response = await api.get<any>(`/api/business/${id}`, {
+      headers: {
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      },
+      params: { _t: new Date().getTime() } //  MÁGICA ANTI-CACHE AQUI
+    });
     return response.data;
   } catch (error) {
     console.error(`Erro no service ao executar GetByIdAsync para o ID ${id}:`, error);
@@ -88,7 +109,7 @@ export async function listarAvaliacoesDoNegocio(businessId: string): Promise<any
     console.error("Erro inesperado ao buscar avaliações:", error);
     return []; 
   }
-} // <--- CHAVE CORRIGIDA AQUI: Agora fecha a função listarAvaliacoesDoNegocio perfeitamente!
+} 
 
 /**
  * Cadastra um novo estabelecimento na orla

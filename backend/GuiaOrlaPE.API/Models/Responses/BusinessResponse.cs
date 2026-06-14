@@ -23,6 +23,8 @@ public class BusinessResponse
 
     public string CoverPhotoUrl { get; set; } = string.Empty;
 
+    //  ADICIONADO: URL da foto da vitrine/card retornada para a listagem
+    public string CardImageUrl { get; set; } = string.Empty;
 
     public string Horario { get; set; } = string.Empty;
 

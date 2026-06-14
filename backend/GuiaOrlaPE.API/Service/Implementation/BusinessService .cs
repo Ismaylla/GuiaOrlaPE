@@ -27,6 +27,7 @@ public class BusinessService(
                 Latitude = x.Latitude, Longitude = x.Longitude, 
                 BusinessPhotoUrl = x.BusinessPhotoUrl,
                 CoverPhotoUrl = x.CoverPhotoUrl,
+                CardImageUrl = x.CardImageUrl, //  ADICIONADO AQUI
                 Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
                 Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
                 PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
@@ -54,6 +55,7 @@ public class BusinessService(
                 Latitude = business.Latitude, Longitude = business.Longitude, 
                 BusinessPhotoUrl = business.BusinessPhotoUrl,
                 CoverPhotoUrl = business.CoverPhotoUrl,
+                CardImageUrl = business.CardImageUrl, //  ADICIONADO AQUI
                 Horario = business.Horario, Cartao = business.Cartao, Pix = business.Pix, Dinheiro = business.Dinheiro,
                 Chuveiro = business.Chuveiro, Estacionamento = business.Estacionamento, Cadeira = business.Cadeira,
                 PetFriendly = business.PetFriendly, Acessibilidade = business.Acessibilidade, Wifi = business.Wifi,
@@ -78,6 +80,7 @@ public class BusinessService(
                 Latitude = x.Latitude, Longitude = x.Longitude, 
                 BusinessPhotoUrl = x.BusinessPhotoUrl,
                 CoverPhotoUrl = x.CoverPhotoUrl,
+                CardImageUrl = x.CardImageUrl, //  ADICIONADO AQUI
                 Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
                 Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
                 PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
@@ -107,6 +110,7 @@ public class BusinessService(
                     Latitude = x.Latitude, Longitude = x.Longitude, 
                     BusinessPhotoUrl = x.BusinessPhotoUrl,
                     CoverPhotoUrl = x.CoverPhotoUrl,
+                    CardImageUrl = x.CardImageUrl, //  ADICIONADO AQUI
                     Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
                     Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
                     PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
@@ -133,6 +137,7 @@ public class BusinessService(
                 Address = request.Address, Latitude = request.Latitude, Longitude = request.Longitude,
                 BusinessPhotoUrl = request.BusinessPhotoUrl,
                 CoverPhotoUrl = string.Empty,
+                CardImageUrl = request.CardImageUrl ?? string.Empty, //  ADICIONADO AQUI
                 Status = true, Horario = request.Horario,
                 Cartao = request.Cartao, Pix = request.Pix, Dinheiro = request.Dinheiro,
                 Chuveiro = request.Chuveiro, Estacionamento = request.Estacionamento, Cadeira = request.Cadeira,
@@ -141,7 +146,7 @@ public class BusinessService(
             };
 
             await _repository.AddAsync(business);
-            return new BusinessResponse { Id = business.Id, UserId = business.UserId, Name = business.Name, ServiceType = business.ServiceType, Address = business.Address, Latitude = business.Latitude, Longitude = business.Longitude, BusinessPhotoUrl = business.BusinessPhotoUrl, CoverPhotoUrl = business.CoverPhotoUrl, Horario = business.Horario, Cartao = business.Cartao, Pix = business.Pix, Dinheiro = business.Dinheiro, Chuveiro = business.Chuveiro, Estacionamento = business.Estacionamento, Cadeira = business.Cadeira, PetFriendly = business.PetFriendly, Acessibilidade = business.Acessibilidade, Wifi = business.Wifi, Description = business.Description, GalleryPhotos = [], Owner = new BusinessOwnerResponse { Id = userId } };
+            return new BusinessResponse { Id = business.Id, UserId = business.UserId, Name = business.Name, ServiceType = business.ServiceType, Address = business.Address, Latitude = business.Latitude, Longitude = business.Longitude, BusinessPhotoUrl = business.BusinessPhotoUrl, CoverPhotoUrl = business.CoverPhotoUrl, CardImageUrl = business.CardImageUrl, Horario = business.Horario, Cartao = business.Cartao, Pix = business.Pix, Dinheiro = business.Dinheiro, Chuveiro = business.Chuveiro, Estacionamento = business.Estacionamento, Cadeira = business.Cadeira, PetFriendly = business.PetFriendly, Acessibilidade = business.Acessibilidade, Wifi = business.Wifi, Description = business.Description, GalleryPhotos = [], Owner = new BusinessOwnerResponse { Id = userId } };
         }
         catch (Exception ex) { _logger.LogError(ex, "Erro."); throw; }
     }
@@ -164,6 +169,7 @@ public class BusinessService(
             business.Wifi = request.Wifi;
             business.Description = request.Description ?? string.Empty;
             business.CoverPhotoUrl = request.CoverPhotoUrl ?? string.Empty;
+            business.CardImageUrl = request.CardImageUrl ?? string.Empty; //  ADICIONADO AQUI
 
             if (request.GalleryPhotos != null)
             {

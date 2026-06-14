@@ -8,7 +8,7 @@ import { PerfilHeader } from "@/components/PerfilPublico/PerfilHeader";
 import { ModalUpload } from "./ModalUpload";
 import { ModalSobre } from "./ModalSobre";
 import { SecaoFeedback } from "@/components/PerfilPublico/SecaoFeedback";
-import { Clock, MapPin, CreditCard, Sparkles, Store, Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, MapPin, CreditCard, Sparkles, Store, Loader2, X, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
 
 import { GaleriaViewer } from "./GaleriaViewer"; 
 
@@ -29,6 +29,7 @@ interface BusinessData {
     wifi: boolean;
     businessPhotoUrl: string;
     coverPhotoUrl: string; 
+    cardImageUrl: string;
     description: string;
     galleryPhotos: string[];
     nota: number;
@@ -45,11 +46,11 @@ export const MeuPerfilScreen = () => {
 
     const [isModalSobreOpen, setIsModalSobreOpen] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-    const [uploadType, setUploadType] = useState<"galeria" | "header" | "profile">("galeria");
+    const [uploadType, setUploadType] = useState<"galeria" | "header" | "profile" | "card">("galeria");
     
-    // ESTADOS DO MODAL DE EXCLUSÃO
+    // ESTADOS DO MODAL DE EXCLUSÃO AJUSTADO PARA ACEITAR "CARD"
     const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
-    const [deleteType, setDeleteType] = useState<"header" | "profile" | null>(null);
+    const [deleteType, setDeleteType] = useState<"header" | "profile" | "card" | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const [indexAberto, setIndexAberto] = useState<number | null>(null);
@@ -85,6 +86,7 @@ export const MeuPerfilScreen = () => {
             if (!prev) return null;
             if (uploadType === "profile") return { ...prev, businessPhotoUrl: fullUrl };
             if (uploadType === "header") return { ...prev, coverPhotoUrl: fullUrl };
+            if (uploadType === "card") return { ...prev, cardImageUrl: fullUrl }; 
             if (uploadType === "galeria") {
                 const galeriaAtualizada = prev.galleryPhotos.includes(fullUrl)
                     ? prev.galleryPhotos
@@ -96,7 +98,6 @@ export const MeuPerfilScreen = () => {
         setIsUploadModalOpen(false);
     };
 
-    // NOVA FUNÇÃO: Dispara a requisição DELETE para o Backend (Perfil e Capa)
     const handleConfirmDelete = async () => {
         if (!business || !deleteType) return;
         
@@ -112,13 +113,14 @@ export const MeuPerfilScreen = () => {
             });
 
             if (response.ok) {
-                // Atualiza a interface instantaneamente apagando a URL
+                //  Lógica ajustada para zerar a cardImageUrl também
                 setBusiness(prev => {
                     if (!prev) return prev;
                     return {
                         ...prev,
                         coverPhotoUrl: deleteType === "header" ? "" : prev.coverPhotoUrl,
-                        businessPhotoUrl: deleteType === "profile" ? "" : prev.businessPhotoUrl
+                        businessPhotoUrl: deleteType === "profile" ? "" : prev.businessPhotoUrl,
+                        cardImageUrl: deleteType === "card" ? "" : prev.cardImageUrl
                     };
                 });
                 setIsConfirmDeleteOpen(false);
@@ -133,40 +135,26 @@ export const MeuPerfilScreen = () => {
         }
     };
 
-    // 🌟 NOVA FUNÇÃO: Exclusão em massa da Galeria
     const handleDeleteGalleryPhotos = async (urlsToDelete: string[]) => {
         if (!business) return;
-        
         try {
             const token = (session as any).accessToken || (session as any).token;
-
             const response = await fetch(`http://localhost:5148/api/business/${business.id}/photo/gallery`, {
                 method: "DELETE",
-                headers: { 
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json" 
-                },
+                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ urls: urlsToDelete })
             });
 
             if (response.ok) {
                 setBusiness(prev => {
                     if (!prev) return prev;
-                    return {
-                        ...prev,
-                        galleryPhotos: prev.galleryPhotos.filter(foto => !urlsToDelete.includes(foto))
-                    };
+                    return { ...prev, galleryPhotos: prev.galleryPhotos.filter(foto => !urlsToDelete.includes(foto)) };
                 });
-            } else {
-                console.error("Erro ao deletar fotos da galeria no backend.");
             }
-        } catch (error) {
-            console.error("Erro de rede ao deletar da galeria:", error);
-        }
+        } catch (error) { console.error("Erro de rede ao deletar da galeria:", error); }
     };
 
-    // NOVA FUNÇÃO: Abre o modal de confirmação guardando o tipo
-    const handleOpenDelete = (tipo: "header" | "profile") => {
+    const handleOpenDelete = (tipo: "header" | "profile" | "card") => {
         setDeleteType(tipo);
         setIsConfirmDeleteOpen(true);
     };
@@ -179,17 +167,12 @@ export const MeuPerfilScreen = () => {
                 const token = (session as any).accessToken || (session as any).token;
 
                 const response = await fetch(`http://localhost:5148/api/business/user?t=${new Date().getTime()}`, {
-                    method: "GET",
-                    cache: "no-store",
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "Content-Type": "application/json"
-                    }
+                    method: "GET", cache: "no-store",
+                    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
                 });
 
                 if (response.ok) {
                     const d = await response.json();
-
                     setBusiness({
                         id: d.id ?? d.Id,
                         name: d.name ?? d.Name ?? "",
@@ -207,41 +190,27 @@ export const MeuPerfilScreen = () => {
                         wifi: d.wifi === true || d.Wifi === true,
                         businessPhotoUrl: (d.businessPhotoUrl ?? d.BusinessPhotoUrl) ? `http://localhost:5148${d.businessPhotoUrl ?? d.BusinessPhotoUrl}` : "",
                         coverPhotoUrl: (d.coverPhotoUrl ?? d.CoverPhotoUrl) ? `http://localhost:5148${d.coverPhotoUrl ?? d.CoverPhotoUrl}` : "",
+                        cardImageUrl: (d.cardImageUrl ?? d.CardImageUrl) ? `http://localhost:5148${d.cardImageUrl ?? d.CardImageUrl}` : "",
                         description: d.description ?? d.Description ?? "",
                         galleryPhotos: (d.galleryPhotos ?? d.GalleryPhotos ?? []).map((p: string) => p.startsWith("http") ? p : `http://localhost:5148${p}`),
                         nota: 5.0,
                         totalAvaliacoes: 0
                     });
                 }
-            } catch (error) {
-                console.error("Erro ao buscar perfil do dono:", error);
-            } finally {
-                setIsLoading(false);
-            }
+            } catch (error) { console.error("Erro:", error); } finally { setIsLoading(false); }
         };
-
         carregarDadosDono();
     }, [session, status]);
 
-    useEffect(() => {
-        document.body.style.overflow = "auto";
-        window.scrollTo(0, 0);
-    }, []);
-
+    useEffect(() => { document.body.style.overflow = "auto"; window.scrollTo(0, 0); }, []);
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    const handleCategoryClick = (cat: string) => {
-        router.push(`/empreendedor/explorer?categoria=${encodeURIComponent(cat)}`);
-    };
-
-    const handleOpenUpload = (tipo: "galeria" | "header" | "profile") => {
-        setUploadType(tipo);
-        setIsUploadModalOpen(true);
-    };
+    const handleCategoryClick = (cat: string) => { router.push(`/empreendedor/explorer?categoria=${encodeURIComponent(cat)}`); };
+    const handleOpenUpload = (tipo: "galeria" | "header" | "profile" | "card") => { setUploadType(tipo); setIsUploadModalOpen(true); };
 
     const handleMouseDown = (ref: React.RefObject<HTMLDivElement | null>) => (e: React.MouseEvent) => {
         if (!ref.current || ref.current.scrollWidth <= ref.current.clientWidth) return;
@@ -261,13 +230,7 @@ export const MeuPerfilScreen = () => {
         document.addEventListener('mouseup', handleMouseUp);
     };
 
-    if (isLoading || !business) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5]">
-                <Loader2 className="animate-spin text-[#0A4F6E]" size={40} />
-            </div>
-        );
-    }
+    if (isLoading || !business) return <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5]"><Loader2 className="animate-spin text-[#0A4F6E]" size={40} /></div>;
 
     return (
         <main className="min-h-screen bg-[#F0F2F5] font-sans pb-20 text-left">
@@ -275,7 +238,6 @@ export const MeuPerfilScreen = () => {
             <div className="h-16"></div>
 
             <div className="max-w-[1100px] mx-auto">
-                {/* 🌟 VÍNCULO FEITO: Conectando os eventos do componente PerfilHeader com as funções da tela */}
                 <PerfilHeader
                     key={`${business.businessPhotoUrl}-${business.coverPhotoUrl}`} 
                     podeEditar={true}
@@ -297,8 +259,36 @@ export const MeuPerfilScreen = () => {
                                 <button onClick={() => setIsModalSobreOpen(true)} className="text-xs font-bold text-[#1398D4] hover:underline">Editar Bio</button>
                             </div>
                             <p className="text-gray-600 text-sm leading-relaxed font-medium">
-                                {business.description || "Nenhuma descrição adicionada. Clique em 'Editar Bio' para contar sobre o seu estabelecimento!"}
+                                {business.description || "Nenhuma descrição adicionada."}
                             </p>
+                        </div>
+
+                        {/* VÍNCULO FEITO: Botões de Remover e Alterar alinhados */}
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-bold text-[#0A4F6E] text-lg">Foto da Vitrine</h3>
+                                <div className="flex items-center gap-3">
+                                    {business.cardImageUrl && (
+                                        <button onClick={() => handleOpenDelete("card")} className="text-xs font-bold text-red-500 hover:underline">
+                                            Remover
+                                        </button>
+                                    )}
+                                    <button onClick={() => handleOpenUpload("card")} className="text-xs font-bold text-[#1398D4] hover:underline">
+                                        {business.cardImageUrl ? "Alterar" : "Adicionar"}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="relative aspect-[4/3] w-full bg-gray-50 rounded-xl overflow-hidden border border-gray-200 group cursor-pointer" onClick={() => handleOpenUpload("card")}>
+                                {business.cardImageUrl ? (
+                                    <Image src={business.cardImageUrl} alt="Vitrine" fill className="object-cover transition-transform group-hover:scale-105" unoptimized />
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center w-full h-full text-gray-400 p-4 text-center group-hover:text-[#1398D4] transition-colors">
+                                        <ImageIcon size={32} className="mb-2 opacity-50" />
+                                        <span className="text-xs font-medium">Nenhuma foto adicionada</span>
+                                    </div>
+                                )}
+                            </div>
+                            <p className="text-[11px] text-gray-400 mt-3 text-center leading-tight">Esta é a foto principal que os clientes verão nas buscas da Orla.</p>
                         </div>
 
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-5">
@@ -317,50 +307,27 @@ export const MeuPerfilScreen = () => {
                                 <h3 className="font-bold text-[#0A4F6E] text-xl italic">Minha Galeria</h3>
                                 <button onClick={() => handleOpenUpload("galeria")} className="text-sm font-bold text-[#1398D4] hover:underline">+ Adicionar Fotos</button>
                             </div>
-
-                            {/* VÍNCULO FEITO: Enviando as funções para habilitar a edição e exclusão */}
-                            <GaleriaViewer 
-                                fotos={business.galleryPhotos} 
-                                podeEditar={true}
-                                onDeleteMultiple={handleDeleteGalleryPhotos}
-                            />
+                            <GaleriaViewer fotos={business.galleryPhotos} podeEditar={true} onDeleteMultiple={handleDeleteGalleryPhotos} />
                         </div>
                         <SecaoFeedback nota={business.nota} totalAvaliacoes={business.totalAvaliacoes} exibirBotaoAvaliar={false} />
                     </section>
                 </div>
             </div>
 
-            <ModalSobre
-                isOpen={isModalSobreOpen}
-                onClose={() => setIsModalSobreOpen(false)}
-                valorAtual={business.description}
-                onSave={(novo: string) => {
-                    setBusiness((prev: any) => ({ ...prev, description: novo }));
-                }}
-            />
+            <ModalSobre isOpen={isModalSobreOpen} onClose={() => setIsModalSobreOpen(false)} valorAtual={business.description} onSave={(novo: string) => { setBusiness((prev: any) => ({ ...prev, description: novo })); }} />
             <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} businessId={business.id} onSuccess={handleImageUpdate} />
             
-            {/* NOVO MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
+            {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
             {isConfirmDeleteOpen && (
                 <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => !isDeleting && setIsConfirmDeleteOpen(false)}>
                     <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
                         <h3 className="text-lg font-bold text-[#0A4F6E] mb-2">Confirmar Exclusão</h3>
                         <p className="text-gray-600 text-sm mb-6">
-                            Tem certeza que deseja remover permanentemente a {deleteType === "header" ? "foto de capa" : "foto de perfil"}?
+                            Tem certeza que deseja remover permanentemente a {deleteType === "header" ? "foto de capa" : deleteType === "profile" ? "foto de perfil" : "foto da vitrine"}?
                         </p>
                         <div className="flex gap-3 justify-end">
-                            <button 
-                                onClick={() => setIsConfirmDeleteOpen(false)}
-                                disabled={isDeleting}
-                                className="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-                            >
-                                Cancelar
-                            </button>
-                            <button 
-                                onClick={handleConfirmDelete}
-                                disabled={isDeleting}
-                                className="px-4 py-2 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors flex items-center justify-center min-w-[90px] disabled:opacity-70"
-                            >
+                            <button onClick={() => setIsConfirmDeleteOpen(false)} disabled={isDeleting} className="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg disabled:opacity-50">Cancelar</button>
+                            <button onClick={handleConfirmDelete} disabled={isDeleting} className="px-4 py-2 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg flex items-center justify-center min-w-[90px] disabled:opacity-70">
                                 {isDeleting ? <Loader2 size={16} className="animate-spin" /> : "Sim, excluir"}
                             </button>
                         </div>

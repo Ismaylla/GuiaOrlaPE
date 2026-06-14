@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 interface ModalUploadProps {
     isOpen: boolean;
     onClose: () => void;
-    tipo: "galeria" | "header" | "profile";
+    tipo: "galeria" | "header" | "profile" | "card"; //  ADICIONADO: tipo "card"
     businessId: string;
     onSuccess?: (newUrl: string) => void;
 }
@@ -61,7 +61,6 @@ export const ModalUpload = ({ isOpen, onClose, tipo = "galeria", businessId, onS
 
             const data = await response.json(); 
             
-            // AJUSTE REALIZADO: Enviando a URL limpa para o callback
             if (onSuccess) {
                 onSuccess(data.url); 
             }
@@ -82,7 +81,13 @@ export const ModalUpload = ({ isOpen, onClose, tipo = "galeria", businessId, onS
         onClose();
     };
 
-    const aspectClass = tipo === "header" ? "aspect-[3/1] w-full" : "aspect-square w-full max-w-[240px]";
+    // AJUSTE: Formato dinâmico baseado no tipo. O card recebe uma proporção retangular 4:3
+    const aspectClass = tipo === "header" 
+        ? "aspect-[3/1] w-full" 
+        : tipo === "card" 
+        ? "aspect-[4/3] w-full" 
+        : "aspect-square w-full max-w-[240px]";
+        
     const shapeClass = tipo === "profile" ? "rounded-full" : "rounded-2xl";
     const modalWidthClass = tipo === "header" ? "max-w-2xl" : "max-w-md";
 
@@ -94,6 +99,7 @@ export const ModalUpload = ({ isOpen, onClose, tipo = "galeria", businessId, onS
                         {tipo === "header" && "Ajustar Foto de Capa"}
                         {tipo === "profile" && "Alterar Foto de Perfil"}
                         {tipo === "galeria" && "Adicionar à Galeria"}
+                        {tipo === "card" && "Alterar Foto da Vitrine"} {/*  NOVO TÍTULO */}
                     </h3>
                     <button onClick={handleClose} disabled={isUploading} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 disabled:opacity-50">
                         <X size={20} />

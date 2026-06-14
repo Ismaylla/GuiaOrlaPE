@@ -1,6 +1,10 @@
+
+
 "use client";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { X, MapPin, CreditCard, ChevronRight, ExternalLink, Clock } from "lucide-react";
 
 interface ModalVerMaisProps {
@@ -9,28 +13,44 @@ interface ModalVerMaisProps {
   isEmpreendedor?: boolean;
 }
 
-// FUNÇÃO DE SEGURANÇA PARA EVITAR QUE STRINGS INVÁLIDAS QUEBREM O NEXT.JS AO ABRIR O MODAL
-const obterImagemValida = (src: string) => {
+const obterImagemValida = (src?: string | null) => {
   if (!src) return "/images/fundopraia.jpg";
   const ehValido = src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://");
-  return ehValido ? src : "/images/fundopraia.jpg"; // Fallback para imagem segura
+  return ehValido ? src : "/images/fundopraia.jpg";
 };
 
 export const ModalVerMais = ({ item, onClose, isEmpreendedor = false }: ModalVerMaisProps) => {
+  const { data: session } = useSession();
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+      setImgError(false);
+  }, [item]);
+
   if (!item) return null;
+
+  const imagemExibicao = imgError ? "/images/fundopraia.jpg" : obterImagemValida(item.cardImageUrl || item.img || item.businessPhotoUrl);
+
+  const usuarioLogadoId = (session as any)?.user?.id || (session as any)?.id;
+  const isOwner = Boolean(usuarioLogadoId && (item.userId === usuarioLogadoId || item.ownerId === usuarioLogadoId));
+
+  const hrefPerfil = isOwner 
+    ? "/empreendedor/meu-perfil" 
+    : `/perfil-publico/${item.id}${isEmpreendedor ? '?role=empreendedor' : ''}`;
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-[#0A4F6E]/40 backdrop-blur-md transition-opacity" onClick={onClose}></div>
       <div className="relative bg-white w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-[32px] shadow-2xl animate-in fade-in zoom-in-95 duration-300 text-left">
         
-        {/* Cabeçalho com Imagem Dinâmica Protegida */}
         <div className="relative h-56 w-full">
           <Image 
-            src={obterImagemValida(item.img || item.businessPhotoUrl)} 
+            src={imagemExibicao} 
             alt={item.nome || "Imagem do estabelecimento"} 
             fill 
             className="object-cover" 
+            unoptimized //  O SEGREDO ESTÁ AQUI TAMBÉM
+            onError={() => setImgError(true)}
           />
           <button onClick={onClose} className="absolute top-4 right-4 bg-black/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-black/40 transition-all">
             <X size={20} />
@@ -41,7 +61,6 @@ export const ModalVerMais = ({ item, onClose, isEmpreendedor = false }: ModalVer
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Status e Descrição */}
           <div>
             <div className="flex items-center gap-2 mb-2">
               <div className={`w-2 h-2 rounded-full ${item.aberto ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -53,7 +72,6 @@ export const ModalVerMais = ({ item, onClose, isEmpreendedor = false }: ModalVer
             <p className="text-gray-600 text-sm italic">"{item.nome}: Venha conhecer nosso espaço na orla! Oferecemos uma ótima experiência gastronômica e de lazer na praia."</p>
           </div>
 
-          {/* Grid de Informações Rápidas */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
               <Clock size={18} className="text-[#1398D4]" />
@@ -63,7 +81,6 @@ export const ModalVerMais = ({ item, onClose, isEmpreendedor = false }: ModalVer
               </div>
             </div>
             
-            {/* LOCALIZAÇÃO ATUALIZADA */}
             <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
               <MapPin size={18} className="text-[#1398D4]" />
               <div className="flex flex-col">
@@ -85,23 +102,17 @@ export const ModalVerMais = ({ item, onClose, isEmpreendedor = false }: ModalVer
             </div>
           </div>
 
-          {/* Ações */}
           <div className="flex flex-col gap-3 pt-2">
-            <a 
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.nome + " " + item.desc)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-[#0A4F6E] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-[#083d55] transition-all shadow-lg shadow-blue-900/10 text-center text-sm"
-            >
+            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.nome + " " + item.desc)}`} target="_blank" rel="noopener noreferrer" className="w-full bg-[#0A4F6E] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-[#083d55] transition-all shadow-lg shadow-blue-900/10 text-center text-sm">
               Como chegar pelo Maps
               <ChevronRight size={18} />
             </a>
 
             <Link 
-              href={`/perfil-publico/${item.id}${isEmpreendedor ? '?role=empreendedor' : ''}`} 
+              href={hrefPerfil} 
               className="w-full bg-gray-100 text-[#0A4F6E] py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-all border border-gray-200 text-center text-sm"
             >
-              Ver perfil completo
+              {isOwner ? "Editar Meu Perfil" : "Ver perfil completo"}
               <ExternalLink size={16} />
             </Link>
           </div>
