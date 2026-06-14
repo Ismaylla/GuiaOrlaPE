@@ -7,6 +7,7 @@ import { FiltrosInterface } from "@/components/ListagemServicos/FiltrosInterface
 import { CardServico } from "@/components/ListagemServicos/CardServico";
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
 import { ModalVerMais } from "@/components/ListagemServicos/ModalVerMais";
+import { AvisoPerfil } from "@/components/Empreendedor/AvisoPerfil";
 
 import { listarTodosOsNegocios, buscarNegociosComFiltros } from "@/services/businessService";
 
@@ -197,6 +198,9 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                         </div>
                     ) : (
                         <>
+
+                            <AvisoPerfil /> 
+
                             <section className="mb-12 md:mb-16">
                                 <h2 className="text-[#0A4F6E] text-lg md:text-xl font-bold italic mb-4 md:mb-6 text-center md:text-left tracking-tight">Próximos de você</h2>
                                 {temDados ? (

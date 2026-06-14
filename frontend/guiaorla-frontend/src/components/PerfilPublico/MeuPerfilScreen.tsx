@@ -12,7 +12,8 @@ import { Clock, MapPin, CreditCard, Sparkles, Store, Loader2, X, ChevronLeft, Ch
 
 import { GaleriaViewer } from "./GaleriaViewer"; 
 
-//  ADICIONADO: Importação do serviço de atualização
+import { BarraProgressoPerfil } from "@/components/Empreendedor/BarraProgressoPerfil";
+
 import { atualizarNegocio } from "@/services/businessService";
 
 interface BusinessData {
@@ -37,7 +38,7 @@ interface BusinessData {
     galleryPhotos: string[];
     nota: number;
     totalAvaliacoes: number;
-    latitude?: number;  // Adicionados latitude e longitude para o PUT funcionar completo
+    latitude?: number;  
     longitude?: number;
 }
 
@@ -57,7 +58,6 @@ export const MeuPerfilScreen = () => {
     const [deleteType, setDeleteType] = useState<"header" | "profile" | "card" | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     
-    //  NOVO: Estado de loading para quando estiver salvando a descrição
     const [isSavingDesc, setIsSavingDesc] = useState(false);
 
     const [indexAberto, setIndexAberto] = useState<number | null>(null);
@@ -105,7 +105,6 @@ export const MeuPerfilScreen = () => {
         setIsUploadModalOpen(false);
     };
 
-    //  NOVA FUNÇÃO: Salvar descrição na API
     const handleSaveDescricao = async (novaDescricao: string) => {
         if (!business) return;
         setIsSavingDesc(true);
@@ -113,7 +112,6 @@ export const MeuPerfilScreen = () => {
         try {
             const token = (session as any).accessToken || (session as any).token;
             
-            // Monta o payload esperado pelo backend
             const payload = {
                 name: business.name,
                 serviceType: business.serviceType,
@@ -128,7 +126,7 @@ export const MeuPerfilScreen = () => {
                 petFriendly: business.petFriendly,
                 acessibilidade: business.acessibilidade,
                 wifi: business.wifi,
-                description: novaDescricao, // Apenas este campo é alterado
+                description: novaDescricao, 
                 coverPhotoUrl: business.coverPhotoUrl.replace("http://localhost:5148", ""),
                 businessPhotoUrl: business.businessPhotoUrl.replace("http://localhost:5148", ""),
                 cardImageUrl: business.cardImageUrl.replace("http://localhost:5148", ""),
@@ -139,7 +137,6 @@ export const MeuPerfilScreen = () => {
 
             await atualizarNegocio(business.id, payload, token);
             
-            // Atualiza a tela se a API confirmar sucesso
             setBusiness(prev => prev ? { ...prev, description: novaDescricao } : null);
             setIsModalSobreOpen(false);
             
@@ -246,8 +243,8 @@ export const MeuPerfilScreen = () => {
                         galleryPhotos: (d.galleryPhotos ?? d.GalleryPhotos ?? []).map((p: string) => p.startsWith("http") ? p : `http://localhost:5148${p}`),
                         nota: 5.0,
                         totalAvaliacoes: 0,
-                        latitude: d.latitude || d.Latitude, // Capturado para não zerar no PUT
-                        longitude: d.longitude || d.Longitude // Capturado para não zerar no PUT
+                        latitude: d.latitude || d.Latitude, 
+                        longitude: d.longitude || d.Longitude 
                     });
                 }
             } catch (error) { console.error("Erro:", error); } finally { setIsLoading(false); }
@@ -304,6 +301,8 @@ export const MeuPerfilScreen = () => {
                     localizacao={business.address}
                 />
 
+                <BarraProgressoPerfil business={business} /> 
+
                 <div className="px-4 grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 mt-4">
                     <aside className="flex flex-col gap-4">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
@@ -311,7 +310,8 @@ export const MeuPerfilScreen = () => {
                                 <h3 className="font-bold text-[#0A4F6E] text-lg">Sobre meu Negócio</h3>
                                 <button onClick={() => setIsModalSobreOpen(true)} className="text-xs font-bold text-[#1398D4] hover:underline">Editar Bio</button>
                             </div>
-                            <p className="text-gray-600 text-sm leading-relaxed font-medium">
+                            {/* ATUALIZAÇÃO: Classe break-words para palavras muito longas não quebrarem o layout */}
+                            <p className="text-gray-600 text-sm leading-relaxed font-medium break-words">
                                 {business.description || "Nenhuma descrição adicionada."}
                             </p>
                         </div>
@@ -366,18 +366,16 @@ export const MeuPerfilScreen = () => {
                 </div>
             </div>
 
-            {/*  MODAL SOBRE ATUALIZADO */}
             <ModalSobre 
                 isOpen={isModalSobreOpen} 
                 onClose={() => setIsModalSobreOpen(false)} 
                 valorAtual={business.description} 
-                onSave={handleSaveDescricao} //  MUDANÇA AQUI
-                isSaving={isSavingDesc} //  MUDANÇA AQUI
+                onSave={handleSaveDescricao} 
+                isSaving={isSavingDesc} 
             />
             
             <ModalUpload isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} tipo={uploadType} businessId={business.id} onSuccess={handleImageUpdate} />
             
-            {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
             {isConfirmDeleteOpen && (
                 <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => !isDeleting && setIsConfirmDeleteOpen(false)}>
                     <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>

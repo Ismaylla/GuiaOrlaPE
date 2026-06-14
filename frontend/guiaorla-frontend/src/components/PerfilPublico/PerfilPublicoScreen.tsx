@@ -31,7 +31,6 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [uploadType, setUploadType] = useState<"galeria" | "header" | "profile">("galeria");
 
-    //  ADICIONADO: Estado que controla qual foto da galeria está aberta em tela cheia
     const [indexAberto, setIndexAberto] = useState<number | null>(null);
 
     const navRef = useRef<HTMLDivElement>(null);
@@ -152,6 +151,10 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
         );
     }
 
+    const exibirDescricao = negocio.description && negocio.description.trim() !== ""
+        ? negocio.description
+        : "Nenhuma descrição informada pelo estabelecimento.";
+
     return (
         <main className="min-h-screen h-full bg-[#F0F2F5] font-sans pb-20 text-left">
             <HeaderListagem isEmpreendedor={isEmpreendedor} forceBlue={true} scrolled={scrolled} categoriaAtiva="" setCategoriaAtiva={handleCategoryClick} showFilter={false} setIsFilterOpen={() => { }} navRef={navRef} handleMouseDown={handleMouseDown} />
@@ -186,9 +189,10 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                                     </div>
                                 </div>
                             </div>
-                            <p className="text-gray-600 text-sm leading-relaxed font-medium">
+                            {/* ATUALIZAÇÃO: Classe break-words para palavras muito longas não quebrarem o layout */}
+                            <p className="text-gray-600 text-sm leading-relaxed font-medium break-words">
                                 <span className="font-bold text-[#0A4F6E]">{negocio.nome}:</span>{" "}
-                                {negocio.description || "Venha conhecer nosso espaço na orla!"}
+                                {exibirDescricao}
                             </p>
                         </div>
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-5">
@@ -231,7 +235,6 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                                                         className="object-cover transition-transform duration-300 group-hover:scale-105" 
                                                         unoptimized={true}
                                                         onError={() => {
-                                                            // 🌟 CORREÇÃO: Remove a imagem quebrada do estado instantaneamente
                                                             setNegocio((prev: any) => {
                                                                 if (!prev) return prev;
                                                                 return {
@@ -251,7 +254,6 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                                         })}
                                     </div>
 
-                                    {/*  ADICIONADO: Modal Lightbox para visualização das fotos em tela cheia */}
                                     {indexAberto !== null && indexAberto < negocio.galleryPhotos.length && (
                                         <div 
                                             className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center backdrop-blur-sm" 

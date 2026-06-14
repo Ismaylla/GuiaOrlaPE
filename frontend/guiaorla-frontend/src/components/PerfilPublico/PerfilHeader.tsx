@@ -17,7 +17,6 @@ interface PerfilHeaderProps {
 const obterImagemValida = (src: string | undefined) => {
   if (!src) return "";
   const limpo = src.trim();
-  // Se for vazio ou se for apenas o domínio puro, ignora
   if (limpo === "" || limpo === "http://localhost:5148" || limpo === "http://localhost:5148/") {
       return "";
   }
@@ -36,18 +35,15 @@ export const PerfilHeader = ({
   localizacao
 }: PerfilHeaderProps) => {
 
-  // 🌟 ADICIONADO: Estados para rastrear se a imagem tentou carregar e deu erro (Erro 404)
   const [capaQuebrada, setCapaQuebrada] = useState(false);
   const [perfilQuebrado, setPerfilQuebrado] = useState(false);
 
-  // Se o usuário subir uma foto nova (a prop mudar), nós resetamos o erro para tentar carregar
   useEffect(() => { setCapaQuebrada(false); }, [fotoCapa]);
   useEffect(() => { setPerfilQuebrado(false); }, [fotoPerfil]);
 
   const imagemCapaOriginal = obterImagemValida(fotoCapa);
   const imagemPerfilOriginal = obterImagemValida(fotoPerfil);
 
-  // 🌟 MÁGICA AQUI: Se a imagem quebrou, força ela a ser vazia para a interface se adaptar automaticamente
   const imagemCapaExibir = capaQuebrada ? "" : imagemCapaOriginal;
   const imagemPerfilExibir = perfilQuebrado ? "" : imagemPerfilOriginal;
 
@@ -55,7 +51,7 @@ export const PerfilHeader = ({
   const localizacaoExibicao = localizacao || "Praia de Gaibu, Cabo de Santo Agostinho";
 
   return (
-    <div className="bg-white shadow-sm rounded-b-2xl overflow-hidden border-x border-b border-gray-200">
+    <div className="bg-white shadow-sm rounded-b-2xl overflow-hidden border-x border-b border-gray-200 relative z-0">
       {/* SEÇÃO DA CAPA */}
       <div className="relative h-[180px] md:h-[300px] w-full bg-gradient-to-r from-gray-200 to-gray-300">
         {imagemCapaExibir ? (
@@ -63,7 +59,6 @@ export const PerfilHeader = ({
               src={imagemCapaExibir}
               alt={`Capa de ${nomeExibicao}`}
               className="w-full h-full object-cover absolute inset-0 z-0"
-              // 🌟 ATUALIZADO: Ao dar erro, muda o estado avisando que a foto está quebrada
               onError={() => setCapaQuebrada(true)} 
             />
         ) : (
@@ -71,8 +66,8 @@ export const PerfilHeader = ({
         )}
 
         {podeEditar && (
-          <div className="absolute bottom-4 right-4 flex items-center gap-2 z-50">
-            {/* O botão de lixeira agora depende da imagem FINAL (se quebrar, ele some) */}
+          //  AJUSTE AQUI: Trocado de z-50 para z-10 para ficar atrás do Header Principal
+          <div className="absolute bottom-4 right-4 flex items-center gap-2 z-10">
             {imagemCapaExibir && (
               <button
                 type="button"
@@ -98,7 +93,6 @@ export const PerfilHeader = ({
               className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm font-bold text-[#1398D4] hover:underline transition-all shadow-sm cursor-pointer"
             >
               <Camera size={18} />
-              {/* O texto também se adapta automaticamente */}
               <span>{imagemCapaExibir ? "Trocar fundo" : "Editar fundo"}</span>
             </button>
           </div>
@@ -106,7 +100,8 @@ export const PerfilHeader = ({
       </div>
 
       {/* CONTEÚDO DO PERFIL */}
-      <div className="max-w-[1050px] mx-auto px-4 pb-6 relative z-10">
+      {/*  AJUSTE AQUI: Removido z-10 para garantir que ele escorregue por baixo do Header */}
+      <div className="max-w-[1050px] mx-auto px-4 pb-6 relative">
         <div className="relative flex flex-col md:flex-row items-center md:items-end gap-5 -mt-10 md:-mt-14">
           <div
             className="relative h-28 w-28 md:h-36 md:w-36 rounded-full border-4 border-white bg-gray-100 shadow-md overflow-hidden shrink-0 group"
@@ -116,19 +111,17 @@ export const PerfilHeader = ({
               <img
                 src={imagemPerfilExibir}
                 alt="Foto de Perfil"
-                className="w-full h-full object-cover block relative z-10"
-                // 🌟 ATUALIZADO: Ao dar erro, avisa o estado que o perfil quebrou
+                className="w-full h-full object-cover block relative z-0"
                 onError={() => setPerfilQuebrado(true)}
               />
             )}
             
-            {/* FALLBACK DO ÍCONE (Aparece se a imagem falhar ou não existir) */}
             <div className={`absolute inset-0 flex items-center justify-center bg-gray-200 z-0 ${imagemPerfilExibir ? 'hidden' : ''}`}>
               <User size={58} strokeWidth={1.7} className="text-gray-500" />
             </div>
 
             {podeEditar && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onEditProfile?.(); }}
