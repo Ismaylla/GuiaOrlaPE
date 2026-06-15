@@ -77,7 +77,7 @@ export const GerenciarNegocioScreen = () => {
         return list.length > 0 ? list.join(", ") : "Nenhuma selecionada";
     };
 
-    // 🛠️ CORRIGIDO: Alinhado com o BusinessServiceTypeEnum do C# (Índices de 1 a 5)
+    //  CORRIGIDO: Alinhado com o BusinessServiceTypeEnum do C# (Índices de 1 a 5)
     const getCategoriaTexto = (type: number) => {
         const map: Record<number, string> = {
             1: "Barracas e Ambulantes",
@@ -202,7 +202,7 @@ export const GerenciarNegocioScreen = () => {
                 categoriaAtual={getCategoriaTexto(business.serviceType)} 
                 onClose={() => setActiveModal(null)} 
                 onSave={(v) => {
-                    // 🛠️ CORRIGIDO: Alinhado com o BusinessServiceTypeEnum do C# (Índices de 1 a 5)
+                    //  CORRIGIDO: Alinhado com o BusinessServiceTypeEnum do C# (Índices de 1 a 5)
                     const map: Record<string, number> = { 
                         "Barracas e Ambulantes": 1, 
                         "Passeios e Lazer": 2, 

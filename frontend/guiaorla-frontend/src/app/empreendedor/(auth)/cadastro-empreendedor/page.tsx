@@ -40,14 +40,13 @@ export default function CadastroEmpreendedor() {
 
     const [aceitouTermos, setAceitouTermos] = useState(false);
 
-    // 🌟 NOVA VALIDAÇÃO PARA AVANÇAR DE ETAPA
     const nextStep = () => {
         if (step === 1) {
             if (!formData.userName.trim() || !formData.email.trim() || !formData.password || !formData.confirmPassword || !formData.phone.trim()) {
                 alert("Por favor, preencha todos os campos pessoais antes de continuar.");
                 return;
             }
-            
+
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(formData.email)) {
                 alert("Por favor, insira um e-mail válido.");
@@ -58,19 +57,18 @@ export default function CadastroEmpreendedor() {
                 alert("As senhas não coincidem. Verifique e tente novamente.");
                 return;
             }
-            
+
             if (formData.password.length < 6) {
                 alert("A senha deve ter pelo menos 6 caracteres.");
                 return;
             }
         }
-        
+
         setStep((prev) => prev + 1);
     };
 
     const prevStep = () => setStep((prev) => (prev > 1 ? prev - 1 : 1));
 
-    // 🌟 VALIDAÇÃO FINAL ANTES DE ENVIAR PARA A API
     async function handleRegister() {
         try {
             if (!formData.businessName.trim() || !formData.address.trim()) {
@@ -89,7 +87,7 @@ export default function CadastroEmpreendedor() {
                     name: formData.businessName, serviceType: formData.serviceType,
                     address: formData.address,
                     latitude: formData.latitude, longitude: formData.longitude,
-                    businessPhotoUrl: "", 
+                    businessPhotoUrl: "",
                 },
             };
 
@@ -167,14 +165,15 @@ export default function CadastroEmpreendedor() {
                 <Image src="/images/LOGOfundotransparente 3.png" alt="Logo" fill className="object-contain" />
             </div>
 
-            <div className="text-center mt-12 mb-8">
+            {/* mt-4 em vez de mt-12 para não empurrar demais */}
+            <div className="text-center mt-4 mb-6">
                 <h2 className="text-[32px] font-medium text-[#FF7620]">Cadastro do Empreendedor</h2>
                 <p className="text-[16px] text-[#FF7620] opacity-80">Passo {step} de 2</p>
             </div>
 
-            <div className="flex w-full max-w-[450px] flex-col">
-                <div className="min-h-[480px] w-full flex flex-col justify-start pb-6">
-                    
+            <div className="flex w-full max-w-[450px] flex-col flex-grow">
+                <div className="w-full flex flex-col justify-start pb-6 flex-1">
+
                     {step === 1 && (
                         <div className="flex flex-col gap-4 animate-in fade-in duration-500">
                             <InputCustomizado name="userName" value={formData.userName} onChange={handleInputChange} label="Nome Completo" />
@@ -188,7 +187,7 @@ export default function CadastroEmpreendedor() {
                     {step === 2 && (
                         <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right duration-500 relative">
                             <InputCustomizado name="businessName" value={formData.businessName} onChange={handleInputChange} label="Nome do negócio" />
-                            
+
                             <div className="relative z-[60]">
                                 <DropdownServicos
                                     label="Qual serviço você oferece?"
@@ -196,11 +195,11 @@ export default function CadastroEmpreendedor() {
                                     onSelect={(value) => setFormData((prev) => ({ ...prev, serviceType: value }))}
                                 />
                             </div>
-                            
+
                             <div className="relative z-50">
                                 <InputCustomizado name="address" value={formData.address} onChange={handleAddressTyping} label="Endereço ou Ponto de Referência" placeholder="Digite para buscar seu local..." />
                                 {buscandoSugestoes && <Loader2 className="absolute right-4 top-11 text-[#FF7620] animate-spin" size={18} />}
-                                
+
                                 {mostrarSugestoes && sugestoesEndereco.length > 0 && (
                                     <ul className="absolute top-full left-0 right-0 bg-white mt-2 rounded-xl shadow-xl border border-gray-200 overflow-hidden max-h-48 overflow-y-auto">
                                         {sugestoesEndereco.map((sugestao, idx) => (
@@ -212,7 +211,7 @@ export default function CadastroEmpreendedor() {
                                     </ul>
                                 )}
                             </div>
-                            
+
                             <button type="button" onClick={usarLocalizacaoAtual} className="text-left ml-4 mt-[-10px] text-[13px] font-semibold text-[#FF904B] hover:underline flex items-center gap-1">
                                 Usar minha localização atual
                             </button>
@@ -230,9 +229,11 @@ export default function CadastroEmpreendedor() {
                             </div>
                         </div>
                     )}
+
                 </div>
 
-                <div className="flex justify-center mt-2">
+                {/* Botão fixo no final do container do formulário */}
+                <div className="flex justify-center mt-2 mb-4">
                     <BotaoFormulario
                         variante="laranja"
                         texto={isPending ? "CRIANDO CONTA..." : step === 2 ? "FINALIZAR CADASTRO" : "PRÓXIMO"}

@@ -67,7 +67,7 @@ public class BusinessRepository : IBusinessRepository
             query = query.Where(x => x.Address.ToLower().Contains(request.Localizacao.ToLower()));
         }
 
-        // Use == true explicitamente. O compilador do C# entende isso como:
+        // Usa == true explicitamente. O compilador do C# entende isso como:
         // "Se for nulo, ignora. Se for false, ignora. Se for true, filtra."
         if (request.Cartao == true) query = query.Where(x => x.Cartao);
         if (request.Chuveiro == true) query = query.Where(x => x.Chuveiro);
@@ -76,12 +76,6 @@ public class BusinessRepository : IBusinessRepository
         if (request.PetFriendly == true) query = query.Where(x => x.PetFriendly);
         if (request.Acessibilidade == true) query = query.Where(x => x.Acessibilidade);
 
-        // if (request.Cartao == true) query = query.Where(x => x.Cartao == true);
-        // if (request.Chuveiro == true) query = query.Where(x => x.Chuveiro == true);
-        // if (request.Estacionamento == true) query = query.Where(x => x.Estacionamento == true);
-        // if (request.Cadeira == true) query = query.Where(x => x.Cadeira == true);
-        // if (request.PetFriendly == true) query = query.Where(x => x.PetFriendly == true);
-        // if (request.Acessibilidade == true) query = query.Where(x => x.Acessibilidade == true);
 
         var totalItems = await query.CountAsync();
 

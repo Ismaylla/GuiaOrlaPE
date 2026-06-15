@@ -19,7 +19,7 @@ interface MapaProps {
     negocios: any[];
 }
 
-// 🪄 COMPONENTE MÁGICO PARA AJUSTAR A CÂMARA AUTOMATICAMENTE
+//  COMPONENTE MÁGICO PARA AJUSTAR A CÂMARA AUTOMATICAMENTE
 function AjustarCamera({ negocios }: { negocios: any[] }) {
     const map = useMap();
 

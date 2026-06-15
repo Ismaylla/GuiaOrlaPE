@@ -75,7 +75,7 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
             setCarregando(true);
             setErroApi(false);
 
-            // 🔥 AGORA CHAMA A API PASSANDO OS FILTROS REAIS PARA O C# FILTRAR NO BANCO
+            //  AGORA CHAMA A API PASSANDO OS FILTROS REAIS PARA O C# FILTRAR NO BANCO
             const respostaApi = await buscarNegociosComFiltros(filtrosAtuais, categoriaFiltro, termoBusca);
 
             // Blindagem para extrair os itens independente se a API responder com 'items' ou 'Items'
