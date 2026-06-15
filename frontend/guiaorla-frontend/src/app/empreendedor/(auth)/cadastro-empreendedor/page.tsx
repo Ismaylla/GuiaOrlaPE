@@ -42,24 +42,35 @@ export default function CadastroEmpreendedor() {
 
     const nextStep = () => {
         if (step === 1) {
+            // 1. Verifica se algo está vazio
             if (!formData.userName.trim() || !formData.email.trim() || !formData.password || !formData.confirmPassword || !formData.phone.trim()) {
-                alert("Por favor, preencha todos os campos pessoais antes de continuar.");
+                alert("Por favor, preencha todos os campos obrigatórios (*).");
                 return;
             }
 
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            // 2. Validação de E-mail (Aceita apenas provedores reais)
+            // Esta Regex exige um @ e um provedor conhecido antes do .com ou .com.br
+            const emailRegex = /^[^\s@]+@(gmail|hotmail|outlook|live|yahoo|icloud)\.(com|com\.br)$/i;
             if (!emailRegex.test(formData.email)) {
-                alert("Por favor, insira um e-mail válido.");
+                alert("Por favor, insira um e-mail válido (ex: @gmail.com, @hotmail.com, @outlook.com).");
+                return;
+            }
+
+            // 3. Validação de Telefone (Apenas números, com 10 ou 11 dígitos)
+            const phoneLimpo = formData.phone.replace(/\D/g, '');
+            if (phoneLimpo.length < 10 || phoneLimpo.length > 11) {
+                alert("Por favor, insira um telefone válido com DDD (ex: 87991234567).");
+                return;
+            }
+
+            // 4. Validação de Senha
+            if (formData.password.length < 8) {
+                alert("A senha deve ter pelo menos 8 caracteres.");
                 return;
             }
 
             if (formData.password !== formData.confirmPassword) {
-                alert("As senhas não coincidem. Verifique e tente novamente.");
-                return;
-            }
-
-            if (formData.password.length < 6) {
-                alert("A senha deve ter pelo menos 6 caracteres.");
+                alert("As senhas não coincidem.");
                 return;
             }
         }
@@ -176,28 +187,28 @@ export default function CadastroEmpreendedor() {
 
                     {step === 1 && (
                         <div className="flex flex-col gap-4 animate-in fade-in duration-500">
-                            <InputCustomizado name="userName" value={formData.userName} onChange={handleInputChange} label="Nome Completo" />
-                            <InputCustomizado name="email" value={formData.email} onChange={handleInputChange} label="E-mail (Será seu Login)" type="email" />
-                            <InputCustomizado name="password" value={formData.password} onChange={handleInputChange} label="Crie uma senha" type="password" showPasswordOption />
-                            <InputCustomizado name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange} label="Confirme sua senha" type="password" showPasswordOption />
-                            <InputCustomizado name="phone" value={formData.phone} onChange={handleInputChange} label="Whatsapp ou Telefone" placeholder="Ex: 87991234567" />
+                            <InputCustomizado name="userName" value={formData.userName} onChange={handleInputChange} label={<span>Nome Completo <span className="text-red-500">*</span></span>} />
+                            <InputCustomizado name="email" value={formData.email} onChange={handleInputChange} label={<span>E-mail <span className="text-red-500">*</span></span>} type="email" />
+                            <InputCustomizado name="password" value={formData.password} onChange={handleInputChange} label={<span>Crie uma senha <span className="text-red-500">*</span></span>} type="password" showPasswordOption />
+                            <InputCustomizado name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange} label={<span>Confirme sua senha <span className="text-red-500">*</span></span>} type="password" showPasswordOption />
+                            <InputCustomizado name="phone" type="tel" value={formData.phone} onChange={handleInputChange} label={<span>Whatsapp ou Telefone <span className="text-red-500">*</span></span>} placeholder="Ex: 87991234567" />
                         </div>
                     )}
 
                     {step === 2 && (
                         <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right duration-500 relative">
-                            <InputCustomizado name="businessName" value={formData.businessName} onChange={handleInputChange} label="Nome do negócio" />
+                            <InputCustomizado name="businessName" value={formData.businessName} onChange={handleInputChange} label={<span>Nome do negócio <span className="text-red-500">*</span></span>} />
 
                             <div className="relative z-[60]">
                                 <DropdownServicos
-                                    label="Qual serviço você oferece?"
+                                    label={<span>Qual serviço você oferece? <span className="text-red-500">*</span></span>}
                                     selected={formData.serviceType}
                                     onSelect={(value) => setFormData((prev) => ({ ...prev, serviceType: value }))}
                                 />
                             </div>
 
                             <div className="relative z-50">
-                                <InputCustomizado name="address" value={formData.address} onChange={handleAddressTyping} label="Endereço ou Ponto de Referência" placeholder="Digite para buscar seu local..." />
+                                <InputCustomizado name="address" value={formData.address} onChange={handleAddressTyping} label={<span>Endereço ou Ponto de Referência <span className="text-red-500">*</span></span>} placeholder="Digite para buscar seu local..." />
                                 {buscandoSugestoes && <Loader2 className="absolute right-4 top-11 text-[#FF7620] animate-spin" size={18} />}
 
                                 {mostrarSugestoes && sugestoesEndereco.length > 0 && (
