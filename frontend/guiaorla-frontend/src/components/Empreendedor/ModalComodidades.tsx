@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { X, Settings, Check, Wifi, Dog, Accessibility, Sun, Umbrella } from "lucide-react";
+import { X, Settings, Check, Wifi, Dog, Accessibility, Sun, Umbrella, Car } from "lucide-react";
 
 interface ModalComodidadesProps {
     isOpen: boolean;
@@ -23,6 +23,7 @@ export const ModalComodidades = ({ isOpen, onClose, comodidadesAtuais, onSave }:
         { id: "Acessibilidade", label: "Acessibilidade", icon: <Accessibility size={20} className="text-[#1398D4]" /> },
         { id: "Ducha/Chuveiro", label: "Ducha/Chuveiro", icon: <Sun size={20} className="text-[#1398D4]" /> },
         { id: "Guarda-sol", label: "Guarda-sol", icon: <Umbrella size={20} className="text-[#1398D4]" /> },
+        { id: "Estacionamento", label: "Estacionamento", icon: <Car size={20} className="text-[#1398D4]" /> }, //adiconado
     ];
 
     if (!isOpen) return null;
