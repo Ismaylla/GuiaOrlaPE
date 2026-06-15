@@ -12,6 +12,7 @@ interface PerfilHeaderProps {
   fotoCapa?: string;
   fotoPerfil?: string;
   localizacao?: string;
+  telefone?: string;
 }
 
 const obterImagemValida = (src: string | undefined) => {
@@ -32,7 +33,8 @@ export const PerfilHeader = ({
   nomeNegocio,
   fotoCapa,
   fotoPerfil,
-  localizacao
+  localizacao,
+  telefone
 }: PerfilHeaderProps) => {
 
   const [capaQuebrada, setCapaQuebrada] = useState(false);
@@ -46,6 +48,13 @@ export const PerfilHeader = ({
 
   const imagemCapaExibir = capaQuebrada ? "" : imagemCapaOriginal;
   const imagemPerfilExibir = perfilQuebrado ? "" : imagemPerfilOriginal;
+
+  const handleWhatsApp = () => {
+    if (!telefone) return;
+    const numeroLimpo = telefone.replace(/\D/g, '');
+    const mensagem = `Olá! Gostaria de saber mais sobre a ${nomeNegocio || 'sua empresa'}.`;
+    window.open(`https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(mensagem)}`, '_blank');
+  };
 
   const nomeExibicao = nomeNegocio || "Raio de Sol: Cocos e Frutas";
   const localizacaoExibicao = localizacao || "Praia de Gaibu, Cabo de Santo Agostinho";
@@ -154,9 +163,14 @@ export const PerfilHeader = ({
           </div>
 
           <div className="flex mb-2">
-            <button className="bg-[#FF7620] text-white px-8 py-2.5 rounded-xl font-bold hover:scale-105 transition-all shadow-md flex items-center justify-center gap-2 whitespace-nowrap">
-              <span>Falar no WhatsApp</span>
-            </button>
+            {!podeEditar && telefone && (
+              <button 
+                onClick={handleWhatsApp}
+                className="bg-[#FF7620] text-white px-8 py-2.5 rounded-xl font-bold hover:scale-105 transition-all shadow-md flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                Falar no WhatsApp
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -70,6 +70,7 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                     id: dados.id ?? dados.Id,
                     userId: dados.userId ?? dados.UserId, 
                     nome: dados.name || "Sem Nome",
+                    telefone: dados.owner?.phone || dados.Owner?.Phone || "",
                     localizacao: dados.address || "Endereço não informado",
                     horario: dados.horario || dados.Horario || "Horário não informado", 
                     pagamentos: pagamentosLista.length > 0 ? pagamentosLista : ["Não informado"],
@@ -170,6 +171,7 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                     fotoCapa={negocio.fotoCapa} 
                     fotoPerfil={negocio.fotoPerfil}
                     localizacao={negocio.localizacao}
+                    telefone={negocio.telefone}
                 />
 
                 <div className="px-4 grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 mt-4">
