@@ -7,11 +7,11 @@ using GuiaOrlaPE.API.Service.Interfaces;
 
 namespace GuiaOrlaPE.API.Service.Implementation;
 
-public class UserService(IUserRepository repository, ITokenService tokenService) : IUserService
+public class UserService(IUserRepository repository, ITokenService tokenService, IEmailService emailService) : IUserService
 {
     private readonly IUserRepository _repository = repository;
-
     private readonly ITokenService _tokenService = tokenService;
+    private readonly IEmailService _emailService = emailService;
 
     public async Task<User> CreateBusinesspersonAsync(CreateBusinesspersonRequest request)
     {
@@ -99,4 +99,28 @@ public class UserService(IUserRepository repository, ITokenService tokenService)
             }
         };
     }
+
+    public async Task ForgotPasswordAsync(string email)
+    {
+        var user = await _repository.GetByEmailAsync(email) ?? throw new Exception("Usuário não encontrado.");
+
+        // Gera uma senha temporária de 8 caracteres
+        var novaSenhaTemp = Guid.NewGuid().ToString()[..8];
+
+        // Atualiza o hash no banco
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(novaSenhaTemp);
+        await _repository.UpdateAsync(user);
+
+        // Envia o e-mail
+        var corpo = $@"
+            <h2>Recuperação de Senha - GuiaOrlaPE</h2>
+            <p>Olá, {user.Name}.</p>
+            <p>Recebemos uma solicitação para redefinir sua senha. Sua nova senha temporária é: <b>{novaSenhaTemp}</b></p>
+            <p><b>AVISO IMPORTANTE:</b> Esta senha é temporária. Recomendamos que você a altere assim que fizer login.</p>
+            <p>Nunca compartilhe esta senha com ninguém.</p>";
+
+        await _emailService.SendAsync(email, "Redefinição de Senha - GuiaOrlaPE", corpo);
+    }
+
+
 }

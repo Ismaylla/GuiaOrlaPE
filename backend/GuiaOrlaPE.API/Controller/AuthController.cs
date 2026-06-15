@@ -59,4 +59,21 @@ public class AuthController(
                 });
         }
     }
+    
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        try
+        {
+            await _userService.ForgotPasswordAsync(request.Email);
+            return Ok(new { message = "Senha redefinida com sucesso. Verifique seu e-mail." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro na recuperação de senha.");
+            return StatusCode(500, new { message = "Erro ao processar solicitação." });
+        }
+    }
+
+
 }
