@@ -1,224 +1,281 @@
 # 🌊 GuiaOrlaPE
 
-Plataforma full-stack que conecta turistas a serviços locais em regiões litorâneas de Pernambuco — restaurantes, passeios, hospedagens e muito mais.
+Plataforma full-stack que conecta turistas a serviços locais em regiões litorâneas de Pernambuco.
 
 ---
 
-## 🧱 Arquitetura
+# 🧱 Arquitetura do Projeto
 
-```
-GuiaOrlaPE/
-├── frontend/        → Next.js (Interface Web)
-├── backend/         → ASP.NET Core 9 (API REST)
-├── docker-compose.yml
-└── .env             → variáveis de ambiente (não vai pro Git)
-```
-
----
-
-## ⚙️ Tecnologias
-
-| Camada | Tecnologia |
-|--------|-----------|
-| Frontend | Next.js, React, TypeScript, TailwindCSS |
-| Backend | .NET 9, ASP.NET Core, Entity Framework |
-| Banco | PostgreSQL 15 |
-| Infra | Docker, Docker Compose |
-
----
-
-## 🔗 Endereços após subir
-
-| Serviço | URL |
-|---------|-----|
-| Frontend | http://localhost:3000 |
-| Backend / Swagger | http://localhost:5000/swagger |
-| Banco (externo) | localhost:5433 |
-
----
-
-## 🐳 Rodando com Docker (RECOMENDADO)
-
-### Pré-requisitos
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado e rodando
-- Git
-
-### Passo a passo
-
-**1. Clone o repositório**
 ```bash
-git clone <url-do-repositorio>
-cd GuiaOrlaPE
+GuiaOrlaPE/
+├── frontend/                         # Next.js (Interface Web)
+├── backend/                          # ASP.NET Core 9 (API REST)
+├── docker-compose.yml
+└── appsettings.example.json          # Modelo de configuração do Backend
 ```
 
-**2. Crie o arquivo `.env` na raiz do projeto**
+---
 
-> ⚠️ Solicite o conteúdo deste arquivo com a equipe — ele não está no repositório por segurança.
+# ⚙️ Tecnologias Utilizadas
+
+| Camada         | Tecnologias                                    |
+| -------------- | ---------------------------------------------- |
+| Frontend       | Next.js, React, TypeScript, TailwindCSS, Axios |
+| Backend        | .NET 9, ASP.NET Core, Entity Framework Core    |
+| Banco de Dados | PostgreSQL 15                                  |
+| Infraestrutura | Docker, Docker Compose                         |
+
+---
+
+# 🐳 Executando com Docker (RECOMENDADO)
+
+## 1. Preparação dos Segredos (OBRIGATÓRIO)
+
+Para que o projeto funcione corretamente, é necessário configurar os segredos e credenciais locais que não estão versionados no repositório.
+
+---
+
+# 📄 Configuração do Backend
+
+Copie o arquivo:
+
+```bash
+backend/GuiaOrlaPE.API/appsettings.example.json
+```
+
+para:
+
+```bash
+backend/GuiaOrlaPE.API/appsettings.json
+```
+
+Depois, configure corretamente as seções:
+
+* `"Email"`
+* `"ConnectionStrings"`
+
+Exemplo:
+
+```json
+{
+  "Email": {
+    "Host": "smtp.gmail.com",
+    "Port": "587",
+    "User": "seu_email@gmail.com",
+    "Password": "sua_senha_de_app",
+    "From": "seu_email@gmail.com"
+  },
+
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=db;Port=5432;Database=guiaorla;Username=postgres;Password=SUA_SENHA_DO_POSTGRES"
+  }
+}
+```
+
+---
+
+# ⚠️ Importante sobre Gmail
+
+Caso utilize Gmail como serviço SMTP:
+
+* NÃO utilize sua senha principal da conta Google.
+* Gere uma **Senha de App** nas configurações de segurança da conta Google.
+* Certifique-se de que a autenticação em duas etapas esteja ativada.
+
+---
+
+# 🔐 Variáveis de Ambiente
+
+As variáveis abaixo precisam existir no ambiente da aplicação:
 
 ```env
-JWT_KEY=sua_chave_jwt_aqui
-POSTGRES_PASSWORD=postgres
+POSTGRES_PASSWORD=sua_senha
+JWT_KEY=sua_chave_jwt_secreta
 ```
 
-**3. Suba tudo com Docker**
+Você pode:
+
+* Definir diretamente no sistema operacional;
+* Utilizar variáveis no Docker;
+* Ou criar manualmente um arquivo `.env` para uso local.
+
+> O arquivo `.env` é opcional no projeto atual e não deve ser versionado.
+
+---
+
+# 🚀 Subindo o Ambiente
+
+Certifique-se de que o Docker Desktop esteja aberto e rodando.
+
+Execute na raiz do projeto:
+
 ```bash
 docker-compose up --build
 ```
 
-Isso sobe automaticamente o banco, o backend e o frontend.
-
-**4. Acesse**
-- Frontend → http://localhost:3000
-- Swagger → http://localhost:5000/swagger
-
-### Parar o sistema
-```bash
-docker-compose down
-```
-
-### Reset completo (quando algo dá errado)
-```bash
-docker-compose down --volumes
-docker system prune -f
-docker-compose up --build
-```
-
 ---
 
-## 💻 Rodando localmente (sem Docker)
+# 🛑 Derrubando o Ambiente
 
-### Pré-requisitos
-
-- .NET 9 SDK
-- Node.js LTS
-- PostgreSQL instalado localmente
-
-### 1. Banco de dados
-
-Abra o pgAdmin ou psql e crie o banco:
-
-```sql
-CREATE DATABASE guiaorla;
-```
-
-### 2. Backend
-
-```bash
-cd backend/GuiaOrlaPE.API
-```
-
-Configure os secrets locais (substitua `SUA_SENHA` pela sua senha do PostgreSQL):
-
-```bash
-dotnet user-secrets init
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=guiaorla;Username=postgres;Password=SUA_SENHA"
-dotnet user-secrets set "Jwt:Key" "GuiaOrlaPE_2026_Secret_Key_Alpha_Omega_1854449"
-```
-
-Crie as tabelas:
-
-```bash
-dotnet ef database update
-```
-
-Rode a API:
-
-```bash
-dotnet run
-```
-
-API disponível em: http://localhost:5148
-
-### 3. Frontend
-
-Em outro terminal:
-
-```bash
-cd frontend/guiaorla-frontend
-npm install
-npm run dev
-```
-
-Frontend disponível em: http://localhost:3000
-
-### Rodar tudo de uma vez (opcional)
-
-```bash
-npx concurrently "cd backend/GuiaOrlaPE.API && dotnet run" "cd frontend/guiaorla-frontend && npm run dev"
-```
-
----
-
-## 📁 Estrutura de pastas
-
-### Frontend
-```
-src/
-├── app/
-├── components/
-├── services/
-│   └── api.ts   → NEXT_PUBLIC_API_URL=http://localhost:5000
-└── styles/
-```
-
-### Backend
-```
-Controllers/
-Models/
-Domain/
-Repository/
-Service/
-Data/
-```
-
----
-
-## ⚠️ Problemas comuns
-
-**Porta já em uso**
-
-Verifique se algo está usando as portas 3000, 5000 ou 5433:
+Para parar todos os containers do projeto:
 
 ```bash
 docker-compose down
 ```
 
-ou pare o container específico:
+---
+
+# 🧹 Limpando Todo o Ambiente (RESET COMPLETO)
+
+Caso ocorra algum problema de:
+
+* Banco corrompido
+* Erro de coluna
+* Conflito de migrations
+* Dados quebrados
+* Containers inconsistentes
+* Cache do Docker
+
+Execute:
 
 ```bash
-docker ps
-docker stop <id-do-container>
+docker-compose down -v
 ```
 
-**Conflito com PostgreSQL local**
+Esse comando:
 
-O Docker usa a porta `5433` externamente para não conflitar com o PostgreSQL local (porta `5432`). Se mesmo assim houver conflito, pare o serviço local do PostgreSQL.
+* Remove os containers
+* Remove os volumes do PostgreSQL
+* Apaga completamente os dados do banco
+* Força recriação limpa do ambiente
 
-**JWT não configurado**
+Depois, execute novamente:
 
-Se o backend não subir e mostrar erro de JWT, verifique se o `.env` está na raiz do projeto com o valor de `JWT_KEY` preenchido.
-
----
-
-## 🧪 Validando o sistema
-
-Após subir o projeto:
-
-1. Acesse http://localhost:3000 e verifique o carregamento do frontend
-2. Acesse http://localhost:5000/swagger e teste os endpoints da API
-3. Tente criar uma conta e fazer login
-4. Acompanhe os logs do backend com `docker-compose logs -f backend`
+```bash
+docker-compose up --build
+```
 
 ---
 
-## 🧠 Boas práticas do projeto
+# ⚠️ Pontos Críticos da Infraestrutura
 
-- Separação clara entre frontend e backend
-- API centralizada (REST)
-- Componentes reutilizáveis no frontend
-- Tipagem obrigatória com TypeScript
-- Lógica de negócio no backend
-- Estilo com TailwindCSS
-- Commits pequenos e frequentes
-- Nunca versionar o arquivo `.env`
+## 🔄 Sincronização Banco ↔ Código
+
+O projeto utiliza:
+
+```csharp
+db.Database.EnsureCreated();
+```
+
+no `Program.cs`.
+
+Isso garante que o banco seja criado automaticamente conforme a estrutura atual das entidades C#.
+
+Caso ocorra erro relacionado a colunas ou estrutura do banco, utilize:
+
+```bash
+docker-compose down -v
+```
+
+para recriar completamente o banco.
+
+---
+
+## 🔐 Segurança
+
+Nunca envie para o Git:
+
+* `appsettings.json`
+* `.env`
+* Credenciais SMTP
+* Chaves JWT
+* Senhas de banco
+
+O `.gitignore` do projeto já está configurado para proteger arquivos sensíveis.
+
+---
+
+## 🌐 Comunicação Interna entre Containers
+
+Dentro do Docker, o frontend se comunica com o backend utilizando:
+
+```txt
+http://backend:8080
+```
+
+Isso ocorre porque os containers utilizam a rede interna do Docker Compose.
+
+---
+
+# 🧪 Validando o Sistema
+
+## Frontend
+
+```txt
+http://localhost:3000
+```
+
+---
+
+## Backend / Swagger
+
+```txt
+http://localhost:5000/swagger
+```
+
+---
+
+# 📋 Logs e Debug
+
+Para visualizar logs do backend em tempo real:
+
+```bash
+docker-compose logs -f backend
+```
+
+Isso ajuda a diagnosticar:
+
+* Falhas de conexão
+* Problemas SMTP
+* Erros JWT
+* Problemas de banco
+* Exceptions da API
+
+---
+
+# 🧠 Boas Práticas do Projeto
+
+* Separação clara entre frontend e backend.
+* Utilização obrigatória de TypeScript no frontend.
+* Nunca versionar arquivos contendo segredos.
+* Utilizar sempre Senha de App para SMTP.
+* Evitar hardcode de URLs, tokens e credenciais.
+* Manter o `appsettings.example.json` sempre atualizado.
+
+---
+
+# 📌 Observações
+
+* O backend roda em ASP.NET Core 9.
+* O banco utilizado é PostgreSQL 15.
+* O ambiente Docker é o método recomendado para desenvolvimento local.
+* O Swagger já vem habilitado para facilitar testes da API.
+
+---
+
+# 👥 Colaboração em Equipe
+
+Para compartilhar o projeto com outros desenvolvedores:
+
+1. Compartilhe apenas arquivos de exemplo.
+2. Cada integrante deve criar seu próprio:
+
+   * `appsettings.json`
+   * `.env` (caso utilize)
+3. A chave JWT pode ser compartilhada entre membros da equipe quando necessário para manter compatibilidade de autenticação.
+
+---
+
+# ✅ Ambiente Pronto
+
+Após finalizar as etapas acima, o sistema estará pronto para desenvolvimento e testes locais.
