@@ -13,4 +13,8 @@ public interface IUserRepository
     Task<List<User>> GetAllAsync();
 
     Task UpdateAsync(User user);
+
+    Task DeleteAsync(User user);
+
+
 }

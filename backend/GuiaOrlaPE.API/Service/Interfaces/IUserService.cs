@@ -17,4 +17,8 @@ public interface IUserService
     Task<LoginResponse> LoginAsync(LoginRequest request);
 
     Task ForgotPasswordAsync(string email);
+    Task UpdateEmailAsync(Guid userId, string newEmail);
+
+    Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword);
+    Task DeleteAsync(Guid id);
 }
