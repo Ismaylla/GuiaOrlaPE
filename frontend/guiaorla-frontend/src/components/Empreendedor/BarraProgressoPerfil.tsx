@@ -14,25 +14,35 @@ const imagemValidaParaPonto = (url?: string) => {
 export const BarraProgressoPerfil = ({ business }: BarraProgressoProps) => {
     if (!business) return null;
 
-    let score = 20; 
-    
-    if (business.description && business.description.trim() !== "") score += 16;
-    if (imagemValidaParaPonto(business.cardImageUrl)) score += 16;
-    if (imagemValidaParaPonto(business.businessPhotoUrl)) score += 16;
-    if (imagemValidaParaPonto(business.coverPhotoUrl)) score += 16;
-    
-    if (business.galleryPhotos && business.galleryPhotos.length > 0) score += 16;
+    // Critérios de preenchimento:
+    // 1. Descrição, Vitrine, Perfil, Capa, Galeria (5 itens)
+    // 2. Endereço, Categoria, Horário, Comodidades (4 itens)
+    const criterios = [
+        !!(business.description && business.description.trim() !== ""),
+        imagemValidaParaPonto(business.cardImageUrl),
+        imagemValidaParaPonto(business.businessPhotoUrl),
+        imagemValidaParaPonto(business.coverPhotoUrl),
+        !!(business.galleryPhotos && business.galleryPhotos.length > 0),
+        !!(business.address && business.address.trim() !== ""),
+        business.serviceType > 0,
+        !!(business.horario && business.horario.trim() !== ""),
+        // Verifica se há pelo menos um item de comodidade/pagamento
+        !!(business.pix || business.cartao || business.dinheiro || business.wifi || business.estacionamento)
+    ];
 
-    score = Math.min(Math.round(score), 100);
+    const totalCrit = criterios.length;
+    const feitos = criterios.filter(c => c).length;
+    const score = Math.round((feitos / totalCrit) * 100);
 
     if (score >= 100) return null; 
 
     return (
+        // ... (seu JSX original permanece igual, o score dinâmico vai cuidar da barra)
         <div className="bg-white rounded-xl p-5 mt-4 shadow-sm border border-orange-200 animate-in fade-in">
             <div className="flex justify-between items-end mb-3">
                 <div>
                     <h3 className="font-bold text-[#0A4F6E] text-sm">Força do seu perfil</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">Adicione sua bio e todas as fotos para chegar em 100%!</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Complete todas as informações para destacar seu negócio!</p>
                 </div>
                 <span className="font-bold text-[#FF7620] text-xl">{score}%</span>
             </div>

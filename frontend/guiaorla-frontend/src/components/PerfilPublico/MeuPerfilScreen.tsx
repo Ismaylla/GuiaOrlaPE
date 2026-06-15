@@ -106,46 +106,51 @@ export const MeuPerfilScreen = () => {
     };
 
     const handleSaveDescricao = async (novaDescricao: string) => {
-        if (!business) return;
-        setIsSavingDesc(true);
+    if (!business) return;
+    setIsSavingDesc(true);
+    
+    try {
+        const token = (session as any).accessToken || (session as any).token;
         
-        try {
-            const token = (session as any).accessToken || (session as any).token;
-            
-            const payload = {
-                name: business.name,
-                serviceType: business.serviceType,
-                address: business.address,
-                horario: business.horario,
-                cartao: business.cartao,
-                pix: business.pix,
-                dinheiro: business.dinheiro,
-                chuveiro: business.chuveiro,
-                estacionamento: business.estacionamento,
-                cadeira: business.cadeira,
-                petFriendly: business.petFriendly,
-                acessibilidade: business.acessibilidade,
-                wifi: business.wifi,
-                description: novaDescricao, 
-                coverPhotoUrl: business.coverPhotoUrl.replace("http://localhost:5148", ""),
-                businessPhotoUrl: business.businessPhotoUrl.replace("http://localhost:5148", ""),
-                cardImageUrl: business.cardImageUrl.replace("http://localhost:5148", ""),
-                latitude: business.latitude || 0,
-                longitude: business.longitude || 0,
-                galleryPhotos: business.galleryPhotos.map(url => url.replace("http://localhost:5148", ""))
-            };
+        // Criamos um objeto que atende tanto a C# (PascalCase) quanto a JS (camelCase)
+        const payload = {
+            id: business.id,
+            name: business.name,
+            serviceType: business.serviceType,
+            address: business.address,
+            horario: business.horario,
+            cartao: business.cartao,
+            pix: business.pix,
+            dinheiro: business.dinheiro,
+            chuveiro: business.chuveiro,
+            estacionamento: business.estacionamento,
+            cadeira: business.cadeira,
+            petFriendly: business.petFriendly,
+            acessibilidade: business.acessibilidade,
+            wifi: business.wifi,
+            description: novaDescricao,
+            latitude: business.latitude,
+            longitude: business.longitude,
+            // Enviamos sem o domínio
+            coverPhotoUrl: business.coverPhotoUrl.replace("http://localhost:5148", ""),
+            businessPhotoUrl: business.businessPhotoUrl.replace("http://localhost:5148", ""),
+            cardImageUrl: business.cardImageUrl.replace("http://localhost:5148", ""),
+            galleryPhotos: business.galleryPhotos.map(url => url.replace("http://localhost:5148", ""))
+        };
 
-            await atualizarNegocio(business.id, payload, token);
-            
-            setBusiness(prev => prev ? { ...prev, description: novaDescricao } : null);
-            setIsModalSobreOpen(false);
-            
-        } catch (error) {
-            alert("Não foi possível salvar a descrição. Tente novamente.");
-        } finally {
-            setIsSavingDesc(false);
-        }
-    };
+        await atualizarNegocio(business.id, payload, token);
+        
+        // Atualiza o estado local
+        setBusiness(prev => prev ? { ...prev, description: novaDescricao } : null);
+        setIsModalSobreOpen(false);
+        
+    } catch (error) {
+        console.error(error);
+        alert("Erro ao salvar.");
+    } finally {
+        setIsSavingDesc(false);
+    }
+};
 
     const handleConfirmDelete = async () => {
         if (!business || !deleteType) return;
@@ -221,31 +226,36 @@ export const MeuPerfilScreen = () => {
 
                 if (response.ok) {
                     const d = await response.json();
-                    setBusiness({
-                        id: d.id ?? d.Id,
-                        name: d.name ?? d.Name ?? "",
-                        serviceType: d.serviceType ?? d.ServiceType ?? 0,
-                        address: d.address ?? d.Address ?? "",
-                        horario: d.horario ?? d.Horario ?? "08:00 às 18:00",
-                        cartao: !!(d.cartao ?? d.Cartao),
-                        pix: !!(d.pix ?? d.Pix),
-                        dinheiro: !!(d.dinheiro ?? d.Dinheiro),
-                        chuveiro: !!(d.chuveiro ?? d.Chuveiro),
-                        estacionamento: !!(d.estacionamento ?? d.Estacionamento),
-                        cadeira: !!(d.cadeira ?? d.Cadeira),
-                        petFriendly: !!(d.petFriendly ?? d.PetFriendly),
-                        acessibilidade: !!(d.acessibilidade ?? d.Acessibilidade),
-                        wifi: d.wifi === true || d.Wifi === true,
-                        businessPhotoUrl: (d.businessPhotoUrl ?? d.BusinessPhotoUrl) ? `http://localhost:5148${d.businessPhotoUrl ?? d.BusinessPhotoUrl}` : "",
-                        coverPhotoUrl: (d.coverPhotoUrl ?? d.CoverPhotoUrl) ? `http://localhost:5148${d.coverPhotoUrl ?? d.CoverPhotoUrl}` : "",
-                        cardImageUrl: (d.cardImageUrl ?? d.CardImageUrl) ? `http://localhost:5148${d.cardImageUrl ?? d.CardImageUrl}` : "",
-                        description: d.description ?? d.Description ?? "",
-                        galleryPhotos: (d.galleryPhotos ?? d.GalleryPhotos ?? []).map((p: string) => p.startsWith("http") ? p : `http://localhost:5148${p}`),
-                        nota: 5.0,
-                        totalAvaliacoes: 0,
-                        latitude: d.latitude || d.Latitude, 
-                        longitude: d.longitude || d.Longitude 
-                    });
+                    // Substitua o bloco de setBusiness no useEffect de carregamento
+setBusiness({
+    id: d.id ?? d.Id,
+    name: d.name ?? d.Name ?? "",
+    serviceType: d.serviceType ?? d.ServiceType ?? 0,
+    address: d.address ?? d.Address ?? "",
+    horario: d.horario ?? d.Horario ?? "08:00 às 18:00",
+    cartao: !!(d.cartao ?? d.Cartao),
+    pix: !!(d.pix ?? d.Pix),
+    dinheiro: !!(d.dinheiro ?? d.Dinheiro),
+    chuveiro: !!(d.chuveiro ?? d.Chuveiro),
+    estacionamento: !!(d.estacionamento ?? d.Estacionamento),
+    cadeira: !!(d.cadeira ?? d.Cadeira),
+    petFriendly: !!(d.petFriendly ?? d.PetFriendly),
+    acessibilidade: !!(d.acessibilidade ?? d.Acessibilidade),
+    wifi: d.wifi === true || d.Wifi === true,
+    // AQUI: Garantia de que se vier vazio, fica vazio. Se vier com http, mantém. Se vier só o caminho, completa.
+    businessPhotoUrl: (d.businessPhotoUrl || d.BusinessPhotoUrl) ? 
+        ((d.businessPhotoUrl || d.BusinessPhotoUrl).startsWith("http") ? (d.businessPhotoUrl || d.BusinessPhotoUrl) : `http://localhost:5148${d.businessPhotoUrl || d.BusinessPhotoUrl}`) : "",
+    coverPhotoUrl: (d.coverPhotoUrl || d.CoverPhotoUrl) ? 
+        ((d.coverPhotoUrl || d.CoverPhotoUrl).startsWith("http") ? (d.coverPhotoUrl || d.CoverPhotoUrl) : `http://localhost:5148${d.coverPhotoUrl || d.CoverPhotoUrl}`) : "",
+    cardImageUrl: (d.cardImageUrl || d.CardImageUrl) ? 
+        ((d.cardImageUrl || d.CardImageUrl).startsWith("http") ? (d.cardImageUrl || d.CardImageUrl) : `http://localhost:5148${d.cardImageUrl || d.CardImageUrl}`) : "",
+    description: d.description ?? d.Description ?? "",
+    galleryPhotos: (d.galleryPhotos ?? d.GalleryPhotos ?? []).map((p: string) => p.startsWith("http") ? p : `http://localhost:5148${p}`),
+    nota: 5.0,
+    totalAvaliacoes: 0,
+    latitude: d.latitude || d.Latitude || 0,
+    longitude: d.longitude || d.Longitude || 0
+});
                 }
             } catch (error) { console.error("Erro:", error); } finally { setIsLoading(false); }
         };

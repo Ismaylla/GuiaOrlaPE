@@ -16,13 +16,6 @@ export const AvisoPerfil = () => {
                 return;
             }
 
-            // Se o usuário fechou o banner antes, não mostra mais
-            const oculto = localStorage.getItem("aviso_boas_vindas_oculto");
-            if (oculto === "true") {
-                setIsLoading(false);
-                return;
-            }
-
             try {
                 const token = (session as any).accessToken || (session as any).token;
                 const response = await fetch(`http://localhost:5148/api/business/user?t=${new Date().getTime()}`, {
@@ -31,9 +24,17 @@ export const AvisoPerfil = () => {
 
                 if (response.ok) {
                     const d = await response.json();
-                    // Se faltar vitrine, perfil, capa ou descrição, consideramos incompleto
-                    const isIncompleto = !d.cardImageUrl || !d.businessPhotoUrl || !d.coverPhotoUrl || !d.description;
-                    if (isIncompleto) setIsVisible(true);
+                    
+                    // Lógica rigorosa de preenchimento (mesma do BarraProgresso)
+                    const isIncompleto = 
+                        !d.cardImageUrl || 
+                        !d.businessPhotoUrl || 
+                        !d.coverPhotoUrl || 
+                        !d.description || 
+                        !d.address || 
+                        d.serviceType === 0;
+
+                    setIsVisible(isIncompleto);
                 }
             } catch (error) {
                 console.error(error);
@@ -44,11 +45,7 @@ export const AvisoPerfil = () => {
         checkPerfil();
     }, [session, status]);
 
-    const handleDismiss = () => {
-        localStorage.setItem("aviso_boas_vindas_oculto", "true");
-        setIsVisible(false);
-    };
-
+    // Removemos o handleDismiss e o localStorage para ele sempre reavaliar
     if (isLoading || !isVisible) return null;
 
     return (
@@ -56,18 +53,13 @@ export const AvisoPerfil = () => {
             <div className="flex items-start gap-3">
                 <AlertCircle className="text-[#1398D4] shrink-0 mt-0.5" size={24} />
                 <div>
-                    <h4 className="text-[#0A4F6E] font-bold text-sm">Complete seu perfil para atrair mais clientes!</h4>
-                    <p className="text-gray-600 text-xs mt-1">Notamos que seu estabelecimento ainda não possui fotos ou bio. Perfis completos recebem até 3x mais cliques na orla.</p>
+                    <h4 className="text-[#0A4F6E] font-bold text-sm">Complete seu perfil!</h4>
+                    <p className="text-gray-600 text-xs mt-1">Perfis 100% preenchidos recebem até 3x mais cliques.</p>
                 </div>
             </div>
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-                <Link href="/empreendedor/meu-perfil" className="bg-[#0A4F6E] hover:bg-[#083d55] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors whitespace-nowrap text-center flex-1 sm:flex-none shadow-md">
-                    Completar agora
-                </Link>
-                <button onClick={handleDismiss} className="p-2 text-gray-400 hover:text-[#0A4F6E] hover:bg-white/50 rounded-full transition-colors absolute top-2 right-2 sm:static">
-                    <X size={18} />
-                </button>
-            </div>
+            <Link href="/empreendedor/meu-perfil" className="bg-[#0A4F6E] hover:bg-[#083d55] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors shadow-md">
+                Completar agora
+            </Link>
         </div>
     );
 };
