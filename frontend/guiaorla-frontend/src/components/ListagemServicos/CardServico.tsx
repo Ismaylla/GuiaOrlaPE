@@ -47,9 +47,8 @@ function DescricaoExpansivel({ texto, limite }: { texto: string; limite: number 
             }}
         >
             <p
-                className={`text-gray-500 text-[10px] md:text-xs leading-tight text-left transition-all duration-300 break-words ${
-                    expandido ? "" : "line-clamp-2"
-                }`}
+                className={`text-gray-500 text-[10px] md:text-xs leading-tight text-left transition-all duration-300 break-words ${expandido ? "" : "line-clamp-2"
+                    }`}
             >
                 {textoExibicao}
             </p>
@@ -65,6 +64,7 @@ function DescricaoExpansivel({ texto, limite }: { texto: string; limite: number 
 export const CardServico = ({ item, variante, onOpenModal }: ServicoProps) => {
     const [mounted, setMounted] = useState(false);
     const [imgError, setImgError] = useState(false);
+    const [tituloExpandido, setTituloExpandido] = useState(false);
 
     useEffect(() => { setMounted(true); }, []);
     useEffect(() => { setImgError(false); }, [item.cardImageUrl, item.img]);
@@ -110,8 +110,10 @@ export const CardServico = ({ item, variante, onOpenModal }: ServicoProps) => {
                 <div className="p-4 flex flex-col flex-1">
                     <div className="flex justify-between items-start mb-1.5 gap-2">
                         <h3
-                            className={`font-bold ${textTitleColor} text-xs md:text-sm leading-tight text-left line-clamp-1`}
+                            className={`font-bold ${textTitleColor} text-xs md:text-sm leading-tight text-left cursor-pointer transition-all duration-300 ${tituloExpandido ? "line-clamp-none" : "line-clamp-1"
+                                }`}
                             title={item.nome}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTituloExpandido(!tituloExpandido); }}
                         >
                             {item.nome}
                         </h3>
@@ -172,8 +174,10 @@ export const CardServico = ({ item, variante, onOpenModal }: ServicoProps) => {
                 <div className="flex-1 flex flex-col min-w-0">
                     <div className="flex justify-between items-start mb-2 gap-2">
                         <h3
-                            className={`${textTitleColor} font-bold text-base md:text-lg leading-tight text-left line-clamp-1`}
+                            className={`${textTitleColor} font-bold text-base md:text-lg leading-tight text-left cursor-pointer transition-all duration-300 ${tituloExpandido ? "line-clamp-none" : "line-clamp-1"
+                                }`}
                             title={item.nome}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTituloExpandido(!tituloExpandido); }}
                         >
                             {item.nome}
                         </h3>
