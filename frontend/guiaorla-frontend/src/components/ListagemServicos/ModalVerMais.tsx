@@ -184,9 +184,7 @@ export const ModalVerMais = ({ item, onClose, isEmpreendedor = false }: ModalVer
           {/* Botões */}
           <div className="flex flex-col gap-3 pt-2">
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                item.nome + " " + item.desc
-              )}`}
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.desc)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full bg-[#0A4F6E] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-[#083d55] transition-all shadow-lg shadow-blue-900/10 text-center text-sm"
