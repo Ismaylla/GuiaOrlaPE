@@ -25,19 +25,38 @@
 // export const forgotPassword = async (email: string) => {
 //   const { data } = await api.post('/api/auth/forgot-password', { email });
 //   return data;
+// }; // <--- Faltava essa chave aqui para fechar o forgotPassword!
 
-
+// export const updateEmail = async (userId: string, newEmail: string) => {
+//   const { data } = await api.put(`/api/users/${userId}/update-email`, { newEmail });
+//   return data;
 // };
 
+// export const changePassword = async (userId: string, data: { currentPassword: string; newPassword: string }) => {
+//   const response = await api.put(`/api/users/${userId}/change-password`, data);
+//   return response.data;
+// };
 
-import { api } from "./api";
+// export const deleteAccount = async (userId: string) => {
+//   const response = await api.delete(`/api/users/${userId}`);
+//   return response.data;
+// };
+
+import axios from 'axios';
+
+// Detecta se estamos no servidor (Docker) ou no navegador
+const API_URL = typeof window === 'undefined' 
+  ? process.env.API_URL_INTERNAL || 'http://backend:8080' 
+  : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+// Criamos uma instância dinâmica baseada no ambiente
+const apiClient = axios.create({
+  baseURL: API_URL
+});
 
 export async function login(data: any) {
   try {
-    // 1. Aponta para a rota real no seu C#
-    const response = await api.post("/api/users/login", data);
-
-    // 2. CORRIGIDO: Repassa o token real criptografado (eyJ...) vindo do C#
+    const response = await apiClient.post("/api/users/login", data);
     return {
       user: {
         id: response.data.id,
@@ -45,8 +64,8 @@ export async function login(data: any) {
         profile: "BUSINESS_OWNER"
       },
       email: response.data.email,
-      token: response.data.accessToken,       // NextAuth vai ler aqui
-      accessToken: response.data.accessToken // Garantia extra para o authorize
+      token: response.data.accessToken,
+      accessToken: response.data.accessToken
     };
   } catch (error) {
     console.error("Erro ao realizar login no auth.service:", error);
@@ -55,21 +74,21 @@ export async function login(data: any) {
 }
 
 export const forgotPassword = async (email: string) => {
-  const { data } = await api.post('/api/auth/forgot-password', { email });
+  const { data } = await apiClient.post('/api/auth/forgot-password', { email });
   return data;
-}; // <--- Faltava essa chave aqui para fechar o forgotPassword!
+};
 
 export const updateEmail = async (userId: string, newEmail: string) => {
-  const { data } = await api.put(`/api/users/${userId}/update-email`, { newEmail });
+  const { data } = await apiClient.put(`/api/users/${userId}/update-email`, { newEmail });
   return data;
 };
 
 export const changePassword = async (userId: string, data: { currentPassword: string; newPassword: string }) => {
-  const response = await api.put(`/api/users/${userId}/change-password`, data);
+  const response = await apiClient.put(`/api/users/${userId}/change-password`, data);
   return response.data;
 };
 
 export const deleteAccount = async (userId: string) => {
-  const response = await api.delete(`/api/users/${userId}`);
+  const response = await apiClient.delete(`/api/users/${userId}`);
   return response.data;
 };

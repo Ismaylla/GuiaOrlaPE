@@ -12,8 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+// Mude isto no seu Program.cs:
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    // Adicione esta linha para ignorar o erro de "PendingModelChangesWarning"
+    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+});
 
 // 🛠️ CORRIGIDO BEM AQUI: Associado a interface à classe concreta UserRepository
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -96,6 +101,16 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Aplica migrations ou garante que o banco esteja criado
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    
+    // EnsureCreated cria o banco e as tabelas com a estrutura exata 
+    // das suas classes C# atuais, sem precisar de migrações.
+    db.Database.EnsureCreated(); 
+}
 
 app.UseSwagger();
 
