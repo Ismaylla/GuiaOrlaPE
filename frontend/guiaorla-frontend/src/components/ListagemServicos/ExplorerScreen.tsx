@@ -11,6 +11,7 @@ import { ModalVerMais } from "@/components/ListagemServicos/ModalVerMais";
 import { AvisoPerfil } from "@/components/Empreendedor/AvisoPerfil";
 
 import { listarTodosOsNegocios, buscarNegociosComFiltros } from "@/services/businessService";
+import { calcularDistancia } from "@/lib/geoUtils"; // Adicione esta linha
 
 // IMPORTA O MAPA DESLIGANDO A RENDERIZAÇÃO NO SERVIDOR
 const MapaOrlaDinamico = dynamic(() => import("@/components/Mapa/MapaOrla"), {
@@ -45,6 +46,9 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const temDados = listaNegocios.length > 0;
+
+    const [posicaoUsuario, setPosicaoUsuario] = useState<{ lat: number, lon: number } | null>(null);
+    const [listaMaisProximos, setListaMaisProximos] = useState<any[]>([])
 
     // ESTADO LIMPO (Sem referências de preços)
     // const [filtros, setFiltros] = useState({
@@ -149,6 +153,29 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
         document.addEventListener('mousemove', handleMouseMove); document.addEventListener('mouseup', handleMouseUp);
     };
 
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => setPosicaoUsuario({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+                (err) => console.warn("Localização negada pelo usuário")
+            );
+        }
+    }, []);
+
+    useEffect(() => {
+        if (posicaoUsuario && listaNegocios.length > 0) {
+            const comDistancia = listaNegocios.map(item => ({
+                ...item,
+                distancia: calcularDistancia(posicaoUsuario.lat, posicaoUsuario.lon, item.latitude, item.longitude)
+            }));
+            setListaMaisProximos(comDistancia.sort((a, b) => a.distancia - b.distancia).slice(0, 5));
+        }
+    }, [listaNegocios, posicaoUsuario]);
+
+
+
+
+
     const scroll = (direction: "left" | "right") => {
         if (scrollRef.current) {
             const { scrollLeft, clientWidth } = scrollRef.current;
@@ -215,7 +242,7 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                                         )}
 
                                         <div ref={scrollRef} onMouseDown={handleMouseDown(scrollRef)} className="flex overflow-x-auto gap-4 md:gap-5 w-full pb-6 scrollbar-hide snap-x items-start cursor-grab active:cursor-grabbing">
-                                            {listaNegocios.map((item) => (
+                                            {(posicaoUsuario ? listaMaisProximos : listaNegocios).map((item) => (
                                                 <CardServico key={item.id} item={item} variante="vertical" isEmpreendedor={isEmpreendedor} onOpenModal={(item) => setServicoSelecionado(item)} />
                                             ))}
                                         </div>
