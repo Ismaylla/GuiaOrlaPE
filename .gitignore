@@ -20,3 +20,6 @@ Thumbs.db
 
 #arquiv env
 .env
+
+# Ignora qualquer arquivo chamado appsettings.json em qualquer pasta
+**/appsettings.json

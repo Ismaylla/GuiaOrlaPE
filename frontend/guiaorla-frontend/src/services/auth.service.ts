@@ -21,3 +21,8 @@ export async function login(data: any) {
     throw error;
   }
 }
+
+export const forgotPassword = async (email: string) => {
+  const { data } = await api.post('/api/auth/forgot-password', { email });
+  return data;
+};

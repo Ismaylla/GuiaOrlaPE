@@ -8,12 +8,15 @@ import Image from "next/image";
 import { LayoutAuth } from "@/components/Formulario/LayoutAuth";
 import { InputCustomizado } from "@/components/Formulario/InputCustomizado";
 import { BotaoFormulario } from "@/components/Formulario/BotaoFormulario";
+import { ModalEsqueciSenha } from "@/components/Auth/ModalEsqueciSenha";
 
 export default function LoginEmpreendedor() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false); // <--- Estado do Modal
+
 
   const router = useRouter();
 
@@ -74,10 +77,19 @@ export default function LoginEmpreendedor() {
           />
           
           <div className="flex justify-between items-center px-4 mt-1">
-            <button className="text-[14px] font-medium text-[#FF904B] hover:underline">
+            <button 
+              type="button" 
+              onClick={() => setIsModalOpen(true)}
+              className="text-[14px] font-medium text-[#FF904B] hover:underline"
+            >
               Esqueci minha senha
             </button>
           </div>
+
+          {/* Renderização do Modal */}
+          {isModalOpen && (
+            <ModalEsqueciSenha onClose={() => setIsModalOpen(false)} />
+          )}
         </div>
       </div>
 
