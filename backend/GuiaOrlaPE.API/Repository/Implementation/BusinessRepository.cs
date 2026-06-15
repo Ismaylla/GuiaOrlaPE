@@ -55,9 +55,10 @@ public class BusinessRepository : IBusinessRepository
 
         if (!string.IsNullOrWhiteSpace(request.Categoria))
         {
-            if (Enum.TryParse<BusinessServiceTypeEnum>(request.Categoria, true, out var enumCategoria))
+            // Tenta converter para int primeiro, pois o seu enum é numérico
+            if (int.TryParse(request.Categoria, out int categoriaId))
             {
-                query = query.Where(x => x.ServiceType == enumCategoria);
+                query = query.Where(x => (int)x.ServiceType == categoriaId);
             }
         }
 
@@ -66,12 +67,21 @@ public class BusinessRepository : IBusinessRepository
             query = query.Where(x => x.Address.ToLower().Contains(request.Localizacao.ToLower()));
         }
 
-        if (request.Cartao == true) query = query.Where(x => x.Cartao == true);
-        if (request.Chuveiro == true) query = query.Where(x => x.Chuveiro == true);
-        if (request.Estacionamento == true) query = query.Where(x => x.Estacionamento == true);
-        if (request.Cadeira == true) query = query.Where(x => x.Cadeira == true);
-        if (request.PetFriendly == true) query = query.Where(x => x.PetFriendly == true);
-        if (request.Acessibilidade == true) query = query.Where(x => x.Acessibilidade == true);
+        // Use == true explicitamente. O compilador do C# entende isso como:
+        // "Se for nulo, ignora. Se for false, ignora. Se for true, filtra."
+        if (request.Cartao == true) query = query.Where(x => x.Cartao);
+        if (request.Chuveiro == true) query = query.Where(x => x.Chuveiro);
+        if (request.Estacionamento == true) query = query.Where(x => x.Estacionamento);
+        if (request.Cadeira == true) query = query.Where(x => x.Cadeira);
+        if (request.PetFriendly == true) query = query.Where(x => x.PetFriendly);
+        if (request.Acessibilidade == true) query = query.Where(x => x.Acessibilidade);
+
+        // if (request.Cartao == true) query = query.Where(x => x.Cartao == true);
+        // if (request.Chuveiro == true) query = query.Where(x => x.Chuveiro == true);
+        // if (request.Estacionamento == true) query = query.Where(x => x.Estacionamento == true);
+        // if (request.Cadeira == true) query = query.Where(x => x.Cadeira == true);
+        // if (request.PetFriendly == true) query = query.Where(x => x.PetFriendly == true);
+        // if (request.Acessibilidade == true) query = query.Where(x => x.Acessibilidade == true);
 
         var totalItems = await query.CountAsync();
 

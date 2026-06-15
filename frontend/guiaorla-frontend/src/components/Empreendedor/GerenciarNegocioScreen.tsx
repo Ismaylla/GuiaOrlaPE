@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -76,9 +77,16 @@ export const GerenciarNegocioScreen = () => {
         return list.length > 0 ? list.join(", ") : "Nenhuma selecionada";
     };
 
+    // 🛠️ CORRIGIDO: Alinhado com o BusinessServiceTypeEnum do C# (Índices de 1 a 5)
     const getCategoriaTexto = (type: number) => {
-        const categorias = ["Barracas e Ambulantes", "Passeios e Lazer", "Bares e Restaurantes", "Artesanato Local", "Comércio e Serviços"];
-        return categorias[type] || "Não Categorizado";
+        const map: Record<number, string> = {
+            1: "Barracas e Ambulantes",
+            2: "Passeios e Lazer",
+            3: "Bares e Restaurantes",
+            4: "Artesanato Local",
+            5: "Comércio e Serviços"
+        };
+        return map[type] || "Não Categorizado";
     };
 
     useEffect(() => {
@@ -189,10 +197,22 @@ export const GerenciarNegocioScreen = () => {
                 </div>
             </div>
 
-            <ModalCategoria isOpen={activeModal === "categoria"} categoriaAtual={getCategoriaTexto(business.serviceType)} onClose={() => setActiveModal(null)} onSave={(v) => {
-                const map: Record<string, number> = { "Barracas e Ambulantes": 0, "Passeios e Lazer": 1, "Bares e Restaurantes": 2, "Artesanato Local": 3, "Comércio e Serviços": 4 };
-                atualizarEPersistir({ serviceType: map[v] ?? 0 });
-            }} />
+            <ModalCategoria 
+                isOpen={activeModal === "categoria"} 
+                categoriaAtual={getCategoriaTexto(business.serviceType)} 
+                onClose={() => setActiveModal(null)} 
+                onSave={(v) => {
+                    // 🛠️ CORRIGIDO: Alinhado com o BusinessServiceTypeEnum do C# (Índices de 1 a 5)
+                    const map: Record<string, number> = { 
+                        "Barracas e Ambulantes": 1, 
+                        "Passeios e Lazer": 2, 
+                        "Bares e Restaurantes": 3, 
+                        "Artesanato Local": 4, 
+                        "Comércio e Serviços": 5 
+                    };
+                    atualizarEPersistir({ serviceType: map[v] ?? 1 });
+                }} 
+            />
             <ModalHorario isOpen={activeModal === "horario"} onClose={() => setActiveModal(null)} valorAtual={business.horario} onSave={(v) => atualizarEPersistir({ horario: v })} />
             <ModalLocalizacao isOpen={activeModal === "localizacao"} onClose={() => setActiveModal(null)} enderecoAtual={business.address} latitudeAtual={business.latitude} longitudeAtual={business.longitude} onSave={(l: any) => atualizarEPersistir({ address: l.endereco, latitude: l.coords.lat, longitude: l.coords.lng })} />
             
