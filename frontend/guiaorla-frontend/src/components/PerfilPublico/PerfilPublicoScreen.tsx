@@ -6,7 +6,7 @@ import Image from "next/image";
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
 import { PerfilHeader } from "@/components/PerfilPublico/PerfilHeader";
 import { SecaoFeedback } from "@/components/PerfilPublico/SecaoFeedback";
-import { Clock, MapPin, CreditCard, Sparkles, Star, Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, MapPin, CreditCard, Sparkles, Store, Star, Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { buscarNegocioPorId, listarAvaliacoesDoNegocio } from "@/services/businessService";
 
 import { ModalUpload } from "./ModalUpload";
@@ -37,6 +37,18 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
 
     const usuarioLogadoId = (session as any)?.user?.id || (session as any)?.id;
     const isOwner = !!(session && negocio && negocio.userId === usuarioLogadoId);
+
+    // CORRIGIDO: Mapeamento EXATO baseado no Enum C#
+    const getCategoriaTexto = (type: number) => {
+        const categories: { [key: number]: string } = {
+            1: "Barracas e Ambulantes",
+            2: "Passeios e Lazer",
+            3: "Bares e Restaurantes",
+            4: "Artesanato Local",
+            5: "Comércio e Serviços"
+        };
+        return categories[type] || "Não Categorizado";
+    };
 
     useEffect(() => {
         const carregarPerfil = async () => {
@@ -70,6 +82,7 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                     id: dados.id ?? dados.Id,
                     userId: dados.userId ?? dados.UserId, 
                     nome: dados.name || "Sem Nome",
+                    serviceType: dados.serviceType ?? dados.ServiceType ?? 0,
                     telefone: dados.owner?.phone || dados.Owner?.Phone || "",
                     localizacao: dados.address || "Endereço não informado",
                     horario: dados.horario || dados.Horario || "Horário não informado", 
@@ -191,7 +204,6 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                                     </div>
                                 </div>
                             </div>
-                            {/* ATUALIZAÇÃO: Classe break-words para palavras muito longas não quebrarem o layout */}
                             <p className="text-gray-600 text-sm leading-relaxed font-medium break-words">
                                 <span className="font-bold text-[#0A4F6E]">{negocio.nome}:</span>{" "}
                                 {exibirDescricao}
@@ -199,6 +211,7 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                         </div>
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-5">
                             <h3 className="font-bold text-[#0A4F6E] text-lg">Informações</h3>
+                            <InfoRow icon={<Store size={18} className="text-[#FF7620]" />} label="Categoria" value={getCategoriaTexto(negocio.serviceType)} />
                             <InfoRow icon={<Clock size={18} className="text-[#1398D4]" />} label="Funcionamento" value={negocio.horario} />
                             <InfoRow icon={<MapPin size={18} className="text-[#1398D4]" />} label="Onde estamos" value={negocio.localizacao} />
                             <InfoRow icon={<CreditCard size={18} className="text-[#1398D4]" />} label="Pagamentos" value={negocio.pagamentos.join(", ")} />

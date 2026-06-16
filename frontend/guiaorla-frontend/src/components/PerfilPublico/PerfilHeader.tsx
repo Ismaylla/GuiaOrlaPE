@@ -75,7 +75,6 @@ export const PerfilHeader = ({
         )}
 
         {podeEditar && (
-          //  AJUSTE AQUI: Trocado de z-50 para z-10 para ficar atrás do Header Principal
           <div className="absolute bottom-4 right-4 flex items-center gap-2 z-10">
             {imagemCapaExibir && (
               <button
@@ -109,7 +108,6 @@ export const PerfilHeader = ({
       </div>
 
       {/* CONTEÚDO DO PERFIL */}
-      {/*  AJUSTE AQUI: Removido z-10 para garantir que ele escorregue por baixo do Header */}
       <div className="max-w-[1050px] mx-auto px-4 pb-6 relative">
         <div className="relative flex flex-col md:flex-row items-center md:items-end gap-5 -mt-10 md:-mt-14">
           <div
@@ -154,19 +152,20 @@ export const PerfilHeader = ({
             )}
           </div>
           
-          <div className="flex-1 text-center md:text-left mb-2">
-            <h1 className="text-2xl md:text-3xl font-bold text-[#0A4F6E]">{nomeExibicao}</h1>
-            <div className="flex items-center justify-center md:justify-start gap-2 text-gray-500 mt-1 font-medium text-sm md:text-base">
-              <MapPin size={16} className="text-[#FF7620]" />
-              <span>{localizacaoExibicao}</span>
+          {/* AJUSTE AQUI: Melhor alinhamento Flexbox para título, local e botão */}
+          <div className="flex-1 flex flex-col md:flex-row items-center md:items-center justify-between w-full md:pb-2 gap-4">
+            <div className="text-center md:text-left">
+              <h1 className="text-2xl md:text-3xl font-bold text-[#0A4F6E]">{nomeExibicao}</h1>
+              <div className="flex items-center justify-center md:justify-start gap-2 text-gray-500 mt-1 font-medium text-sm md:text-base">
+                <MapPin size={16} className="text-[#FF7620] shrink-0" />
+                <span className="line-clamp-1">{localizacaoExibicao}</span>
+              </div>
             </div>
-          </div>
 
-          <div className="flex mb-2">
             {!podeEditar && telefone && (
               <button 
                 onClick={handleWhatsApp}
-                className="bg-[#FF7620] text-white px-8 py-2.5 rounded-xl font-bold hover:scale-105 transition-all shadow-md flex items-center justify-center gap-2 whitespace-nowrap"
+                className="bg-[#FF7620] text-white px-8 py-2.5 rounded-xl font-bold hover:scale-105 transition-all shadow-md flex items-center justify-center gap-2 whitespace-nowrap shrink-0"
               >
                 Falar no WhatsApp
               </button>

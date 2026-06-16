@@ -63,8 +63,15 @@ export const MeuPerfilScreen = () => {
     const [indexAberto, setIndexAberto] = useState<number | null>(null);
     const navRef = useRef<HTMLDivElement>(null);
 
+    // CORRIGIDO: Mapeamento EXATO baseado no Enum C#
     const getCategoriaTexto = (type: number) => {
-        const categories = ["Barracas e Ambulantes", "Passeios e Lazer", "Bares e Restaurantes", "Artesanato Local", "Comércio e Serviços"];
+        const categories: { [key: number]: string } = {
+            1: "Barracas e Ambulantes",
+            2: "Passeios e Lazer",
+            3: "Bares e Restaurantes",
+            4: "Artesanato Local",
+            5: "Comércio e Serviços"
+        };
         return categories[type] || "Não Categorizado";
     };
 
@@ -226,36 +233,34 @@ export const MeuPerfilScreen = () => {
 
                 if (response.ok) {
                     const d = await response.json();
-                    // Substitua o bloco de setBusiness no useEffect de carregamento
-setBusiness({
-    id: d.id ?? d.Id,
-    name: d.name ?? d.Name ?? "",
-    serviceType: d.serviceType ?? d.ServiceType ?? 0,
-    address: d.address ?? d.Address ?? "",
-    horario: d.horario ?? d.Horario ?? "08:00 às 18:00",
-    cartao: !!(d.cartao ?? d.Cartao),
-    pix: !!(d.pix ?? d.Pix),
-    dinheiro: !!(d.dinheiro ?? d.Dinheiro),
-    chuveiro: !!(d.chuveiro ?? d.Chuveiro),
-    estacionamento: !!(d.estacionamento ?? d.Estacionamento),
-    cadeira: !!(d.cadeira ?? d.Cadeira),
-    petFriendly: !!(d.petFriendly ?? d.PetFriendly),
-    acessibilidade: !!(d.acessibilidade ?? d.Acessibilidade),
-    wifi: d.wifi === true || d.Wifi === true,
-    // AQUI: Garantia de que se vier vazio, fica vazio. Se vier com http, mantém. Se vier só o caminho, completa.
-    businessPhotoUrl: (d.businessPhotoUrl || d.BusinessPhotoUrl) ? 
-        ((d.businessPhotoUrl || d.BusinessPhotoUrl).startsWith("http") ? (d.businessPhotoUrl || d.BusinessPhotoUrl) : `http://localhost:5148${d.businessPhotoUrl || d.BusinessPhotoUrl}`) : "",
-    coverPhotoUrl: (d.coverPhotoUrl || d.CoverPhotoUrl) ? 
-        ((d.coverPhotoUrl || d.CoverPhotoUrl).startsWith("http") ? (d.coverPhotoUrl || d.CoverPhotoUrl) : `http://localhost:5148${d.coverPhotoUrl || d.CoverPhotoUrl}`) : "",
-    cardImageUrl: (d.cardImageUrl || d.CardImageUrl) ? 
-        ((d.cardImageUrl || d.CardImageUrl).startsWith("http") ? (d.cardImageUrl || d.CardImageUrl) : `http://localhost:5148${d.cardImageUrl || d.CardImageUrl}`) : "",
-    description: d.description ?? d.Description ?? "",
-    galleryPhotos: (d.galleryPhotos ?? d.GalleryPhotos ?? []).map((p: string) => p.startsWith("http") ? p : `http://localhost:5148${p}`),
-    nota: 5.0,
-    totalAvaliacoes: 0,
-    latitude: d.latitude || d.Latitude || 0,
-    longitude: d.longitude || d.Longitude || 0
-});
+                    setBusiness({
+                        id: d.id ?? d.Id,
+                        name: d.name ?? d.Name ?? "",
+                        serviceType: d.serviceType ?? d.ServiceType ?? 0,
+                        address: d.address ?? d.Address ?? "",
+                        horario: d.horario ?? d.Horario ?? "08:00 às 18:00",
+                        cartao: !!(d.cartao ?? d.Cartao),
+                        pix: !!(d.pix ?? d.Pix),
+                        dinheiro: !!(d.dinheiro ?? d.Dinheiro),
+                        chuveiro: !!(d.chuveiro ?? d.Chuveiro),
+                        estacionamento: !!(d.estacionamento ?? d.Estacionamento),
+                        cadeira: !!(d.cadeira ?? d.Cadeira),
+                        petFriendly: !!(d.petFriendly ?? d.PetFriendly),
+                        acessibilidade: !!(d.acessibilidade ?? d.Acessibilidade),
+                        wifi: d.wifi === true || d.Wifi === true,
+                        businessPhotoUrl: (d.businessPhotoUrl || d.BusinessPhotoUrl) ? 
+                            ((d.businessPhotoUrl || d.BusinessPhotoUrl).startsWith("http") ? (d.businessPhotoUrl || d.BusinessPhotoUrl) : `http://localhost:5148${d.businessPhotoUrl || d.BusinessPhotoUrl}`) : "",
+                        coverPhotoUrl: (d.coverPhotoUrl || d.CoverPhotoUrl) ? 
+                            ((d.coverPhotoUrl || d.CoverPhotoUrl).startsWith("http") ? (d.coverPhotoUrl || d.CoverPhotoUrl) : `http://localhost:5148${d.coverPhotoUrl || d.CoverPhotoUrl}`) : "",
+                        cardImageUrl: (d.cardImageUrl || d.CardImageUrl) ? 
+                            ((d.cardImageUrl || d.CardImageUrl).startsWith("http") ? (d.cardImageUrl || d.CardImageUrl) : `http://localhost:5148${d.cardImageUrl || d.CardImageUrl}`) : "",
+                        description: d.description ?? d.Description ?? "",
+                        galleryPhotos: (d.galleryPhotos ?? d.GalleryPhotos ?? []).map((p: string) => p.startsWith("http") ? p : `http://localhost:5148${p}`),
+                        nota: 5.0,
+                        totalAvaliacoes: 0,
+                        latitude: d.latitude || d.Latitude || 0,
+                        longitude: d.longitude || d.Longitude || 0
+                    });
                 }
             } catch (error) { console.error("Erro:", error); } finally { setIsLoading(false); }
         };
@@ -320,7 +325,6 @@ setBusiness({
                                 <h3 className="font-bold text-[#0A4F6E] text-lg">Sobre meu Negócio</h3>
                                 <button onClick={() => setIsModalSobreOpen(true)} className="text-xs font-bold text-[#1398D4] hover:underline">Editar Bio</button>
                             </div>
-                            {/* ATUALIZAÇÃO: Classe break-words para palavras muito longas não quebrarem o layout */}
                             <p className="text-gray-600 text-sm leading-relaxed font-medium break-words">
                                 {business.description || "Nenhuma descrição adicionada."}
                             </p>
