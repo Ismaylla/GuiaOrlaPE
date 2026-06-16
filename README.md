@@ -276,6 +276,12 @@ Para compartilhar o projeto com outros desenvolvedores:
 
 ---
 
+# 📸 Créditos e Atribuições
+
+* **Imagem de Capa Padrão e Fundo:** [Imagem de freepik](https://br.freepik.com/imagem-ia-gratis/paisagem-de-praia-do-havai-com-natureza-e-litoral_299824859.htm)
+
+---
+
 # ✅ Ambiente Pronto
 
 Após finalizar as etapas acima, o sistema estará pronto para desenvolvimento e testes locais.

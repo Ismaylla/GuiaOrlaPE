@@ -50,13 +50,6 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
     const [posicaoUsuario, setPosicaoUsuario] = useState<{ lat: number, lon: number } | null>(null);
     const [listaMaisProximos, setListaMaisProximos] = useState<any[]>([])
 
-    // ESTADO LIMPO (Sem referências de preços)
-    // const [filtros, setFiltros] = useState({
-    //     localizacao: "", 
-    //     cartao: true, chuveiro: false, estacionamento: false, cadeira: false,
-    //     petFriendly: false, acessibilidade: false, melhoresAvaliados: false
-    // });
-
     const [filtros, setFiltros] = useState({
         localizacao: "",
         cartao: false, // Alterado de true para false para não filtrar nada por padrão
@@ -67,8 +60,6 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
         acessibilidade: false,
         melhoresAvaliados: false
     });
-
-
 
     const carregarNegocios = useCallback(async (
         filtrosAtuais = filtros,
@@ -172,10 +163,6 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
         }
     }, [listaNegocios, posicaoUsuario]);
 
-
-
-
-
     const scroll = (direction: "left" | "right") => {
         if (scrollRef.current) {
             const { scrollLeft, clientWidth } = scrollRef.current;
@@ -215,19 +202,19 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                     </div>
                 </aside>
 
-                <div className="min-w-0">
+                <div className="min-w-0 flex flex-col h-full">
                     {carregando ? (
-                        <div className="text-center p-20 flex flex-col items-center justify-center gap-3">
+                        <div className="text-center p-20 flex flex-col items-center justify-center gap-3 flex-grow">
                             <div className="w-8 h-8 border-4 border-[#0A4F6E] border-t-transparent rounded-full animate-spin"></div>
                             <p className="text-gray-500 text-xs italic font-medium">Carregando estabelecimentos da orla...</p>
                         </div>
                     ) : erroApi ? (
-                        <div className="text-center p-12 bg-red-50 rounded-2xl border border-dashed border-red-200">
+                        <div className="text-center p-12 bg-red-50 rounded-2xl border border-dashed border-red-200 flex-grow">
                             <p className="text-red-600 font-bold text-sm">Não foi possível conectar ao servidor local.</p>
                             <p className="text-gray-500 text-xs mt-1">Verifique se a sua API C# está rodando perfeitamente na porta 5148.</p>
                         </div>
                     ) : (
-                        <>
+                        <div className="flex flex-col flex-grow">
 
                             <AvisoPerfil />
 
@@ -262,7 +249,7 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
 
                             <hr className="w-full border-gray-200 mb-10 md:mb-12" />
 
-                            <section>
+                            <section className="flex-grow">
                                 <h2 className="text-[#0A4F6E] text-lg md:text-xl font-bold mb-6 md:mb-8 italic text-center md:text-left tracking-tight">Todos os estabelecimentos</h2>
                                 {temDados ? (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-8">
@@ -278,7 +265,15 @@ export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {
                                     </div>
                                 )}
                             </section>
-                        </>
+
+                            {/* ADICIONADO AQUI: Créditos do Freepik no final da página */}
+                            <div className="w-full text-center py-8 mt-12 mb-4 border-t border-gray-200/60">
+                                <p className="text-[11px] text-gray-400 font-medium">
+                                    A imagem de capa padrão dos estabelecimentos e fundo são fornecidas por <a href="https://br.freepik.com/imagem-ia-gratis/paisagem-de-praia-do-havai-com-natureza-e-litoral_299824859.htm" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#1398D4] transition-colors">Freepik</a>.
+                                </p>
+                            </div>
+
+                        </div>
                     )}
                 </div>
             </div>

@@ -115,6 +115,11 @@ export default function LoginEmpreendedor() {
           Criar conta
         </Link>
       </div>
+
+      {/* ADICIONADO AQUI: Créditos do Freepik */}
+      <div className="absolute bottom-2 right-4 z-10 text-[10px] text-gray-500/70">
+          Imagem de capa por <a href="https://br.freepik.com/imagem-ia-gratis/paisagem-de-praia-do-havai-com-natureza-e-litoral_299824859.htm" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 underline">Freepik</a>
+      </div>
     </LayoutAuth>
   );
 }
