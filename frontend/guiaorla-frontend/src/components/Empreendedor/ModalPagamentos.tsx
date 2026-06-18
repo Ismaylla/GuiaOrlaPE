@@ -1,6 +1,7 @@
+
 "use client";
-import { useState } from "react";
-import { X, CreditCard, Check, Smartphone, Banknote, Landmark } from "lucide-react";
+import { useState, useEffect } from "react"; // IMPORTADO: useEffect adicionado
+import { X, CreditCard, Check, Smartphone, Banknote } from "lucide-react";
 
 interface ModalPagamentosProps {
     isOpen: boolean;
@@ -12,11 +13,16 @@ interface ModalPagamentosProps {
 export const ModalPagamentos = ({ isOpen, onClose, pagamentosAtuais, onSave }: ModalPagamentosProps) => {
     const [selecionados, setSelecionados] = useState<string[]>(pagamentosAtuais);
 
-    // Mapeamento de opções com ícones da Lucide
+    // CORREÇÃO CRUCIAL: Sincroniza os estados sempre que o modal for aberto com os dados reais e atualizados do banco
+    useEffect(() => {
+        if (isOpen) {
+            setSelecionados(pagamentosAtuais);
+        }
+    }, [isOpen, pagamentosAtuais]);
+
     const opcoes = [
         { id: "Pix", label: "Pix", icon: <Smartphone size={20} className="text-[#1398D4]" /> },
-        { id: "Cartão de Crédito", label: "Cartão de Crédito", icon: <CreditCard size={20} className="text-[#1398D4]" /> },
-        { id: "Cartão de Débito", label: "Cartão de Débito", icon: <Landmark size={20} className="text-[#1398D4]" /> },
+        { id: "Cartão", label: "Cartão", icon: <CreditCard size={20} className="text-[#1398D4]" /> },
         { id: "Dinheiro", label: "Dinheiro", icon: <Banknote size={20} className="text-[#1398D4]" /> },
     ];
 
@@ -56,8 +62,8 @@ export const ModalPagamentos = ({ isOpen, onClose, pagamentosAtuais, onSave }: M
                                     onClick={() => toggleOpcao(opcao.id)}
                                     className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all active:scale-[0.98] ${
                                         isSelected 
-                                        ? "border-[#1398D4] bg-blue-50/30" 
-                                        : "border-gray-50 hover:border-gray-200 bg-gray-50/50"
+                                            ? "border-[#1398D4] bg-blue-50/30" 
+                                            : "border-gray-50 hover:border-gray-200 bg-gray-50/50"
                                     }`}
                                 >
                                     <div className="flex items-center gap-3">
@@ -87,6 +93,7 @@ export const ModalPagamentos = ({ isOpen, onClose, pagamentosAtuais, onSave }: M
                             Cancelar
                         </button>
                         <button 
+                            type="button"
                             onClick={() => {
                                 onSave(selecionados);
                                 onClose();

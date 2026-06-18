@@ -1,269 +1,287 @@
-# 🌊 GuiaOrlaPE — Documentação de Setup
+# 🌊 GuiaOrlaPE
 
-Bem-vindo(a) ao projeto **GuiaOrlaPE** 🚀
-Este repositório contém o sistema completo (frontend, backend e banco de dados) utilizado para conectar turistas a serviços locais em regiões litorâneas de Pernambuco.
-
----
-
-# 📌 Visão Geral do Projeto
-
-O **GuiaOrlaPE** é uma plataforma full-stack que permite:
-
-* Visualização de serviços locais (restaurantes, passeios, hospedagens etc.)
-* Busca e filtros por categoria
-* Interface responsiva para turistas e empreendedores
-* API centralizada para gerenciamento de dados
-* Persistência em banco PostgreSQL
+Plataforma full-stack que conecta turistas a serviços locais em regiões litorâneas de Pernambuco.
 
 ---
 
-# 🧱 Arquitetura
+# 🧱 Arquitetura do Projeto
 
-O sistema é dividido em três partes principais:
-
-```
+```bash
 GuiaOrlaPE/
-│
-├── frontend/   → Next.js (Interface Web)
-├── backend/    → API em .NET
-├── docker/     → Banco de dados PostgreSQL
+├── frontend/                         # Next.js (Interface Web)
+├── backend/                          # ASP.NET Core 9 (API REST)
+├── docker-compose.yml
+└── appsettings.example.json          # Modelo de configuração do Backend
 ```
 
 ---
 
 # ⚙️ Tecnologias Utilizadas
 
-## Frontend
-
-* Next.js
-* React
-* TypeScript
-* TailwindCSS
-
-## Backend
-
-* .NET 9 (ASP.NET Core)
-* API REST
-
-## Banco de Dados
-
-* PostgreSQL 15
-
-## Infraestrutura
-
-* Docker
-* Docker Compose
+| Camada         | Tecnologias                                    |
+| -------------- | ---------------------------------------------- |
+| Frontend       | Next.js, React, TypeScript, TailwindCSS, Axios |
+| Backend        | .NET 9, ASP.NET Core, Entity Framework Core    |
+| Banco de Dados | PostgreSQL 15                                  |
+| Infraestrutura | Docker, Docker Compose                         |
 
 ---
 
-# 🚀 Como rodar o projeto completo
+# 🐳 Executando com Docker (RECOMENDADO)
 
-## 📌 Pré-requisitos
+## 1. Preparação dos Segredos (OBRIGATÓRIO)
 
-Instale antes de começar:
-
-* Node.js (18+)
-* .NET SDK (9+)
-* Docker + Docker Compose
-* Git
+Para que o projeto funcione corretamente, é necessário configurar os segredos e credenciais locais que não estão versionados no repositório.
 
 ---
 
-## 🐳 1. Rodando tudo com Docker (RECOMENDADO)
+# 📄 Configuração do Backend
 
-Na raiz do projeto:
+Copie o arquivo:
 
-```bash id="z7qv5x"
+```bash
+backend/GuiaOrlaPE.API/appsettings.example.json
+```
+
+para:
+
+```bash
+backend/GuiaOrlaPE.API/appsettings.json
+```
+
+Depois, configure corretamente as seções:
+
+* `"Email"`
+* `"ConnectionStrings"`
+
+Exemplo:
+
+```json
+{
+  "Email": {
+    "Host": "smtp.gmail.com",
+    "Port": "587",
+    "User": "seu_email@gmail.com",
+    "Password": "sua_senha_de_app",
+    "From": "seu_email@gmail.com"
+  },
+
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=db;Port=5432;Database=guiaorla;Username=postgres;Password=SUA_SENHA_DO_POSTGRES"
+  }
+}
+```
+
+---
+
+# ⚠️ Importante sobre Gmail
+
+Caso utilize Gmail como serviço SMTP:
+
+* NÃO utilize sua senha principal da conta Google.
+* Gere uma **Senha de App** nas configurações de segurança da conta Google.
+* Certifique-se de que a autenticação em duas etapas esteja ativada.
+
+---
+
+# 🔐 Variáveis de Ambiente
+
+As variáveis abaixo precisam existir no ambiente da aplicação:
+
+```env
+POSTGRES_PASSWORD=sua_senha
+JWT_KEY=sua_chave_jwt_secreta
+```
+
+Você pode:
+
+* Definir diretamente no sistema operacional;
+* Utilizar variáveis no Docker;
+* Ou criar manualmente um arquivo `.env` para uso local.
+
+> O arquivo `.env` é opcional no projeto atual e não deve ser versionado.
+
+---
+
+# 🚀 Subindo o Ambiente
+
+Certifique-se de que o Docker Desktop esteja aberto e rodando.
+
+Execute na raiz do projeto:
+
+```bash
 docker-compose up --build
 ```
 
-Isso irá subir automaticamente:
-
-* 🐘 PostgreSQL
-* ⚙️ Backend (.NET API)
-* 🌐 Frontend (Next.js)
-
 ---
 
-## 🌍 Acessos após subir
+# 🛑 Derrubando o Ambiente
 
-* Frontend → [http://localhost:3000](http://localhost:3000)
-* Backend → [http://localhost:5000](http://localhost:5000)
-* Banco de dados → localhost:5433
+Para parar todos os containers do projeto:
 
----
-
-## 🛑 Parar o sistema
-
-```bash id="k0p9ww"
+```bash
 docker-compose down
 ```
 
 ---
 
-# 💻 2. Rodando localmente (sem Docker)
+# 🧹 Limpando Todo o Ambiente (RESET COMPLETO)
 
-## 📦 Frontend
+Caso ocorra algum problema de:
 
-```bash id="3c9m2q"
-cd frontend/guiaorla-frontend
-npm install
-npm run dev
+* Banco corrompido
+* Erro de coluna
+* Conflito de migrations
+* Dados quebrados
+* Containers inconsistentes
+* Cache do Docker
+
+Execute:
+
+```bash
+docker-compose down -v
 ```
 
-👉 [http://localhost:3000](http://localhost:3000)
+Esse comando:
 
----
+* Remove os containers
+* Remove os volumes do PostgreSQL
+* Apaga completamente os dados do banco
+* Força recriação limpa do ambiente
 
-## ⚙️ Backend
+Depois, execute novamente:
 
-```bash id="xq8n1t"
-cd backend/GuiaOrlaPE.API
-dotnet run
-```
-
-👉 [http://localhost:5000](http://localhost:5000)
-
----
-
-## 🐘 Banco de Dados (local)
-
-Você precisa de PostgreSQL rodando:
-
-```bash id="v0p4aa"
-Host: localhost
-Port: 5433
-Database: guiaorla
-User: postgres
-Password: postgres
+```bash
+docker-compose up --build
 ```
 
 ---
 
-# 🔗 Comunicação entre sistemas
+# ⚠️ Pontos Críticos da Infraestrutura
 
-O frontend consome a API via:
+## 🔄 Sincronização Banco ↔ Código
 
-```ts id="7k2q9p"
-API_URL = "http://localhost:5000"
+O projeto utiliza:
+
+```csharp
+db.Database.EnsureCreated();
 ```
 
-📁 Arquivo:
+no `Program.cs`.
 
+Isso garante que o banco seja criado automaticamente conforme a estrutura atual das entidades C#.
+
+Caso ocorra erro relacionado a colunas ou estrutura do banco, utilize:
+
+```bash
+docker-compose down -v
 ```
-frontend/src/services/api.ts
-```
+
+para recriar completamente o banco.
 
 ---
 
-# 📁 Estrutura geral
+## 🔐 Segurança
 
-```
-frontend/
-backend/
-docker-compose.yml
-```
+Nunca envie para o Git:
+
+* `appsettings.json`
+* `.env`
+* Credenciais SMTP
+* Chaves JWT
+* Senhas de banco
+
+O `.gitignore` do projeto já está configurado para proteger arquivos sensíveis.
 
 ---
+
+## 🌐 Comunicação Interna entre Containers
+
+Dentro do Docker, o frontend se comunica com o backend utilizando:
+
+```txt
+http://backend:8080
+```
+
+Isso ocorre porque os containers utilizam a rede interna do Docker Compose.
+
+---
+
+# 🧪 Validando o Sistema
 
 ## Frontend
 
-```
-src/
-├── app/
-├── components/
-├── services/
-├── styles/
-```
-
-## Backend
-
-```
-Controllers/
-Models/
-Services/
-Data/
+```txt
+http://localhost:3000
 ```
 
 ---
 
-# 🧠 Regras e boas práticas
+## Backend / Swagger
 
-✔ Separação clara entre frontend e backend
-✔ API centralizada (REST)
-✔ Componentes reutilizáveis no frontend
-✔ Tipagem obrigatória (TypeScript)
-✔ Lógica de negócio no backend
-✔ Estilo com TailwindCSS
-
----
-
-# 🧪 Como validar o sistema
-
-Após subir o projeto:
-
-1. Abrir [http://localhost:3000](http://localhost:3000)
-2. Verificar carregamento do frontend
-3. Testar chamadas para API
-4. Confirmar dados vindo do banco
-5. Validar logs do backend
-
----
-
-# ⚠️ Problemas comuns
-
-## Porta já em uso
-
-* 3000 → frontend
-* 5000 → backend
-* 5433 → banco
-
-Solução:
-
-```bash id="k8n3ld"
-docker-compose down
-```
-
-ou matar processos:
-
-```bash id="m2q9zz"
-docker ps
-docker stop <container>
+```txt
+http://localhost:5000/swagger
 ```
 
 ---
 
-## Conflito com PostgreSQL local
+# 📋 Logs e Debug
 
-Se tiver PostgreSQL instalado no Windows, ele pode ocupar a porta 5432.
+Para visualizar logs do backend em tempo real:
 
-👉 Solução: o projeto já usa 5433 no Docker.
-
----
-
-# 🧹 Reset completo (quando tudo dá errado)
-
-```bash id="r1c9pp"
-docker system prune -a
+```bash
+docker-compose logs -f backend
 ```
 
-⚠️ Remove containers, imagens e cache não utilizados.
+Isso ajuda a diagnosticar:
+
+* Falhas de conexão
+* Problemas SMTP
+* Erros JWT
+* Problemas de banco
+* Exceptions da API
 
 ---
 
-# ✨ Dicas de desenvolvimento
+# 🧠 Boas Práticas do Projeto
 
-* Use Docker para ambiente completo
-* Use `npm run dev` no frontend para hot reload
-* Use `dotnet watch run` no backend
-* Commits pequenos e frequentes
-* Sempre testar API antes do frontend
+* Separação clara entre frontend e backend.
+* Utilização obrigatória de TypeScript no frontend.
+* Nunca versionar arquivos contendo segredos.
+* Utilizar sempre Senha de App para SMTP.
+* Evitar hardcode de URLs, tokens e credenciais.
+* Manter o `appsettings.example.json` sempre atualizado.
 
 ---
 
-# 📌 Observação final
+# 📌 Observações
 
-Este projeto foi estruturado para funcionar tanto:
+* O backend roda em ASP.NET Core 9.
+* O banco utilizado é PostgreSQL 15.
+* O ambiente Docker é o método recomendado para desenvolvimento local.
+* O Swagger já vem habilitado para facilitar testes da API.
 
-* em ambiente Docker (produção/dev completo)
-* quanto localmente (desenvolvimento manual)
+---
+
+# 👥 Colaboração em Equipe
+
+Para compartilhar o projeto com outros desenvolvedores:
+
+1. Compartilhe apenas arquivos de exemplo.
+2. Cada integrante deve criar seu próprio:
+
+   * `appsettings.json`
+   * `.env` (caso utilize)
+3. A chave JWT pode ser compartilhada entre membros da equipe quando necessário para manter compatibilidade de autenticação.
+
+---
+
+# 📸 Créditos e Atribuições
+
+* **Imagem de Capa Padrão e Fundo:** [Imagem de freepik](https://br.freepik.com/imagem-ia-gratis/paisagem-de-praia-do-havai-com-natureza-e-litoral_299824859.htm)
+
+---
+
+# ✅ Ambiente Pronto
+
+Após finalizar as etapas acima, o sistema estará pronto para desenvolvimento e testes locais.

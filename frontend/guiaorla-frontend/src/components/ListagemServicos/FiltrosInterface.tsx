@@ -8,7 +8,6 @@ import {
     Dog, 
     Accessibility, 
     Star,
-    DollarSign,
     MapPin
 } from "lucide-react";
 
@@ -27,15 +26,6 @@ export const FiltrosInterface = ({ filtros, setFiltros, fecharModal, contexto }:
         "Itapuama", "Gaibu", "Calhetas", "Enseada dos Corais",
         "Porto de Galinhas", "Tamandaré"
     ];
-
-    const handleRadioChange = (id: string) => {
-        setFiltros((prev: any) => ({
-            ...prev,
-            faixaPreco: id,
-            precoMinManual: "",
-            precoMaxManual: ""
-        }));
-    };
 
     return (
         <div className="flex flex-col gap-2.5"> {/* Gap reduzido */}
@@ -58,53 +48,7 @@ export const FiltrosInterface = ({ filtros, setFiltros, fecharModal, contexto }:
                 </select>
             </div>
 
-            {/* SEÇÃO: PREÇOS */}
-            <div>
-                <h4 className="text-[#0A4F6E] font-bold text-[10px] mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
-                    <DollarSign size={12} strokeWidth={3} />
-                    Preços
-                </h4>
-                
-                <div className="flex flex-col gap-0.5 mb-2"> {/* Gap mínimo aqui */}
-                    {[
-                        { id: 'ate50', label: 'Até R$ 50' },
-                        { id: '50a300', label: 'R$ 50 a R$ 300' },
-                        { id: 'mais300', label: 'Mais de R$ 300' }
-                    ].map((opcao) => (
-                        <label key={opcao.id} className="flex items-center gap-2 cursor-pointer group py-0.5">
-                            <input
-                                type="radio"
-                                name={`faixaPreco-${contexto}`}
-                                value={opcao.id}
-                                checked={filtros.faixaPreco === opcao.id}
-                                onClick={() => handleRadioChange(opcao.id)}
-                                readOnly
-                                className="w-3 h-3 border-gray-300 text-[#FF7620] focus:ring-[#FF7620]"
-                            />
-                            <span className="text-[11px] text-gray-600 group-hover:text-[#0A4F6E]">{opcao.label}</span>
-                        </label>
-                    ))}
-                </div>
-
-                <div className="flex items-center gap-1 mb-1">
-                    <input
-                        type="number" placeholder="Min"
-                        value={filtros.precoMinManual}
-                        onChange={(e) => setFiltros((prev: any) => ({ ...prev, precoMinManual: e.target.value, faixaPreco: "" }))}
-                        className="w-full h-7 pl-2 rounded-md border border-gray-200 text-[10px] outline-none"
-                    />
-                    <span className="text-gray-400 text-[9px] font-bold">a</span>
-                    <input
-                        type="number" placeholder="Max"
-                        value={filtros.precoMaxManual}
-                        onChange={(e) => setFiltros((prev: any) => ({ ...prev, precoMaxManual: e.target.value, faixaPreco: "" }))}
-                        className="w-full h-7 pl-2 rounded-md border border-gray-200 text-[10px] outline-none"
-                    />
-                    <button onClick={() => fecharModal?.()} className="h-7 px-2 bg-gray-100 hover:bg-[#FF7620] hover:text-white text-gray-500 font-bold text-[9px] rounded-md transition-all">
-                        Ir
-                    </button>
-                </div>
-            </div>
+            {/* SEÇÃO DE PREÇOS REMOVIDA */}
 
             {/* SEÇÃO: COMODIDADES */}
             <div>

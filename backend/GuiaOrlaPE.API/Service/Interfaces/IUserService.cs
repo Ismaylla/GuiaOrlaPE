@@ -15,4 +15,10 @@ public interface IUserService
     Task UpdateAsync(Guid id, CreateBusinesspersonRequest request);
 
     Task<LoginResponse> LoginAsync(LoginRequest request);
+
+    Task ForgotPasswordAsync(string email);
+    Task UpdateEmailAsync(Guid userId, string newEmail);
+
+    Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword);
+    Task DeleteAsync(Guid id);
 }

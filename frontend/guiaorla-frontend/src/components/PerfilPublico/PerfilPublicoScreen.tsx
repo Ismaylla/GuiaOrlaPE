@@ -1,10 +1,16 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import Image from "next/image"; 
 import { HeaderListagem } from "@/components/ListagemServicos/HeaderListagem";
 import { PerfilHeader } from "@/components/PerfilPublico/PerfilHeader";
 import { SecaoFeedback } from "@/components/PerfilPublico/SecaoFeedback";
-import { Clock, MapPin, CreditCard, Sparkles, Star } from "lucide-react";
+import { Clock, MapPin, CreditCard, Sparkles, Store, Star, Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { buscarNegocioPorId, listarAvaliacoesDoNegocio } from "@/services/businessService";
+
+import { ModalUpload } from "./ModalUpload";
+import { ModalSobre } from "./ModalSobre";
 
 interface PerfilPublicoScreenProps {
     isEmpreendedor: boolean;
@@ -12,18 +18,93 @@ interface PerfilPublicoScreenProps {
 
 export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps) => {
     const router = useRouter();
+    const { data: session } = useSession(); 
+    const params = useParams(); 
+    const idNegocio = params?.id as string;
+
     const [scrolled, setScrolled] = useState(false);
+    const [negocio, setNegocio] = useState<any>(null);
+    const [carregando, setCarregando] = useState(true);
+    const [erro, setErro] = useState(false);
+
+    const [isModalSobreOpen, setIsModalSobreOpen] = useState(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [uploadType, setUploadType] = useState<"galeria" | "header" | "profile">("galeria");
+
+    const [indexAberto, setIndexAberto] = useState<number | null>(null);
+
     const navRef = useRef<HTMLDivElement>(null);
 
-    const dadosEstaticos = {
-        nome: "Barraca do Coco Selecionado",
-        localizacao: "Praia de Gaibu, Cabo de Santo Agostinho",
-        horario: "08:00 às 18:00",
-        pagamentos: ["Pix", "Cartão de Crédito", "Dinheiro"],
-        comodidades: ["Wi-fi Grátis", "Pet Friendly", "Ducha/Chuveiro"],
-        nota: 4.8,
-        totalAvaliacoes: 124
+    const usuarioLogadoId = (session as any)?.user?.id || (session as any)?.id;
+    const isOwner = !!(session && negocio && negocio.userId === usuarioLogadoId);
+
+    // CORRIGIDO: Mapeamento EXATO baseado no Enum C#
+    const getCategoriaTexto = (type: number) => {
+        const categories: { [key: number]: string } = {
+            1: "Barracas e Ambulantes",
+            2: "Passeios e Lazer",
+            3: "Bares e Restaurantes",
+            4: "Artesanato Local",
+            5: "Comércio e Serviços"
+        };
+        return categories[type] || "Não Categorizado";
     };
+
+    useEffect(() => {
+        const carregarPerfil = async () => {
+            if (!idNegocio) return;
+            try {
+                setCarregando(true);
+                setErro(false);
+
+                const dados = await buscarNegocioPorId(idNegocio);
+                const avaliacoes = await listarAvaliacoesDoNegocio(idNegocio);
+
+                const total = avaliacoes.length;
+                const media = total > 0 
+                    ? avaliacoes.reduce((acc: number, item: any) => acc + item.stars, 0) / total 
+                    : 0.0;
+
+                const pagamentosLista: string[] = [];
+                if (dados.pix ?? dados.Pix) pagamentosLista.push("Pix");
+                if (dados.cartao ?? dados.Cartao) pagamentosLista.push("Cartão");
+                if (dados.dinheiro ?? dados.Dinheiro) pagamentosLista.push("Dinheiro");
+
+                const comodidadesLista: string[] = [];
+                if (dados.chuveiro ?? dados.Chuveiro) comodidadesLista.push("Chuveirão");
+                if (dados.estacionamento ?? dados.Estacionamento) comodidadesLista.push("Estacionamento");
+                if (dados.cadeira ?? dados.Cadeira) comodidadesLista.push("Cadeira de Sol");
+                if (dados.petFriendly ?? dados.PetFriendly) comodidadesLista.push("Pet Friendly");
+                if (dados.acessibilidade ?? dados.Acessibilidade) comodidadesLista.push("Acessibilidade");
+                if (dados.wifi ?? dados.Wifi) comodidadesLista.push("Wi-Fi Grátis");
+
+                setNegocio({
+                    id: dados.id ?? dados.Id,
+                    userId: dados.userId ?? dados.UserId, 
+                    nome: dados.name || "Sem Nome",
+                    serviceType: dados.serviceType ?? dados.ServiceType ?? 0,
+                    telefone: dados.owner?.phone || dados.Owner?.Phone || "",
+                    localizacao: dados.address || "Endereço não informado",
+                    horario: dados.horario || dados.Horario || "Horário não informado", 
+                    pagamentos: pagamentosLista.length > 0 ? pagamentosLista : ["Não informado"],
+                    comodidades: comodidadesLista.length > 0 ? comodidadesLista : ["Nenhuma comodidade informada"],
+                    nota: media, 
+                    totalAvaliacoes: total, 
+                    fotoCapa: (dados.coverPhotoUrl ?? dados.CoverPhotoUrl) ? `http://localhost:5148${dados.coverPhotoUrl ?? dados.CoverPhotoUrl}` : "",
+                    fotoPerfil: (dados.businessPhotoUrl ?? dados.BusinessPhotoUrl) ? `http://localhost:5148${dados.businessPhotoUrl ?? dados.BusinessPhotoUrl}` : "",
+                    description: dados.description ?? dados.Description ?? "", 
+                    galleryPhotos: (dados.galleryPhotos ?? dados.GalleryPhotos ?? []).map((foto: string) => foto.startsWith("http") ? foto : `http://localhost:5148${foto}`)
+                });
+            } catch (error) {
+                console.error("Erro ao carregar o perfil do negócio:", error);
+                setErro(true);
+            } finally {
+                setCarregando(false);
+            }
+        };
+
+        carregarPerfil();
+    }, [idNegocio]);
 
     useEffect(() => {
         document.body.style.overflow = "auto";
@@ -39,6 +120,11 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
     const handleCategoryClick = (cat: string) => {
         const baseRoute = isEmpreendedor ? "/empreendedor/explorer" : "/explorer";
         router.push(`${baseRoute}?categoria=${encodeURIComponent(cat)}`);
+    };
+
+    const handleOpenUpload = (tipo: "galeria" | "header" | "profile") => {
+        setUploadType(tipo);
+        setIsUploadModalOpen(true);
     };
 
     const handleMouseDown = (ref: React.RefObject<HTMLDivElement | null>) => (e: React.MouseEvent) => {
@@ -59,66 +145,208 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
         document.addEventListener('mouseup', handleMouseUp);
     };
 
+    if (carregando) {
+        return (
+            <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center gap-3">
+                <Loader2 className="animate-spin text-[#0A4F6E]" size={40} />
+                <p className="text-gray-500 italic text-sm">Carregando dados do perfil...</p>
+            </div>
+        );
+    }
+
+    if (erro || !negocio) {
+        return (
+            <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-6">
+                <div className="bg-white p-8 rounded-2xl shadow-md border border-red-100 text-center max-w-md">
+                    <p className="text-red-600 font-bold">Perfil não encontrado</p>
+                    <button onClick={() => router.back()} className="mt-4 px-4 py-2 bg-[#0A4F6E] text-white rounded-xl text-xs font-bold">Voltar</button>
+                </div>
+            </div>
+        );
+    }
+
+    const exibirDescricao = negocio.description && negocio.description.trim() !== ""
+        ? negocio.description
+        : "Nenhuma descrição informada pelo estabelecimento.";
+
     return (
         <main className="min-h-screen h-full bg-[#F0F2F5] font-sans pb-20 text-left">
-            <HeaderListagem 
-                isEmpreendedor={isEmpreendedor} 
-                forceBlue={true} 
-                scrolled={scrolled} 
-                categoriaAtiva="" 
-                setCategoriaAtiva={handleCategoryClick} 
-                showFilter={false} 
-                setIsFilterOpen={() => {}} 
-                navRef={navRef} 
-                handleMouseDown={handleMouseDown} 
-            />
-            
+            <HeaderListagem isEmpreendedor={isEmpreendedor} forceBlue={true} scrolled={scrolled} categoriaAtiva="" setCategoriaAtiva={handleCategoryClick} showFilter={false} setIsFilterOpen={() => { }} navRef={navRef} handleMouseDown={handleMouseDown} />
             <div className="h-16"></div>
 
             <div className="max-w-[1100px] mx-auto">
-                <PerfilHeader podeEditar={false} />
-                
+                <PerfilHeader 
+                    key={`${negocio.fotoPerfil}-${negocio.fotoCapa}`}
+                    podeEditar={isOwner} 
+                    onEditCover={() => handleOpenUpload("header")}
+                    onEditProfile={() => handleOpenUpload("profile")}
+                    nomeNegocio={negocio.nome} 
+                    fotoCapa={negocio.fotoCapa} 
+                    fotoPerfil={negocio.fotoPerfil}
+                    localizacao={negocio.localizacao}
+                    telefone={negocio.telefone}
+                />
+
                 <div className="px-4 grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 mt-4">
                     <aside className="flex flex-col gap-4">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                             <div className="flex justify-between items-center mb-3">
+                            <div className="flex justify-between items-center mb-3">
                                 <h3 className="font-bold text-[#0A4F6E] text-lg">Sobre</h3>
-                                <div className="flex items-center gap-1 bg-orange-50 px-2 py-1 rounded-lg">
-                                    <span className="text-[#FF7620] font-bold text-sm">{dadosEstaticos.nota}</span>
-                                    <Star size={12} className="text-[#FF7620] fill-[#FF7620]" />
+                                <div className="flex items-center gap-2">
+                                    {isOwner && (
+                                        <button onClick={() => setIsModalSobreOpen(true)} className="text-xs font-bold text-[#1398D4] hover:underline mr-1">
+                                            Editar Bio
+                                        </button>
+                                    )}
+                                    <div className="flex items-center gap-1 bg-orange-50 px-2 py-1 rounded-lg">
+                                        <span className="text-[#FF7620] font-bold text-sm">{negocio.nota.toFixed(1)}</span>
+                                        <Star size={12} className="text-[#FF7620] fill-[#FF7620]" />
+                                    </div>
                                 </div>
-                             </div>
-                             <p className="text-gray-600 text-sm leading-relaxed font-medium">
-                                {dadosEstaticos.nome}: Os melhores cocos e frutas selecionadas da Praia de Gaibu. 
-                             </p>
+                            </div>
+                            <p className="text-gray-600 text-sm leading-relaxed font-medium break-words">
+                                <span className="font-bold text-[#0A4F6E]">{negocio.nome}:</span>{" "}
+                                {exibirDescricao}
+                            </p>
                         </div>
-
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-5">
                             <h3 className="font-bold text-[#0A4F6E] text-lg">Informações</h3>
-                            <InfoRow icon={<Clock size={18} className="text-[#1398D4]" />} label="Funcionamento" value={dadosEstaticos.horario} />
-                            <InfoRow icon={<MapPin size={18} className="text-[#1398D4]" />} label="Onde estamos" value={dadosEstaticos.localizacao} />
-                            <InfoRow icon={<CreditCard size={18} className="text-[#1398D4]" />} label="Pagamentos" value={dadosEstaticos.pagamentos.join(", ")} />
-                            <InfoRow icon={<Sparkles size={18} className="text-[#1398D4]" />} label="Comodidades" value={dadosEstaticos.comodidades.join(" • ")} />
+                            <InfoRow icon={<Store size={18} className="text-[#FF7620]" />} label="Categoria" value={getCategoriaTexto(negocio.serviceType)} />
+                            <InfoRow icon={<Clock size={18} className="text-[#1398D4]" />} label="Funcionamento" value={negocio.horario} />
+                            <InfoRow icon={<MapPin size={18} className="text-[#1398D4]" />} label="Onde estamos" value={negocio.localizacao} />
+                            <InfoRow icon={<CreditCard size={18} className="text-[#1398D4]" />} label="Pagamentos" value={negocio.pagamentos.join(", ")} />
+                            <InfoRow icon={<Sparkles size={18} className="text-[#1398D4]" />} label="Comodidades" value={negocio.comodidades.join(" • ")} />
                         </div>
                     </aside>
 
                     <section className="flex flex-col gap-4">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 min-h-[400px]">
-                            <h3 className="font-bold text-[#0A4F6E] text-xl italic mb-6">Galeria de Fotos</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                <div className="aspect-square bg-gray-100 rounded-xl border border-gray-200"></div>
-                                <div className="aspect-square bg-gray-50 rounded-xl border border-dashed border-gray-300"></div>
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="font-bold text-[#0A4F6E] text-xl italic">Galeria de Fotos</h3>
+                                {isOwner && (
+                                    <button onClick={() => handleOpenUpload("galeria")} className="text-sm font-bold text-[#1398D4] hover:underline">
+                                        + Adicionar Fotos
+                                    </button>
+                                )}
                             </div>
+                            
+                            {negocio.galleryPhotos.length > 0 ? (
+                                <>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        {negocio.galleryPhotos.slice(0, 6).map((foto: string, idx: number) => {
+                                            const isUltima = idx === 5;
+                                            const fotosRestantes = negocio.galleryPhotos.length - 6;
+
+                                            return (
+                                                <div 
+                                                    key={idx} 
+                                                    onClick={() => setIndexAberto(idx)}
+                                                    className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden border border-gray-200 cursor-pointer group"
+                                                >
+                                                    <Image 
+                                                        src={foto} 
+                                                        alt={`Foto ${idx + 1}`} 
+                                                        fill 
+                                                        className="object-cover transition-transform duration-300 group-hover:scale-105" 
+                                                        unoptimized={true}
+                                                        onError={() => {
+                                                            setNegocio((prev: any) => {
+                                                                if (!prev) return prev;
+                                                                return {
+                                                                    ...prev,
+                                                                    galleryPhotos: prev.galleryPhotos.filter((p: string) => p !== foto)
+                                                                };
+                                                            });
+                                                        }}
+                                                    />
+                                                    {isUltima && fotosRestantes > 0 && (
+                                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10 transition-colors group-hover:bg-black/70">
+                                                            <span className="text-white text-3xl font-bold">+{fotosRestantes}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {indexAberto !== null && indexAberto < negocio.galleryPhotos.length && (
+                                        <div 
+                                            className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center backdrop-blur-sm" 
+                                            onClick={() => setIndexAberto(null)}
+                                        >
+                                            <button 
+                                                onClick={() => setIndexAberto(null)} 
+                                                className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors z-50 p-2"
+                                            >
+                                                <X size={36} />
+                                            </button>
+
+                                            {indexAberto > 0 && (
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); setIndexAberto(indexAberto - 1); }} 
+                                                    className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 text-white hover:scale-110 transition-transform z-50 bg-black/50 p-3 rounded-full"
+                                                >
+                                                    <ChevronLeft size={32} />
+                                                </button>
+                                            )}
+
+                                            <div className="relative w-full max-w-6xl h-[85vh] px-16" onClick={(e) => e.stopPropagation()}>
+                                                <Image 
+                                                    src={negocio.galleryPhotos[indexAberto]} 
+                                                    alt={`Foto ampliada ${indexAberto + 1}`} 
+                                                    fill 
+                                                    className="object-contain" 
+                                                    unoptimized={true}
+                                                />
+                                            </div>
+
+                                            {indexAberto < negocio.galleryPhotos.length - 1 && (
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); setIndexAberto(indexAberto + 1); }} 
+                                                    className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 text-white hover:scale-110 transition-transform z-50 bg-black/50 p-3 rounded-full"
+                                                >
+                                                    <ChevronRight size={32} />
+                                                </button>
+                                            )}
+                                            
+                                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-sm font-medium tracking-widest bg-black/50 px-4 py-1.5 rounded-full">
+                                                {indexAberto + 1} / {negocio.galleryPhotos.length}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl p-8 min-h-[220px] bg-gray-50/50">
+                                    <p className="text-sm font-semibold text-gray-400">Nenhuma foto adicionada.</p>
+                                </div>
+                            )}
                         </div>
-                        
-                        <SecaoFeedback 
-                            nota={dadosEstaticos.nota} 
-                            totalAvaliacoes={dadosEstaticos.totalAvaliacoes} 
-                            exibirBotaoAvaliar={!isEmpreendedor} 
-                        />
+                        <SecaoFeedback nota={negocio.nota} totalAvaliacoes={negocio.totalAvaliacoes} exibirBotaoAvaliar={!isOwner} />
                     </section>
                 </div>
             </div>
+
+            <ModalSobre 
+                isOpen={isModalSobreOpen} 
+                onClose={() => setIsModalSobreOpen(false)} 
+                valorAtual={negocio.description} 
+                onSave={(novo: string) => setNegocio((prev: any) => ({ ...prev, description: novo }))} 
+            />
+            <ModalUpload 
+                isOpen={isUploadModalOpen} 
+                onClose={() => setIsUploadModalOpen(false)} 
+                tipo={uploadType} 
+                businessId={negocio.id} 
+                onSuccess={(newUrl) => { 
+                    const fullUrl = newUrl.startsWith("http") ? newUrl : `http://localhost:5148${newUrl}`;
+                    setNegocio((prev: any) => ({ 
+                        ...prev, 
+                        fotoPerfil: uploadType === "profile" ? fullUrl : prev.fotoPerfil, 
+                        fotoCapa: uploadType === "header" ? fullUrl : prev.fotoCapa, 
+                        galleryPhotos: uploadType === "galeria" ? [...prev.galleryPhotos, fullUrl] : prev.galleryPhotos 
+                    })); 
+                }} 
+            />
         </main>
     );
 };

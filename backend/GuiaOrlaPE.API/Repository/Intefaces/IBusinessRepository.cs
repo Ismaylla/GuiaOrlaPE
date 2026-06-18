@@ -1,4 +1,5 @@
 ﻿using GuiaOrlaPE.API.Domain.Entities;
+using GuiaOrlaPE.API.Models.Requests;
 
 namespace GuiaOrlaPE.API.Repository.Intefaces;
 
@@ -8,8 +9,14 @@ public interface IBusinessRepository
 
     Task<Business?> GetByIdAsync(Guid id);
 
-    Task<(List<Business> Items, int TotalItems)> SearchAsync(string? search, int page, int pageSize);
+    // Mudamos para 'Items' e 'TotalItems' com iniciais maiúsculas aqui para corrigri erro no repository
+    Task<(List<Business> Items, int TotalItems)> SearchAsync(SearchBusinessRequest request);
 
     Task<(List<Business> Items, int TotalItems)> GetByUserIdAsync(Guid userId, int page, int pageSize);
 
+    Task AddAsync(Business business);
+
+    Task UpdateAsync(Business business);
+
+    
 }

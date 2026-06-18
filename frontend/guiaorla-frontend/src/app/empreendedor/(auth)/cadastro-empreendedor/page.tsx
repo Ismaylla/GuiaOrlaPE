@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { LayoutAuth } from "@/components/Formulario/LayoutAuth";
 import { InputCustomizado } from "@/components/Formulario/InputCustomizado";
@@ -11,77 +12,160 @@ import { BotaoVoltar } from "@/components/Formulario/BotaoVoltar";
 import { useRegisterBusinessperson } from "@/hooks/mutations/useRegisterBusinessperson";
 import { CreateBusinesspersonRequest } from "@/interfaces/businessPersonRequest";
 import { BusinessServiceTypeEnum } from "@/interfaces/businessRequest";
+import { Loader2, MapPin } from "lucide-react";
+
+const MapaCaptura = dynamic(
+    () => import("@/components/Empreendedor/MapaCaptura").then((mod) => mod.MapaCaptura),
+    { ssr: false, loading: () => <div className="h-full w-full bg-gray-100 flex items-center justify-center text-xs text-gray-400">Carregando mapa interativo...</div> }
+);
 
 export default function CadastroEmpreendedor() {
     const [step, setStep] = useState(1);
-    const [selectedService, setSelectedService] = useState("Selecione...");
+    const [carregandoGps, setCarregandoGps] = useState(false);
     const router = useRouter();
-
-    const nextStep = () => setStep((prev) => prev + 1);
-    const prevStep = () => setStep((prev) => (prev > 1 ? prev - 1 : 1));
 
     const { mutateAsync, isPending } = useRegisterBusinessperson();
 
     const [formData, setFormData] = useState({
-        userName: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        phone: "",
-        businessName: "",
-        address: "",
-        businessPhotoUrl: "teste",
+        userName: "", email: "", password: "", confirmPassword: "", phone: "",
+        businessName: "", address: "",
         serviceType: BusinessServiceTypeEnum.ArtesanatoLocal,
+        latitude: -8.3364, longitude: -34.9451,
     });
+
+    const [sugestoesEndereco, setSugestoesEndereco] = useState<any[]>([]);
+    const [buscandoSugestoes, setBuscandoSugestoes] = useState(false);
+    const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const [aceitouTermos, setAceitouTermos] = useState(false);
+
+    const nextStep = () => {
+        if (step === 1) {
+            // 1. Verifica se algo está vazio
+            if (!formData.userName.trim() || !formData.email.trim() || !formData.password || !formData.confirmPassword || !formData.phone.trim()) {
+                alert("Por favor, preencha todos os campos obrigatórios (*).");
+                return;
+            }
+
+            // 2. Validação de E-mail (Aceita apenas provedores reais)
+            // Esta Regex exige um @ e um provedor conhecido antes do .com ou .com.br
+            const emailRegex = /^[^\s@]+@(gmail|hotmail|outlook|live|yahoo|icloud)\.(com|com\.br)$/i;
+            if (!emailRegex.test(formData.email)) {
+                alert("Por favor, insira um e-mail válido (ex: @gmail.com, @hotmail.com, @outlook.com).");
+                return;
+            }
+
+            // 3. Validação de Telefone (Apenas números, com 10 ou 11 dígitos)
+            const phoneLimpo = formData.phone.replace(/\D/g, '');
+            if (phoneLimpo.length < 10 || phoneLimpo.length > 11) {
+                alert("Por favor, insira um telefone válido com DDD (ex: 87991234567).");
+                return;
+            }
+
+            // 4. Validação de Senha
+            if (formData.password.length < 8) {
+                alert("A senha deve ter pelo menos 8 caracteres.");
+                return;
+            }
+
+            if (formData.password !== formData.confirmPassword) {
+                alert("As senhas não coincidem.");
+                return;
+            }
+        }
+
+        setStep((prev) => prev + 1);
+    };
+
+    const prevStep = () => setStep((prev) => (prev > 1 ? prev - 1 : 1));
 
     async function handleRegister() {
         try {
-            if (formData.password !== formData.confirmPassword) {
-                alert("As senhas não coincidem");
+            if (!formData.businessName.trim() || !formData.address.trim()) {
+                alert("Por favor, preencha o nome e o endereço do seu negócio.");
+                return;
+            }
+
+            if (!aceitouTermos) {
+                alert("Você precisa aceitar os Termos de Uso para finalizar o cadastro.");
                 return;
             }
 
             const payload: CreateBusinesspersonRequest = {
-                name: formData.userName,
-                email: formData.email,
-                password: formData.password,
-                phone: formData.phone,
+                name: formData.userName, email: formData.email, password: formData.password, phone: formData.phone,
                 business: {
-                    name: formData.businessName,
-                    serviceType: formData.serviceType,
+                    name: formData.businessName, serviceType: formData.serviceType,
                     address: formData.address,
-                    latitude: 0,
-                    longitude: 0,
-                    businessPhotoUrl:
-                        formData.businessPhotoUrl ||
-                        "teste",
+                    latitude: formData.latitude, longitude: formData.longitude,
+                    businessPhotoUrl: "",
                 },
             };
 
-            const createdUser = await mutateAsync(payload);
-
-            console.log("Usuário criado:", createdUser);
-
+            await mutateAsync(payload);
             router.push("/empreendedor/login-empreendedor");
         } catch (error: any) {
             console.error(error);
-
-            const message =
-                error?.response?.data?.message ||
-                "Erro ao realizar cadastro";
-
-            alert(message);
+            alert(error?.response?.data?.message || "Erro ao realizar cadastro");
         }
     }
 
-    function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) 
-    {
-        const { name, value } = e.target;
+    const obterEnderecoPorCoordenadas = async (lat: number, lng: number) => {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, { headers: { "User-Agent": "GuiaOrlaPE" } });
+            if (response.ok) {
+                const dados = await response.json();
+                return dados.display_name || `Coordenadas: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            }
+        } catch (err) { console.error(err); }
+        return `Coordenadas: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    };
 
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+    const usarLocalizacaoAtual = () => {
+        if (!navigator.geolocation) { alert("Geolocalização não é suportada pelo seu navegador."); return; }
+        setCarregandoGps(true);
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const lat = pos.coords.latitude; const lng = pos.coords.longitude;
+                const enderecoReal = await obterEnderecoPorCoordenadas(lat, lng);
+                setFormData((prev) => ({ ...prev, address: enderecoReal, latitude: lat, longitude: lng }));
+                setCarregandoGps(false);
+            },
+            () => { alert("Não foi possível obter a localização atual via GPS."); setCarregandoGps(false); }
+        );
+    };
+
+    const handleMapClick = async (lat: number, lng: number) => {
+        setCarregandoGps(true);
+        const enderecoReal = await obterEnderecoPorCoordenadas(lat, lng);
+        setFormData((prev) => ({ ...prev, address: enderecoReal, latitude: lat, longitude: lng }));
+        setCarregandoGps(false);
+    };
+
+    const handleAddressTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setFormData((prev) => ({ ...prev, address: val }));
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (val.length < 4) { setSugestoesEndereco([]); setMostrarSugestoes(false); return; }
+
+        timeoutRef.current = setTimeout(async () => {
+            setBuscandoSugestoes(true);
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&limit=5&countrycodes=br`, { headers: { "User-Agent": "GuiaOrlaPE" } });
+                const data = await res.json();
+                setSugestoesEndereco(data); setMostrarSugestoes(true);
+            } catch (err) { console.error("Erro ao buscar sugestões:", err); } finally { setBuscandoSugestoes(false); }
+        }, 800);
+    };
+
+    const selecionarSugestao = (sugestao: any) => {
+        setFormData((prev) => ({ ...prev, address: sugestao.display_name, latitude: parseFloat(sugestao.lat), longitude: parseFloat(sugestao.lon) }));
+        setMostrarSugestoes(false);
+    };
+
+    function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
     }
 
     return (
@@ -92,124 +176,86 @@ export default function CadastroEmpreendedor() {
                 <Image src="/images/LOGOfundotransparente 3.png" alt="Logo" fill className="object-contain" />
             </div>
 
-            <div className="text-center mt-12 mb-8">
+            {/* mt-4 em vez de mt-12 para não empurrar demais */}
+            <div className="text-center mt-4 mb-6">
                 <h2 className="text-[32px] font-medium text-[#FF7620]">Cadastro do Empreendedor</h2>
-                <p className="text-[16px] text-[#FF7620] opacity-80">Passo {step} de 3</p>
+                <p className="text-[16px] text-[#FF7620] opacity-80">Passo {step} de 2</p>
             </div>
 
-            <div className="flex w-full max-w-[450px] flex-col">
-                <div className="h-[480px] w-full flex flex-col justify-start">
-                    
+            <div className="flex w-full max-w-[450px] flex-col flex-grow">
+                <div className="w-full flex flex-col justify-start pb-6 flex-1">
+
                     {step === 1 && (
                         <div className="flex flex-col gap-4 animate-in fade-in duration-500">
-                            <InputCustomizado 
-                                name="userName"
-                                value={formData.userName}
-                                onChange={handleInputChange} 
-                                label="Nome Completo" 
-                            />
-                            <InputCustomizado
-                                name="email"
-                                value={formData.email}
-                                onChange={handleInputChange}
-                                label="E-mail (Será seu Login)" 
-                                type="email" 
-                            />
-                            <InputCustomizado 
-                                name="password"
-                                value={formData.password}
-                                onChange={handleInputChange}
-                                label="Crie uma senha" 
-                                type="password" 
-                                showPasswordOption 
-                            />
-                            <InputCustomizado 
-                                name="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={handleInputChange}
-                                label="Confirme sua senha" 
-                                type="password" 
-                                showPasswordOption />
-                            <InputCustomizado
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleInputChange} 
-                                label="Whatsapp ou Telefone" 
-                                placeholder="Ex: 87991234567" />
+                            <InputCustomizado name="userName" value={formData.userName} onChange={handleInputChange} label={<span>Nome Completo <span className="text-red-500">*</span></span>} />
+                            <InputCustomizado name="email" value={formData.email} onChange={handleInputChange} label={<span>E-mail <span className="text-red-500">*</span></span>} type="email" />
+                            <InputCustomizado name="password" value={formData.password} onChange={handleInputChange} label={<span>Crie uma senha <span className="text-red-500">*</span></span>} type="password" showPasswordOption />
+                            <InputCustomizado name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange} label={<span>Confirme sua senha <span className="text-red-500">*</span></span>} type="password" showPasswordOption />
+                            <InputCustomizado name="phone" type="tel" value={formData.phone} onChange={handleInputChange} label={<span>Whatsapp ou Telefone <span className="text-red-500">*</span></span>} placeholder="Ex: 87991234567" />
                         </div>
                     )}
 
                     {step === 2 && (
-                        <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right duration-500">
-                            <InputCustomizado 
-                                name="businessName"
-                                value={formData.businessName}
-                                onChange={handleInputChange} 
-                                label="Nome do negócio" 
-                            />
-                            <DropdownServicos
-                                label="Qual serviço você oferece?"
-                                selected={formData.serviceType}
-                                onSelect={(value) =>
-                                    setFormData((prev) => ({
-                                        ...prev,
-                                        serviceType: value,
-                                    }))
-                                }
-                            />
-                            <InputCustomizado 
-                                name="address"
-                                value={formData.address}
-                                onChange={handleInputChange}
-                                label="Endereço ou Ponto de Referência" 
-                                placeholder="Ex: Av. Beira Mar, Gaibu" />
-                            <button className="text-left ml-4 mt-[-10px] text-[13px] font-semibold text-[#FF904B] hover:underline">
+                        <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right duration-500 relative">
+                            <InputCustomizado name="businessName" value={formData.businessName} onChange={handleInputChange} label={<span>Nome do negócio <span className="text-red-500">*</span></span>} />
+
+                            <div className="relative z-[60]">
+                                <DropdownServicos
+                                    label={<span>Qual serviço você oferece? <span className="text-red-500">*</span></span>}
+                                    selected={formData.serviceType}
+                                    onSelect={(value) => setFormData((prev) => ({ ...prev, serviceType: value }))}
+                                />
+                            </div>
+
+                            <div className="relative z-50">
+                                <InputCustomizado name="address" value={formData.address} onChange={handleAddressTyping} label={<span>Endereço ou Ponto de Referência <span className="text-red-500">*</span></span>} placeholder="Digite para buscar seu local..." />
+                                {buscandoSugestoes && <Loader2 className="absolute right-4 top-11 text-[#FF7620] animate-spin" size={18} />}
+
+                                {mostrarSugestoes && sugestoesEndereco.length > 0 && (
+                                    <ul className="absolute top-full left-0 right-0 bg-white mt-2 rounded-xl shadow-xl border border-gray-200 overflow-hidden max-h-48 overflow-y-auto">
+                                        {sugestoesEndereco.map((sugestao, idx) => (
+                                            <li key={idx} onClick={() => selecionarSugestao(sugestao)} className="px-4 py-3 hover:bg-blue-50 cursor-pointer flex items-start gap-3 border-b border-gray-100 last:border-0 transition-colors">
+                                                <MapPin className="text-[#1398D4] shrink-0 mt-0.5" size={16} />
+                                                <span className="text-xs text-gray-700 leading-tight">{sugestao.display_name}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+
+                            <button type="button" onClick={usarLocalizacaoAtual} className="text-left ml-4 mt-[-10px] text-[13px] font-semibold text-[#FF904B] hover:underline flex items-center gap-1">
                                 Usar minha localização atual
                             </button>
-                            <div className="relative mt-2 w-full h-[180px] rounded-2xl bg-gray-200 overflow-hidden border border-gray-300">
-                                <Image src="/images/mapa-mockup.png" alt="Mapa" fill className="object-cover opacity-30 grayscale" />
-                                <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                                    <div className="bg-[#FF904B] text-white text-[10px] px-2 py-1 rounded-md mb-1 font-bold italic">É aqui?</div>
-                                    <div className="h-6 w-6 bg-[#FF904B] rounded-full border-2 border-white shadow-lg"></div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
-                    {step === 3 && (
-                        <div className="flex flex-col items-center gap-6 animate-in fade-in slide-in-from-right duration-500 w-full">
-                            <h3 className="text-[22px] font-medium text-[#0A4F6E] leading-tight text-center">Adicione uma foto do seu negócio</h3>
-                            
-                            <div className="relative w-full h-[200px] rounded-2xl bg-white border-2 border-dashed border-[#1398D4] flex flex-col items-center justify-center gap-3 cursor-pointer">
-                                <Image src="/icons/CamUpload.svg" alt="Upload" width={60} height={60} />
-                                <p className="text-[#1398D4] font-semibold text-[14px] underline">Faça Upload da imagem aqui</p>
-                                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" />
+                            <div className="relative mt-2 w-full h-[180px] rounded-2xl bg-gray-100 overflow-hidden border border-gray-300 shadow-inner z-10 shrink-0">
+                                <MapaCaptura lat={formData.latitude} lng={formData.longitude} onChangeCoords={handleMapClick} />
                             </div>
 
-                            <div className="flex flex-col items-center gap-4">
+                            <div className="flex flex-col gap-2 mt-2 px-2">
                                 <label className="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" className="h-6 w-6 rounded border-2 border-[#0A4F6E] checked:bg-[#0A4F6E]" />
-                                    <span className="text-[#0A4F6E] text-[15px] font-medium">Li e aceito os Termos de Uso</span>
+                                    <input type="checkbox" checked={aceitouTermos} onChange={(e) => setAceitouTermos(e.target.checked)} className="h-5 w-5 rounded border-2 border-[#0A4F6E] checked:bg-[#0A4F6E]" />
+                                    <span className="text-[#0A4F6E] text-[14px] font-medium">Li e aceito os Termos de Uso</span>
                                 </label>
-                                <Link href="/termos" className="text-[#1398D4] font-bold text-[15px] underline">Termos de Uso</Link>
+                                <Link href="/termos" className="text-[#1398D4] font-bold text-[13px] underline ml-8">Ler Termos de Uso</Link>
                             </div>
                         </div>
                     )}
+
                 </div>
 
-                <div className="flex justify-center mt-4">
+                {/* Botão fixo no final do container do formulário */}
+                <div className="flex justify-center mt-2 mb-4">
                     <BotaoFormulario
                         variante="laranja"
-                        texto={
-                            isPending
-                                ? "CARREGANDO..."
-                                : step === 3
-                                ? "FINALIZAR CADASTRO"
-                                : "PRÓXIMO"
-                        }
-                        onClick={step === 3 ? handleRegister : nextStep}
+                        texto={isPending ? "CRIANDO CONTA..." : step === 2 ? "FINALIZAR CADASTRO" : "PRÓXIMO"}
+                        onClick={step === 2 ? handleRegister : nextStep}
                     />
                 </div>
+            </div>
+            
+            {/* ADICIONADO AQUI: Créditos do Freepik */}
+            <div className="absolute bottom-2 right-4 z-10 text-[10px] text-gray-500/70">
+                Imagem de capa por <a href="https://br.freepik.com/imagem-ia-gratis/paisagem-de-praia-do-havai-com-natureza-e-litoral_299824859.htm" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 underline">Freepik</a>
             </div>
         </LayoutAuth>
     );

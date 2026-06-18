@@ -1,7 +1,8 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  // Forçando o HTTP puro na porta q o terminal listou
+  baseURL: "http://localhost:5148",
   headers: {
     "Content-Type": "application/json",
   },

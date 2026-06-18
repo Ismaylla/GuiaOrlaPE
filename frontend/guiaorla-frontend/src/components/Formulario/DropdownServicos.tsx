@@ -6,7 +6,7 @@ import { BusinessServiceTypeEnum } from "@/interfaces/businessRequest";
 
 
 interface DropdownProps {
-    label: string;
+    label: React.ReactNode;
     selected?: BusinessServiceTypeEnum;
     onSelect: (opcao: BusinessServiceTypeEnum) => void;
 }

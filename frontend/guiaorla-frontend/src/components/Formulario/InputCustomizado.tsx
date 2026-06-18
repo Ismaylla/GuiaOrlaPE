@@ -3,7 +3,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 interface InputProps {
-  label: string;
+  label: React.ReactNode;
   name?: string;
   type?: string;
   placeholder?: string;
@@ -12,14 +12,14 @@ interface InputProps {
   showPasswordOption?: boolean; // Para mostrar o olhinho
 }
 
-export const InputCustomizado = ({ 
-  label, 
+export const InputCustomizado = ({
+  label,
   name,
-  type = "text", 
-  placeholder, 
-  value, 
-  onChange, 
-  showPasswordOption 
+  type = "text",
+  placeholder,
+  value,
+  onChange,
+  showPasswordOption
 }: InputProps) => {
   const [show, setShow] = useState(false);
   const isPassword = type === "password";
@@ -33,14 +33,20 @@ export const InputCustomizado = ({
           type={isPassword ? (show ? "text" : "password") : type}
           placeholder={placeholder}
           value={value}
-          onChange={onChange}
+          onChange={(e) => {
+            // Se o tipo for "tel", remove letras antes de chamar o onChange do pai
+            if (type === "tel") {
+              e.target.value = e.target.value.replace(/\D/g, "");
+            }
+            onChange?.(e);
+          }}
           className="h-11 w-full rounded-full bg-white px-6 focus:outline-none text-[16px]"
           style={{ boxShadow: '0px 4px 6px rgba(10, 79, 110, 0.8)' }}
         />
         {isPassword && showPasswordOption && (
-          <button 
-            type="button" 
-            onClick={() => setShow(!show)} 
+          <button
+            type="button"
+            onClick={() => setShow(!show)}
             className="absolute right-5 top-1/2 -translate-y-1/2 text-[#FF904B]"
           >
             {show ? <Eye size={22} /> : <EyeOff size={22} />}
