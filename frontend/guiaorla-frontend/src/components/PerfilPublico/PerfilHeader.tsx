@@ -1,4 +1,6 @@
 "use client";
+
+import { API_URL } from "@/lib/config";
 import { useState, useEffect } from "react";
 import { MapPin, Camera, User, Trash2 } from "lucide-react";
 
@@ -18,7 +20,7 @@ interface PerfilHeaderProps {
 const obterImagemValida = (src: string | undefined) => {
   if (!src) return "";
   const limpo = src.trim();
-  if (limpo === "" || limpo === "http://localhost:5148" || limpo === "http://localhost:5148/") {
+  if ( limpo === "" || limpo === API_URL || limpo === `${API_URL}/`) {
       return "";
   }
   return limpo;

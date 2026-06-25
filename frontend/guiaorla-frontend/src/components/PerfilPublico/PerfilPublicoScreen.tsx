@@ -1,4 +1,6 @@
 "use client";
+
+import { API_URL } from "@/lib/config";
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -90,10 +92,10 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                     comodidades: comodidadesLista.length > 0 ? comodidadesLista : ["Nenhuma comodidade informada"],
                     nota: media, 
                     totalAvaliacoes: total, 
-                    fotoCapa: (dados.coverPhotoUrl ?? dados.CoverPhotoUrl) ? `http://localhost:5148${dados.coverPhotoUrl ?? dados.CoverPhotoUrl}` : "",
-                    fotoPerfil: (dados.businessPhotoUrl ?? dados.BusinessPhotoUrl) ? `http://localhost:5148${dados.businessPhotoUrl ?? dados.BusinessPhotoUrl}` : "",
+                    fotoCapa: (dados.coverPhotoUrl ?? dados.CoverPhotoUrl) ? `${API_URL}${dados.coverPhotoUrl ?? dados.CoverPhotoUrl}` : "",
+                    fotoPerfil: (dados.businessPhotoUrl ?? dados.BusinessPhotoUrl) ? `${API_URL}${dados.businessPhotoUrl ?? dados.BusinessPhotoUrl}` : "",
                     description: dados.description ?? dados.Description ?? "", 
-                    galleryPhotos: (dados.galleryPhotos ?? dados.GalleryPhotos ?? []).map((foto: string) => foto.startsWith("http") ? foto : `http://localhost:5148${foto}`)
+                    galleryPhotos: (dados.galleryPhotos ?? dados.GalleryPhotos ?? []).map((foto: string) => foto.startsWith("http") ? foto : `${API_URL}${foto}`)
                 });
             } catch (error) {
                 console.error("Erro ao carregar o perfil do negócio:", error);
@@ -338,7 +340,7 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
                 tipo={uploadType} 
                 businessId={negocio.id} 
                 onSuccess={(newUrl) => { 
-                    const fullUrl = newUrl.startsWith("http") ? newUrl : `http://localhost:5148${newUrl}`;
+                    const fullUrl = newUrl.startsWith("http") ? newUrl : `${API_URL}${newUrl}`;
                     setNegocio((prev: any) => ({ 
                         ...prev, 
                         fotoPerfil: uploadType === "profile" ? fullUrl : prev.fotoPerfil, 
