@@ -12,15 +12,20 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-// Mude isto no seu Program.cs:
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-    // Adicione esta linha para ignorar o erro de "PendingModelChangesWarning"
-    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+    if (builder.Environment.IsEnvironment("Testing"))
+    {
+        options.UseSqlite(builder.Configuration.GetConnectionString("TesteDefaultConnection"));
+    }
+    else
+    {
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+        options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+    }
 });
 
-// 🛠️ CORRIGIDO BEM AQUI: Associado a interface à classe concreta UserRepository
+// Associado a interface à classe concreta UserRepository
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
 
@@ -106,10 +111,10 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
+
     // EnsureCreated cria o banco e as tabelas com a estrutura exata 
     // das suas classes C# atuais, sem precisar de migrações.
-    db.Database.EnsureCreated(); 
+    db.Database.EnsureCreated();
 }
 
 app.UseSwagger();
@@ -131,9 +136,11 @@ app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
