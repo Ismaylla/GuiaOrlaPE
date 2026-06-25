@@ -1,4 +1,6 @@
 "use client";
+
+import { API_URL } from "@/lib/config";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { X, ChevronLeft, ChevronRight, Trash2, Edit2, CheckCircle2, Circle } from "lucide-react";
@@ -19,7 +21,7 @@ export const GaleriaViewer = ({ fotos, podeEditar = false, onDeleteMultiple }: G
 
     useEffect(() => {
         const fotosLimpas = fotos.filter(f => 
-            f && f.trim() !== "" && f !== "http://localhost:5148" && f !== "http://localhost:5148/"
+            f && f.trim() !== "" && f !== `${API_URL}` && f !== `${API_URL}/`
         );
         setFotosValidas(fotosLimpas);
         

@@ -1,37 +1,3 @@
-// import { useState } from 'react';
-// import { useForgotPassword } from '@/hooks/mutations/useForgotPassword';
-
-// export const ModalEsqueciSenha = ({ onClose }: { onClose: () => void }) => {
-//   const [email, setEmail] = useState('');
-//   const { mutate, isPending } = useForgotPassword();
-
-//   const handleSubmit = () => {
-//     mutate(email, {
-//       onSuccess: () => {
-//         alert("E-mail enviado com sucesso! Verifique sua caixa de entrada.");
-//         onClose();
-//       },
-//       onError: () => alert("Erro ao enviar. Verifique se o e-mail está correto."),
-//     });
-//   };
-
-//   return (
-//     <div className="modal-container">
-//       <h2>Esqueci minha senha</h2>
-//       <input 
-//         type="email" 
-//         placeholder="Digite seu e-mail" 
-//         value={email} 
-//         onChange={(e) => setEmail(e.target.value)} 
-//       />
-//       <button onClick={handleSubmit} disabled={isPending}>
-//         {isPending ? 'Enviando...' : 'Enviar Nova Senha'}
-//       </button>
-//       <button onClick={onClose}>Cancelar</button>
-//     </div>
-//   );
-// };
-
 "use client";
 import { useState } from "react";
 import { X, Mail } from "lucide-react";

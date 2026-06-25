@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL } from "@/lib/config";
+
 interface BarraProgressoProps {
     business: any;
 }
@@ -8,7 +10,11 @@ interface BarraProgressoProps {
 const imagemValidaParaPonto = (url?: string) => {
     if (!url || typeof url !== "string") return false;
     const limpa = url.trim();
-    return limpa !== "" && limpa !== "http://localhost:5148" && limpa !== "http://localhost:5148/";
+    return (
+    limpa !== "" &&
+    limpa !== API_URL &&
+    limpa !== `${API_URL}/`
+)
 };
 
 export const BarraProgressoPerfil = ({ business }: BarraProgressoProps) => {

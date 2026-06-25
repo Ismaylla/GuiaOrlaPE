@@ -1,8 +1,9 @@
 import axios from "axios";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+
 export const api = axios.create({
-  // Forçando o HTTP puro na porta q o terminal listou
-  baseURL: "http://localhost:5148",
+  baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
