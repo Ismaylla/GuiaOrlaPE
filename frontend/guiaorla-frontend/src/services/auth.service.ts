@@ -56,7 +56,7 @@ const apiClient = axios.create({
 
 export async function login(data: any) {
   try {
-    const response = await apiClient.post("/api/users/login", data);
+    const response = await apiClient.post("/api/auth/login", data);
     return {
       user: {
         id: response.data.id,
