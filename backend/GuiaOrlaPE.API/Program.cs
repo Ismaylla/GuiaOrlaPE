@@ -88,13 +88,24 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// Origens permitidas para CORS. Em produção/CasaOS, defina a variável de
+// ambiente Cors__AllowedOrigins (ex.: "http://192.168.0.50:3000"). Aceita
+// múltiplas origens separadas por vírgula ou ponto-e-vírgula.
+var corsOrigins = builder.Configuration["Cors:AllowedOrigins"]
+    ?.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+if (corsOrigins is null || corsOrigins.Length == 0)
+{
+    corsOrigins = new[] { "http://localhost:3000" };
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
         policy =>
         {
             policy
-                .WithOrigins("http://localhost:3000")
+                .WithOrigins(corsOrigins)
                 .AllowAnyHeader()
                 .AllowAnyMethod();
         });

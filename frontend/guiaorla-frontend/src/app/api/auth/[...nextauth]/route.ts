@@ -77,7 +77,7 @@ export const authOptions: NextAuthOptions = {
     signIn: "/empreendedor/login-empreendedor",
   },
 
-  secret: "guia-orla-pe-secret-key-temporary-123456789",
+  secret: process.env.NEXTAUTH_SECRET || "guia-orla-pe-secret-key-temporary-123456789",
 };
 
 const handler = NextAuth(authOptions);
