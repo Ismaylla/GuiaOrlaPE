@@ -49,7 +49,6 @@ export default function CadastroEmpreendedor() {
             }
 
             // 2. Validação de E-mail (Aceita apenas provedores reais)
-            // Esta Regex exige um @ e um provedor conhecido antes do .com ou .com.br
             const emailRegex = /^[^\s@]+@(gmail|hotmail|outlook|live|yahoo|icloud)\.(com|com\.br)$/i;
             if (!emailRegex.test(formData.email)) {
                 alert("Por favor, insira um e-mail válido (ex: @gmail.com, @hotmail.com, @outlook.com).");
@@ -172,14 +171,9 @@ export default function CadastroEmpreendedor() {
         <LayoutAuth>
             <BotaoVoltar onClick={() => step > 1 ? prevStep() : window.history.back()} />
 
-            <div className="absolute top-4 right-4 h-28 w-28">
-                <Image src="/images/LOGOfundotransparente 3.png" alt="Logo" fill className="object-contain" />
-            </div>
-
-            {/* mt-4 em vez de mt-12 para não empurrar demais */}
-            <div className="text-center mt-4 mb-6">
-                <h2 className="text-[32px] font-medium text-[#FF7620]">Cadastro do Empreendedor</h2>
-                <p className="text-[16px] text-[#FF7620] opacity-80">Passo {step} de 2</p>
+            <div className="text-center mt-8 mb-6">
+                <h2 className="text-[32px] font-medium text-[#FF7620] leading-tight">Cadastro do Empreendedor</h2>
+                <p className="text-[16px] text-[#FF7620] opacity-80 mt-1">Passo {step} de 2</p>
             </div>
 
             <div className="flex w-full max-w-[450px] flex-col flex-grow">
@@ -243,7 +237,6 @@ export default function CadastroEmpreendedor() {
 
                 </div>
 
-                {/* Botão fixo no final do container do formulário */}
                 <div className="flex justify-center mt-2 mb-4">
                     <BotaoFormulario
                         variante="laranja"
@@ -253,7 +246,6 @@ export default function CadastroEmpreendedor() {
                 </div>
             </div>
             
-            {/* ADICIONADO AQUI: Créditos do Freepik */}
             <div className="absolute bottom-2 right-4 z-10 text-[10px] text-gray-500/70">
                 Imagem de capa por <a href="https://br.freepik.com/imagem-ia-gratis/paisagem-de-praia-do-havai-com-natureza-e-litoral_299824859.htm" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 underline">Freepik</a>
             </div>
