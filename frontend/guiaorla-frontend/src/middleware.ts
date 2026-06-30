@@ -4,8 +4,7 @@ export default withAuth({
   pages: {
     signIn: "/empreendedor/login-empreendedor",
   },
-  // injeta a mesma chave exata que coloquei no route.ts
-  secret: "guia-orla-pe-secret-key-temporary-123456789",
+  secret: process.env.NEXTAUTH_SECRET,
 });
 
 export const config = {
