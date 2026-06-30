@@ -18,5 +18,7 @@ public interface IBusinessRepository
 
     Task UpdateAsync(Business business);
 
-    
+    Task DeleteAsync(Business business);
+
+
 }

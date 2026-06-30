@@ -22,7 +22,8 @@ public class TokenService(IConfiguration configuration) : ITokenService
 
         var audience = jwtSettings["Audience"]!;
 
-        var expiresInMinutes = int.Parse(jwtSettings["ExpiresInMinutes"]!);
+        var expiresInMinutesStr = _configuration["Jwt:ExpiresInMinutes"];
+        var expiresInMinutes = int.TryParse(expiresInMinutesStr, out var minutos) ? minutos : 120;
 
         var claims = new List<Claim>
         {

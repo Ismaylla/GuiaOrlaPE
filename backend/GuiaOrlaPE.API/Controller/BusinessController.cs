@@ -63,9 +63,9 @@ public class BusinessController(
                 Latitude = b.Latitude,
                 Longitude = b.Longitude,
                 BusinessPhotoUrl = b.BusinessPhotoUrl ?? "",
-                CoverPhotoUrl = b.CoverPhotoUrl ?? "", 
+                CoverPhotoUrl = b.CoverPhotoUrl ?? "",
                 CardImageUrl = b.CardImageUrl ?? "",
-                Horario = b.Horario ?? "", 
+                Horario = b.Horario ?? "",
                 Cartao = b.Cartao,
                 Pix = b.Pix,
                 Dinheiro = b.Dinheiro,
@@ -75,8 +75,8 @@ public class BusinessController(
                 PetFriendly = b.PetFriendly,
                 Acessibilidade = b.Acessibilidade,
                 Wifi = b.Wifi,
-                Description = b.Description ?? "", 
-                GalleryPhotos = b.GalleryPhotos ?? [] 
+                Description = b.Description ?? "",
+                GalleryPhotos = b.GalleryPhotos ?? []
             };
 
             return Ok(response);
@@ -92,7 +92,7 @@ public class BusinessController(
     }
 
     [HttpPost]
-    [Authorize] 
+    [Authorize]
     public async Task<IActionResult> Create([FromBody] CreateBusinessRequest request)
     {
         try
@@ -106,7 +106,7 @@ public class BusinessController(
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize] 
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, [FromBody] CreateBusinessRequest request)
     {
         try
@@ -173,13 +173,25 @@ public class BusinessController(
 
             var requestUpdate = new CreateBusinessRequest
             {
-                Name = businessDto.Name, ServiceType = businessDto.ServiceType, Address = businessDto.Address,
-                Latitude = businessDto.Latitude, Longitude = businessDto.Longitude, Horario = businessDto.Horario,
-                Cartao = businessDto.Cartao, Pix = businessDto.Pix, Dinheiro = businessDto.Dinheiro,
-                Chuveiro = businessDto.Chuveiro, Estacionamento = businessDto.Estacionamento, Cadeira = businessDto.Cadeira,
-                PetFriendly = businessDto.PetFriendly, Acessibilidade = businessDto.Acessibilidade, Wifi = businessDto.Wifi,
-                Description = businessDto.Description, CoverPhotoUrl = businessDto.CoverPhotoUrl,
-                BusinessPhotoUrl = businessDto.BusinessPhotoUrl, CardImageUrl = businessDto.CardImageUrl,
+                Name = businessDto.Name,
+                ServiceType = businessDto.ServiceType,
+                Address = businessDto.Address,
+                Latitude = businessDto.Latitude,
+                Longitude = businessDto.Longitude,
+                Horario = businessDto.Horario,
+                Cartao = businessDto.Cartao,
+                Pix = businessDto.Pix,
+                Dinheiro = businessDto.Dinheiro,
+                Chuveiro = businessDto.Chuveiro,
+                Estacionamento = businessDto.Estacionamento,
+                Cadeira = businessDto.Cadeira,
+                PetFriendly = businessDto.PetFriendly,
+                Acessibilidade = businessDto.Acessibilidade,
+                Wifi = businessDto.Wifi,
+                Description = businessDto.Description,
+                CoverPhotoUrl = businessDto.CoverPhotoUrl,
+                BusinessPhotoUrl = businessDto.BusinessPhotoUrl,
+                CardImageUrl = businessDto.CardImageUrl,
                 GalleryPhotos = businessDto.GalleryPhotos ?? []
             };
 
@@ -233,13 +245,25 @@ public class BusinessController(
 
             var requestUpdate = new CreateBusinessRequest
             {
-                Name = businessDto.Name, ServiceType = businessDto.ServiceType, Address = businessDto.Address,
-                Latitude = businessDto.Latitude, Longitude = businessDto.Longitude, Horario = businessDto.Horario,
-                Cartao = businessDto.Cartao, Pix = businessDto.Pix, Dinheiro = businessDto.Dinheiro,
-                Chuveiro = businessDto.Chuveiro, Estacionamento = businessDto.Estacionamento, Cadeira = businessDto.Cadeira,
-                PetFriendly = businessDto.PetFriendly, Acessibilidade = businessDto.Acessibilidade, Wifi = businessDto.Wifi,
-                Description = businessDto.Description, CoverPhotoUrl = businessDto.CoverPhotoUrl,
-                BusinessPhotoUrl = businessDto.BusinessPhotoUrl, CardImageUrl = businessDto.CardImageUrl, 
+                Name = businessDto.Name,
+                ServiceType = businessDto.ServiceType,
+                Address = businessDto.Address,
+                Latitude = businessDto.Latitude,
+                Longitude = businessDto.Longitude,
+                Horario = businessDto.Horario,
+                Cartao = businessDto.Cartao,
+                Pix = businessDto.Pix,
+                Dinheiro = businessDto.Dinheiro,
+                Chuveiro = businessDto.Chuveiro,
+                Estacionamento = businessDto.Estacionamento,
+                Cadeira = businessDto.Cadeira,
+                PetFriendly = businessDto.PetFriendly,
+                Acessibilidade = businessDto.Acessibilidade,
+                Wifi = businessDto.Wifi,
+                Description = businessDto.Description,
+                CoverPhotoUrl = businessDto.CoverPhotoUrl,
+                BusinessPhotoUrl = businessDto.BusinessPhotoUrl,
+                CardImageUrl = businessDto.CardImageUrl,
                 GalleryPhotos = businessDto.GalleryPhotos ?? []
             };
 
@@ -248,7 +272,7 @@ public class BusinessController(
                 if (!string.IsNullOrEmpty(businessDto.BusinessPhotoUrl))
                 {
                     EliminarArquivoFisico(businessDto.BusinessPhotoUrl);
-                    requestUpdate.BusinessPhotoUrl = string.Empty; 
+                    requestUpdate.BusinessPhotoUrl = string.Empty;
                 }
             }
             else if (tipoNormalizado == "header")
@@ -256,7 +280,7 @@ public class BusinessController(
                 if (!string.IsNullOrEmpty(businessDto.CoverPhotoUrl))
                 {
                     EliminarArquivoFisico(businessDto.CoverPhotoUrl);
-                    requestUpdate.CoverPhotoUrl = string.Empty; 
+                    requestUpdate.CoverPhotoUrl = string.Empty;
                 }
             }
             else if (tipoNormalizado == "card")
@@ -264,7 +288,7 @@ public class BusinessController(
                 if (!string.IsNullOrEmpty(businessDto.CardImageUrl))
                 {
                     EliminarArquivoFisico(businessDto.CardImageUrl);
-                    requestUpdate.CardImageUrl = string.Empty; 
+                    requestUpdate.CardImageUrl = string.Empty;
                 }
             }
 
@@ -288,7 +312,7 @@ public class BusinessController(
                 return BadRequest(new { message = "Nenhuma URL fornecida para exclusão." });
 
             var businessDto = await _service.GetByIdAsync(id);
-            if (businessDto == null) 
+            if (businessDto == null)
                 return NotFound(new { message = "Estabelecimento não encontrado." });
 
             var novaLista = businessDto.GalleryPhotos?.Where(p => !request.Urls.Contains(p)).ToList() ?? new List<string>();
@@ -300,18 +324,30 @@ public class BusinessController(
 
             var requestUpdate = new CreateBusinessRequest
             {
-                Name = businessDto.Name, ServiceType = businessDto.ServiceType, Address = businessDto.Address,
-                Latitude = businessDto.Latitude, Longitude = businessDto.Longitude, Horario = businessDto.Horario,
-                Cartao = businessDto.Cartao, Pix = businessDto.Pix, Dinheiro = businessDto.Dinheiro,
-                Chuveiro = businessDto.Chuveiro, Estacionamento = businessDto.Estacionamento, Cadeira = businessDto.Cadeira,
-                PetFriendly = businessDto.PetFriendly, Acessibilidade = businessDto.Acessibilidade, Wifi = businessDto.Wifi,
-                Description = businessDto.Description, CoverPhotoUrl = businessDto.CoverPhotoUrl,
-                BusinessPhotoUrl = businessDto.BusinessPhotoUrl, CardImageUrl = businessDto.CardImageUrl,
+                Name = businessDto.Name,
+                ServiceType = businessDto.ServiceType,
+                Address = businessDto.Address,
+                Latitude = businessDto.Latitude,
+                Longitude = businessDto.Longitude,
+                Horario = businessDto.Horario,
+                Cartao = businessDto.Cartao,
+                Pix = businessDto.Pix,
+                Dinheiro = businessDto.Dinheiro,
+                Chuveiro = businessDto.Chuveiro,
+                Estacionamento = businessDto.Estacionamento,
+                Cadeira = businessDto.Cadeira,
+                PetFriendly = businessDto.PetFriendly,
+                Acessibilidade = businessDto.Acessibilidade,
+                Wifi = businessDto.Wifi,
+                Description = businessDto.Description,
+                CoverPhotoUrl = businessDto.CoverPhotoUrl,
+                BusinessPhotoUrl = businessDto.BusinessPhotoUrl,
+                CardImageUrl = businessDto.CardImageUrl,
                 GalleryPhotos = novaLista
             };
 
             await _service.UpdateAsync(id, requestUpdate, businessDto.UserId);
-            
+
             return Ok(new { message = "Fotos da galeria removidas com sucesso!" });
         }
         catch (Exception ex)
@@ -320,6 +356,31 @@ public class BusinessController(
             return StatusCode(500, new { message = $"Erro interno: {ex.Message}" });
         }
     }
+
+    [HttpDelete("{id:guid}")]
+    [Authorize]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+
+            await _service.DeleteAsync(id, Guid.Parse(userIdClaim));
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { Message = "Estabelecimento não encontrado." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao excluir estabelecimento.");
+            return StatusCode(500, new { Message = "Erro interno." });
+        }
+    }
+
+
 
     private void EliminarArquivoFisico(string urlAmigavel)
     {

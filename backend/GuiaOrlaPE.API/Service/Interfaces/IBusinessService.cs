@@ -15,5 +15,7 @@ public interface IBusinessService
 
     Task<BusinessResponse> CreateAsync(CreateBusinessRequest request, Guid userId);
 
+    Task DeleteAsync(Guid id, Guid userId);
+
     Task UpdateAsync(Guid id, CreateBusinessRequest request, Guid userId);
 }
