@@ -11,5 +11,5 @@ global using GuiaOrlaPE.API.Models.Requests;
 global using GuiaOrlaPE.API.Models.Responses;
 global using GuiaOrlaPE.API.Repository.Intefaces;
 global using GuiaOrlaPE.API.Service.Interfaces;
-global using GuiaOrlaPE.API.Tests.Fixtures;
+global using GuiaOrlaPE.API.UnitTests.Fixtures;
 global using GuiaOrlaPE.API.Controller;

@@ -1,4 +1,4 @@
-namespace GuiaOrlaPE.API.Tests.Controllers;
+namespace GuiaOrlaPE.API.UnitTests.Controllers;
 
 public class AuthControllerTests : IClassFixture<AuthControllerFixture>
 {

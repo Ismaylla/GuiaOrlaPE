@@ -1,12 +1,12 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.7.11919.86 stable
+VisualStudioVersion = 18.7.11919.86
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuiaOrlaPE.API", "backend\GuiaOrlaPE.API\GuiaOrlaPE.API.csproj", "{F1ABAC79-4B8B-2CD8-3E05-C6E7E702BEC1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuiaOrlaPE.API.Tests", "backend\GuiaOrlaPE.API.Tests\GuiaOrlaPE.API.Tests.csproj", "{56C6D35E-C821-72E0-D2F6-AC92AD487DE9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuiaOrlaPE.API.UnitTests", "backend\GuiaOrlaPE.API.UnitTests\GuiaOrlaPE.API.UnitTests.csproj", "{56C6D35E-C821-72E0-D2F6-AC92AD487DE9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

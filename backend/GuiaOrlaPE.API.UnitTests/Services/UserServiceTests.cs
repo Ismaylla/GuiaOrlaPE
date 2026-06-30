@@ -1,4 +1,4 @@
-namespace GuiaOrlaPE.API.Tests.Services;
+namespace GuiaOrlaPE.API.UnitTests.Services;
 
 public class UserServiceTests : IClassFixture<UserServiceFixture>
 {

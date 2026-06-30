@@ -1,4 +1,4 @@
-namespace GuiaOrlaPE.API.Tests.Fixtures;
+namespace GuiaOrlaPE.API.UnitTests.Fixtures;
 
 public class BusinessServiceFixture
 {

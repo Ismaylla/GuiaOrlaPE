@@ -1,28 +1,33 @@
-namespace GuiaOrlaPE.API.Tests.Fixtures;
+namespace GuiaOrlaPE.API.UnitTests.Fixtures;
 
-public class UserServiceFixture
+public class UserControllerFixture
 {
-    public Mock<IUserRepository> UserRepositoryMock { get; set; }
+    public Mock<IUserService> UserServiceMock { get; set; }
+    public Mock<IBusinessService> BusinessServiceMock { get; set; }
     public Mock<ITokenService> TokenServiceMock { get; set; }
-    public Mock<IEmailService> EmailServiceMock { get; set; }
-    public GuiaOrlaPE.API.Service.Implementation.UserService UserService { get; set; }
+    public Mock<ILogger<GuiaOrlaPE.API.Controller.UserController>> LoggerMock { get; set; }
+    public GuiaOrlaPE.API.Controller.UserController UserController { get; set; }
 
-    public UserServiceFixture()
+    public UserControllerFixture()
     {
-        UserRepositoryMock = new Mock<IUserRepository>();
+        UserServiceMock = new Mock<IUserService>();
+        BusinessServiceMock = new Mock<IBusinessService>();
         TokenServiceMock = new Mock<ITokenService>();
-        EmailServiceMock = new Mock<IEmailService>();
-        UserService = new GuiaOrlaPE.API.Service.Implementation.UserService(
-            UserRepositoryMock.Object,
+        LoggerMock = new Mock<ILogger<GuiaOrlaPE.API.Controller.UserController>>();
+
+        UserController = new GuiaOrlaPE.API.Controller.UserController(
+            UserServiceMock.Object,
+            BusinessServiceMock.Object,
             TokenServiceMock.Object,
-            EmailServiceMock.Object);
+            LoggerMock.Object);
     }
 
     public void ResetMocks()
     {
-        UserRepositoryMock.Reset();
+        UserServiceMock.Reset();
+        BusinessServiceMock.Reset();
         TokenServiceMock.Reset();
-        EmailServiceMock.Reset();
+        LoggerMock.Reset();
     }
 
     public static CreateBusinesspersonRequest CreateValidRequest()
@@ -58,6 +63,15 @@ public class UserServiceFixture
             Status = true,
             CreatedAt = DateTime.UtcNow,
             Businesses = []
+        };
+    }
+
+    public static LoginRequest CreateValidLoginRequest()
+    {
+        return new LoginRequest
+        {
+            Email = "joao@example.com",
+            Password = "SenhaSegura@123"
         };
     }
 }

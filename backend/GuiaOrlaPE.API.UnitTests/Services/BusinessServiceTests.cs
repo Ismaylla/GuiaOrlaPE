@@ -1,4 +1,4 @@
-namespace GuiaOrlaPE.API.Tests.Services;
+namespace GuiaOrlaPE.API.UnitTests.Services;
 
 public class BusinessServiceTests : IClassFixture<BusinessServiceFixture>
 {
@@ -34,7 +34,7 @@ public class BusinessServiceTests : IClassFixture<BusinessServiceFixture>
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(3);
-        result.Should().AllSatisfy(b => 
+        result.Should().AllSatisfy(b =>
         {
             b.Id.Should().NotBeEmpty();
             b.Name.Should().NotBeNullOrEmpty();
