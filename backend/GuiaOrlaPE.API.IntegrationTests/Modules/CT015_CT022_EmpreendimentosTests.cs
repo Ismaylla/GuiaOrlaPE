@@ -1,15 +1,12 @@
 using FluentAssertions;
-using GuiaOrlaPE.Tests.Helpers;
+using GuiaOrlaPE.API.IntegrationTests.Helpers;
 using System.Net;
+using System.Net.Http.Headers;
 using Xunit;
 using System.Text.Json;
 
-namespace GuiaOrlaPE.Tests.Modules;
+namespace GuiaOrlaPE.API.IntegrationTests.Modules;
 
-/// <summary>
-/// CT-015 a CT-022 — Módulo de Empreendimentos
-/// Execute com: dotnet test --filter "Category=Empreendimentos"
-/// </summary>
 [Trait("Category", "Empreendimentos")]
 public class CT015_CT022_EmpreendimentosTests : IClassFixture<GuiaOrlaWebFactory>
 {
@@ -20,10 +17,11 @@ public class CT015_CT022_EmpreendimentosTests : IClassFixture<GuiaOrlaWebFactory
         _client = factory.CreateClient();
     }
 
-    private async Task<(Guid UserId, Guid BusinessId)> CriarUsuarioComNegocioAsync()
+    private async Task<(Guid UserId, Guid BusinessId, string Email, string Senha)> CriarUsuarioComNegocioAsync()
     {
         var email = $"biz_{Guid.NewGuid():N}@email.com";
-        var json = TestFixtures.UsuarioValidoJson(email: email);
+        var senha = "123456";
+        var json = TestFixtures.UsuarioValidoJson(email: email, senha: senha);
 
         var resp = await _client.PostAsync(
             "/api/users/businessperson",
@@ -37,19 +35,26 @@ public class CT015_CT022_EmpreendimentosTests : IClassFixture<GuiaOrlaWebFactory
         var userId = doc.RootElement.GetProperty("id").GetGuid();
         var businessId = doc.RootElement.GetProperty("businesses")[0].GetProperty("id").GetGuid();
 
-        return (userId, businessId);
+        return (userId, businessId, email, senha);
+    }
+
+    private async Task AutenticarAsync(string email, string senha)
+    {
+        var token = await TestFixtures.ObterTokenAsync(_client, email, senha);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
     [Fact(DisplayName = "CT-015 — Cadastro de empreendimento válido retorna 201")]
     public async Task CT015_CadastroEmpreendimentoValido_Retorna201()
     {
-        var (userId, _) = await CriarUsuarioComNegocioAsync();
+        var (userId, _, email, senha) = await CriarUsuarioComNegocioAsync();
+        await AutenticarAsync(email, senha);
 
         var businessJson = $$"""
         {
             "userId": "{{userId}}",
             "name": "Restaurante Beira Mar",
-            "serviceType": "Restaurante",
+            "serviceType": "BaresERestaurantes",
             "address": "Av. Boa Viagem, 1000",
             "latitude": -8.1178,
             "longitude": -34.9006,
@@ -67,6 +72,9 @@ public class CT015_CT022_EmpreendimentosTests : IClassFixture<GuiaOrlaWebFactory
     [Fact(DisplayName = "CT-016 — Cadastro de empreendimento com dados inválidos retorna 400")]
     public async Task CT016_CadastroEmpreendimentoDadosInvalidos_Retorna400()
     {
+        var (_, _, email, senha) = await CriarUsuarioComNegocioAsync();
+        await AutenticarAsync(email, senha);
+
         var bodyInvalido = """
         {
             "userId": "00000000-0000-0000-0000-000000000000",
@@ -104,7 +112,7 @@ public class CT015_CT022_EmpreendimentosTests : IClassFixture<GuiaOrlaWebFactory
     [Fact(DisplayName = "CT-018 — Busca de empreendimento por ID válido retorna 200")]
     public async Task CT018_BuscarEmpreendimentoPorId_Retorna200()
     {
-        var (_, businessId) = await CriarUsuarioComNegocioAsync();
+        var (_, businessId, _, _) = await CriarUsuarioComNegocioAsync();
 
         var response = await _client.GetAsync($"/api/business/{businessId}");
 
@@ -144,13 +152,14 @@ public class CT015_CT022_EmpreendimentosTests : IClassFixture<GuiaOrlaWebFactory
     [Fact(DisplayName = "CT-021 — Atualização de empreendimento retorna sucesso")]
     public async Task CT021_AtualizarEmpreendimento_RetornaSucesso()
     {
-        var (userId, businessId) = await CriarUsuarioComNegocioAsync();
+        var (userId, businessId, email, senha) = await CriarUsuarioComNegocioAsync();
+        await AutenticarAsync(email, senha);
 
         var updateJson = $$"""
         {
             "userId": "{{userId}}",
             "name": "Restaurante Premium",
-            "serviceType": "Restaurante",
+            "serviceType": "BaresERestaurantes",
             "address": "Av. Boa Viagem, 2000",
             "latitude": -8.1178,
             "longitude": -34.9006,
@@ -170,7 +179,8 @@ public class CT015_CT022_EmpreendimentosTests : IClassFixture<GuiaOrlaWebFactory
     [Fact(DisplayName = "CT-022 — Exclusão de empreendimento retorna sucesso")]
     public async Task CT022_ExcluirEmpreendimento_RetornaSucesso()
     {
-        var (_, businessId) = await CriarUsuarioComNegocioAsync();
+        var (_, businessId, email, senha) = await CriarUsuarioComNegocioAsync();
+        await AutenticarAsync(email, senha);
 
         var response = await _client.DeleteAsync($"/api/business/{businessId}");
 

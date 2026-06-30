@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 
-namespace GuiaOrlaPE.Tests.Helpers;
+namespace GuiaOrlaPE.API.IntegrationTests.Helpers;
 
 /// <summary>
 /// Payloads e métodos utilitários reutilizados pelos 31 casos de teste.
@@ -24,7 +24,7 @@ public static class TestFixtures
             "phone":    "{{phone}}",
             "business": {
                 "name":        "Restaurante Beira Mar",
-                "serviceType": "Restaurante",
+                "serviceType": "BaresERestaurantes",
                 "address":     "Av. Boa Viagem, 1000",
                 "latitude":    -8.1178,
                 "longitude":   -34.9006,
@@ -38,7 +38,7 @@ public static class TestFixtures
     // -------------------------------------------------------------------------
     public static string NegocioValidoJson(
         string nome = "Restaurante Beira Mar",
-        string tipo = "Restaurante",
+        string tipo = "BaresERestaurantes",
         string endereco = "Av. Boa Viagem, 1000") => $$"""
         {
             "name":        "{{nome}}",
@@ -110,7 +110,7 @@ public static class TestFixtures
             {
                 "userId":      "{{userId}}",
                 "name":        "{{nome}}",
-                "serviceType": "Restaurante",
+                "serviceType": "BaresERestaurantes",
                 "address":     "Av. Boa Viagem, 1000",
                 "latitude":    -8.1178,
                 "longitude":   -34.9006,

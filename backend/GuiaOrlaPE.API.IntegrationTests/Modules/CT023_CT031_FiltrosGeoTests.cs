@@ -1,16 +1,12 @@
 using FluentAssertions;
-using GuiaOrlaPE.Tests.Helpers;
+using GuiaOrlaPE.API.IntegrationTests.Helpers;
 using System.Net;
 using Xunit;
 using System.Text.Json;
 using System.Linq;
 
-namespace GuiaOrlaPE.Tests.Modules;
+namespace GuiaOrlaPE.API.IntegrationTests.Modules;
 
-/// <summary>
-/// CT-023 a CT-031 — Filtros de Empreendimentos e Geolocalização
-/// Execute com: dotnet test --filter "Category=Filtros"
-/// </summary>
 [Trait("Category", "Filtros")]
 public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
 {
@@ -34,9 +30,8 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
             "phone": "81999999999",
             "business": {
                 "name": "{{nome}}",
-                "serviceType": "Restaurante",
+                "serviceType": "BaresERestaurantes",
                 "address": "{{endereco}}",
-                "region": "{{regiao}}",
                 "latitude": -8.1178,
                 "longitude": -34.9006,
                 "estacionamento": {{temEstacionamento.ToString().ToLower()}},
@@ -47,9 +42,17 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         }
         """;
 
-        await _client.PostAsync(
+        var resp = await _client.PostAsync(
             "/api/users/businessperson",
             TestFixtures.Json(json));
+
+        resp.EnsureSuccessStatusCode();
+    }
+
+    private static JsonElement GetItems(string body)
+    {
+        using var doc = JsonDocument.Parse(body);
+        return doc.RootElement.Clone().GetProperty("items");
     }
 
     [Fact(DisplayName = "CT-023 — Listagem sem filtros retorna todos os empreendimentos")]
@@ -63,7 +66,8 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var body = await response.Content.ReadAsStringAsync();
-        body.Should().NotBe("[]");
+        using var doc = JsonDocument.Parse(body);
+        doc.RootElement.GetArrayLength().Should().BeGreaterThan(0);
     }
 
     [Fact(DisplayName = "CT-024 — Filtro por região retorna apenas empreendimentos da orla selecionada")]
@@ -72,7 +76,7 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         await CriarNegocioNaOrla("Restaurante Boa Viagem", "Av. Boa Viagem, 500", "Boa Viagem");
 
         var response = await _client.GetAsync(
-            "/api/business/search?region=Boa+Viagem");
+            "/api/business/search?localizacao=Boa+Viagem");
 
         response.StatusCode.Should().BeOneOf(
             HttpStatusCode.OK,
@@ -81,7 +85,8 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         if (response.StatusCode == HttpStatusCode.OK)
         {
             var body = await response.Content.ReadAsStringAsync();
-            if (body != "[]")
+            var items = GetItems(body);
+            if (items.GetArrayLength() > 0)
                 body.ToLower().Should().Contain("boa viagem");
         }
     }
@@ -102,7 +107,8 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         if (response.StatusCode == HttpStatusCode.OK)
         {
             var body = await response.Content.ReadAsStringAsync();
-            if (body != "[]")
+            var items = GetItems(body);
+            if (items.GetArrayLength() > 0)
                 body.ToLower().Should().NotContain("sem estacionamento");
         }
     }
@@ -123,7 +129,8 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         if (response.StatusCode == HttpStatusCode.OK)
         {
             var body = await response.Content.ReadAsStringAsync();
-            if (body != "[]")
+            var items = GetItems(body);
+            if (items.GetArrayLength() > 0)
                 body.ToLower().Should().NotContain("só pix");
         }
     }
@@ -134,7 +141,7 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         var region = $"Orla_{Guid.NewGuid():N}";
 
         var response = await _client.GetAsync(
-            $"/api/business/search?region={Uri.EscapeDataString(region)}");
+            $"/api/business/search?localizacao={Uri.EscapeDataString(region)}");
 
         response.StatusCode.Should().BeOneOf(
             HttpStatusCode.OK,
@@ -143,7 +150,8 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         if (response.StatusCode == HttpStatusCode.OK)
         {
             var body = await response.Content.ReadAsStringAsync();
-            body.Should().BeOneOf("[]", "null", "");
+            var items = GetItems(body);
+            items.GetArrayLength().Should().Be(0);
         }
     }
 
@@ -157,7 +165,8 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         semFiltro.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var bodySemFiltro = await semFiltro.Content.ReadAsStringAsync();
-        bodySemFiltro.Should().NotBe("[]");
+        using var doc = JsonDocument.Parse(bodySemFiltro);
+        doc.RootElement.GetArrayLength().Should().BeGreaterThan(0);
     }
 
     [Fact(DisplayName = "CT-029 — Busca por nome retorna apenas empreendimentos com o termo")]
@@ -167,7 +176,7 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         await CriarNegocioNaOrla("Barraca Legal", "Rua B, 2", "Recife");
 
         var response = await _client.GetAsync(
-            "/api/business/search?name=Esquina");
+            "/api/business/search?search=Esquina");
 
         response.StatusCode.Should().BeOneOf(
             HttpStatusCode.OK,
@@ -176,7 +185,8 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         if (response.StatusCode == HttpStatusCode.OK)
         {
             var body = await response.Content.ReadAsStringAsync();
-            if (body != "[]")
+            var items = GetItems(body);
+            if (items.GetArrayLength() > 0)
             {
                 body.ToLower().Should().Contain("esquina");
                 body.ToLower().Should().NotContain("barraca legal");
@@ -190,7 +200,7 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         await CriarNegocioNaOrla("Esquina do Mar", "Rua A, 1", "Recife");
 
         var response = await _client.GetAsync(
-            "/api/business/search?name=esQuInA");
+            "/api/business/search?search=esQuInA");
 
         response.StatusCode.Should().BeOneOf(
             HttpStatusCode.OK,
@@ -199,7 +209,8 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
         if (response.StatusCode == HttpStatusCode.OK)
         {
             var body = await response.Content.ReadAsStringAsync();
-            if (body != "[]")
+            var items = GetItems(body);
+            if (items.GetArrayLength() > 0)
                 body.ToLower().Should().Contain("esquina");
         }
     }
@@ -218,7 +229,7 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
             "phone": "81999999999",
             "business": {
                 "name": "Barraca Próxima",
-                "serviceType": "Restaurante",
+                "serviceType": "BaresERestaurantes",
                 "address": "Praia de Boa Viagem",
                 "latitude": -8.1178,
                 "longitude": -34.9006,
@@ -235,7 +246,7 @@ public class CT023_CT031_FiltrosGeoTests : IClassFixture<GuiaOrlaWebFactory>
             "phone": "81999999999",
             "business": {
                 "name": "Barraca Distante",
-                "serviceType": "Restaurante",
+                "serviceType": "BaresERestaurantes",
                 "address": "Porto de Galinhas",
                 "latitude": -8.7042,
                 "longitude": -35.1460,

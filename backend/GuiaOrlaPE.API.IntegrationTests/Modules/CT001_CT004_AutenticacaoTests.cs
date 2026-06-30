@@ -1,9 +1,9 @@
 using FluentAssertions;
-using GuiaOrlaPE.Tests.Helpers;
+using GuiaOrlaPE.API.IntegrationTests.Helpers;
 using System.Net;
 using Xunit;
 
-namespace GuiaOrlaPE.Tests.Modules;
+namespace GuiaOrlaPE.API.IntegrationTests.Modules;
 
 /// <summary>
 /// CT-001 a CT-004 — Módulo de Autenticação

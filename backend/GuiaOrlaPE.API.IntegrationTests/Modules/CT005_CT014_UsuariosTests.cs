@@ -1,10 +1,10 @@
 using FluentAssertions;
-using GuiaOrlaPE.Tests.Helpers;
+using GuiaOrlaPE.API.IntegrationTests.Helpers;
 using System.Net;
 using Xunit;
 using System.Text.Json;
 
-namespace GuiaOrlaPE.Tests.Modules;
+namespace GuiaOrlaPE.API.IntegrationTests.Modules;
 
 [Trait("Category", "Usuarios")]
 public class CT005_CT014_UsuariosTests : IClassFixture<GuiaOrlaWebFactory>

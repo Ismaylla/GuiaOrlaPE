@@ -154,4 +154,24 @@ public class BusinessRepository : IBusinessRepository
         // 4. Executa a gravação cirúrgica atômica
         await _context.SaveChangesAsync();
     }
+
+    public async Task DeleteAsync(Business business)
+    {
+        // Garante que estamos apagando a entidade rastreada pelo contexto correto
+        var dbBusiness = await _context.Businesses
+            .Include(x => x.Photos)
+            .FirstOrDefaultAsync(x => x.Id == business.Id);
+
+        if (dbBusiness == null)
+            throw new KeyNotFoundException("Estabelecimento não encontrado no repositório.");
+
+        // Remove as fotos relacionadas primeiro (evita problemas de FK)
+        if (dbBusiness.Photos != null && dbBusiness.Photos.Any())
+        {
+            _context.Set<BusinessPhoto>().RemoveRange(dbBusiness.Photos);
+        }
+
+        _context.Businesses.Remove(dbBusiness);
+        await _context.SaveChangesAsync();
+    }
 }

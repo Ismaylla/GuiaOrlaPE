@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{1AE8
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuiaOrlaPE.API", "backend\GuiaOrlaPE.API\GuiaOrlaPE.API.csproj", "{F1ABAC79-4B8B-2CD8-3E05-C6E7E702BEC1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuiaOrlaPE.Tests", "GuiaOrlaPE.Tests\GuiaOrlaPE.Tests.csproj", "{C475EBC4-F0B2-4AD0-B3CB-EF24FC46EF73}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuiaOrlaPE.API.IntegrationTests", "GuiaOrlaPE.API.IntegrationTests\GuiaOrlaPE.API.IntegrationTests.csproj", "{C475EBC4-F0B2-4AD0-B3CB-EF24FC46EF73}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
