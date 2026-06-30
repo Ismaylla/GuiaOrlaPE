@@ -21,18 +21,28 @@ public class BusinessService(
             var businesses = await _repository.GetAllAsync();
             return businesses.Select(x => new BusinessResponse
             {
-                Id = x.Id, 
+                Id = x.Id,
                 UserId = x.UserId,
-                Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
-                Latitude = x.Latitude, Longitude = x.Longitude, 
+                Name = x.Name,
+                ServiceType = x.ServiceType,
+                Address = x.Address,
+                Latitude = x.Latitude,
+                Longitude = x.Longitude,
                 BusinessPhotoUrl = x.BusinessPhotoUrl,
                 CoverPhotoUrl = x.CoverPhotoUrl,
                 CardImageUrl = x.CardImageUrl, //  ADICIONADO AQUI
-                Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
-                Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
-                PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
-                Description = x.Description, 
-                GalleryPhotos = x.Photos?.Select(p => p.PhotoUrl).ToList() ?? [], 
+                Horario = x.Horario,
+                Cartao = x.Cartao,
+                Pix = x.Pix,
+                Dinheiro = x.Dinheiro,
+                Chuveiro = x.Chuveiro,
+                Estacionamento = x.Estacionamento,
+                Cadeira = x.Cadeira,
+                PetFriendly = x.PetFriendly,
+                Acessibilidade = x.Acessibilidade,
+                Wifi = x.Wifi,
+                Description = x.Description,
+                GalleryPhotos = x.Photos?.Select(p => p.PhotoUrl).ToList() ?? [],
                 Owner = new BusinessOwnerResponse { Id = x.User.Id, Name = x.User.Name, Email = x.User.Email, Phone = x.User.Phone }
             }).ToList();
         }
@@ -49,18 +59,28 @@ public class BusinessService(
 
             return new BusinessResponse
             {
-                Id = business.Id, 
+                Id = business.Id,
                 UserId = business.UserId,
-                Name = business.Name, ServiceType = business.ServiceType, Address = business.Address,
-                Latitude = business.Latitude, Longitude = business.Longitude, 
+                Name = business.Name,
+                ServiceType = business.ServiceType,
+                Address = business.Address,
+                Latitude = business.Latitude,
+                Longitude = business.Longitude,
                 BusinessPhotoUrl = business.BusinessPhotoUrl,
                 CoverPhotoUrl = business.CoverPhotoUrl,
                 CardImageUrl = business.CardImageUrl, //  ADICIONADO AQUI
-                Horario = business.Horario, Cartao = business.Cartao, Pix = business.Pix, Dinheiro = business.Dinheiro,
-                Chuveiro = business.Chuveiro, Estacionamento = business.Estacionamento, Cadeira = business.Cadeira,
-                PetFriendly = business.PetFriendly, Acessibilidade = business.Acessibilidade, Wifi = business.Wifi,
-                Description = business.Description, 
-                GalleryPhotos = business.Photos?.Select(p => p.PhotoUrl).ToList() ?? [], 
+                Horario = business.Horario,
+                Cartao = business.Cartao,
+                Pix = business.Pix,
+                Dinheiro = business.Dinheiro,
+                Chuveiro = business.Chuveiro,
+                Estacionamento = business.Estacionamento,
+                Cadeira = business.Cadeira,
+                PetFriendly = business.PetFriendly,
+                Acessibilidade = business.Acessibilidade,
+                Wifi = business.Wifi,
+                Description = business.Description,
+                GalleryPhotos = business.Photos?.Select(p => p.PhotoUrl).ToList() ?? [],
                 Owner = new BusinessOwnerResponse { Id = business.User.Id, Name = business.User.Name, Email = business.User.Email, Phone = business.User.Phone }
             };
         }
@@ -74,18 +94,28 @@ public class BusinessService(
             var (items, totalItems) = await _repository.SearchAsync(request);
             var responseItems = items.Select(x => new BusinessResponse
             {
-                Id = x.Id, 
+                Id = x.Id,
                 UserId = x.UserId,
-                Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
-                Latitude = x.Latitude, Longitude = x.Longitude, 
+                Name = x.Name,
+                ServiceType = x.ServiceType,
+                Address = x.Address,
+                Latitude = x.Latitude,
+                Longitude = x.Longitude,
                 BusinessPhotoUrl = x.BusinessPhotoUrl,
                 CoverPhotoUrl = x.CoverPhotoUrl,
                 CardImageUrl = x.CardImageUrl, //  ADICIONADO AQUI
-                Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
-                Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
-                PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
-                Description = x.Description, 
-                GalleryPhotos = x.Photos?.Select(p => p.PhotoUrl).ToList() ?? [], 
+                Horario = x.Horario,
+                Cartao = x.Cartao,
+                Pix = x.Pix,
+                Dinheiro = x.Dinheiro,
+                Chuveiro = x.Chuveiro,
+                Estacionamento = x.Estacionamento,
+                Cadeira = x.Cadeira,
+                PetFriendly = x.PetFriendly,
+                Acessibilidade = x.Acessibilidade,
+                Wifi = x.Wifi,
+                Description = x.Description,
+                GalleryPhotos = x.Photos?.Select(p => p.PhotoUrl).ToList() ?? [],
                 Owner = new BusinessOwnerResponse { Id = x.User.Id, Name = x.User.Name, Email = x.User.Email, Phone = x.User.Phone }
             }).ToList();
 
@@ -100,22 +130,33 @@ public class BusinessService(
         try
         {
             var (items, totalItems) = await _repository.GetByUserIdAsync(userId, request.Page, request.PageSize);
-            
-            var responseItems = items.Select(x => {
+
+            var responseItems = items.Select(x =>
+            {
                 var resp = new BusinessResponse
                 {
-                    Id = x.Id, 
+                    Id = x.Id,
                     UserId = x.UserId,
-                    Name = x.Name, ServiceType = x.ServiceType, Address = x.Address,
-                    Latitude = x.Latitude, Longitude = x.Longitude, 
+                    Name = x.Name,
+                    ServiceType = x.ServiceType,
+                    Address = x.Address,
+                    Latitude = x.Latitude,
+                    Longitude = x.Longitude,
                     BusinessPhotoUrl = x.BusinessPhotoUrl,
                     CoverPhotoUrl = x.CoverPhotoUrl,
                     CardImageUrl = x.CardImageUrl, //  ADICIONADO AQUI
-                    Horario = x.Horario, Cartao = x.Cartao, Pix = x.Pix, Dinheiro = x.Dinheiro,
-                    Chuveiro = x.Chuveiro, Estacionamento = x.Estacionamento, Cadeira = x.Cadeira,
-                    PetFriendly = x.PetFriendly, Acessibilidade = x.Acessibilidade, Wifi = x.Wifi,
-                    Description = x.Description, 
-                    GalleryPhotos = x.Photos?.Select(p => p.PhotoUrl).ToList() ?? [], 
+                    Horario = x.Horario,
+                    Cartao = x.Cartao,
+                    Pix = x.Pix,
+                    Dinheiro = x.Dinheiro,
+                    Chuveiro = x.Chuveiro,
+                    Estacionamento = x.Estacionamento,
+                    Cadeira = x.Cadeira,
+                    PetFriendly = x.PetFriendly,
+                    Acessibilidade = x.Acessibilidade,
+                    Wifi = x.Wifi,
+                    Description = x.Description,
+                    GalleryPhotos = x.Photos?.Select(p => p.PhotoUrl).ToList() ?? [],
                     Owner = new BusinessOwnerResponse { Id = x.User.Id, Name = x.User.Name, Email = x.User.Email, Phone = x.User.Phone }
                 };
                 return resp;
@@ -133,15 +174,27 @@ public class BusinessService(
         {
             var business = new Business
             {
-                Id = Guid.NewGuid(), UserId = userId, Name = request.Name, ServiceType = request.ServiceType,
-                Address = request.Address, Latitude = request.Latitude, Longitude = request.Longitude,
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Name = request.Name,
+                ServiceType = request.ServiceType,
+                Address = request.Address,
+                Latitude = request.Latitude,
+                Longitude = request.Longitude,
                 BusinessPhotoUrl = request.BusinessPhotoUrl,
                 CoverPhotoUrl = string.Empty,
                 CardImageUrl = request.CardImageUrl ?? string.Empty, //  ADICIONADO AQUI
-                Status = true, Horario = request.Horario,
-                Cartao = request.Cartao, Pix = request.Pix, Dinheiro = request.Dinheiro,
-                Chuveiro = request.Chuveiro, Estacionamento = request.Estacionamento, Cadeira = request.Cadeira,
-                PetFriendly = request.PetFriendly, Acessibilidade = request.Acessibilidade, Wifi = request.Wifi,
+                Status = true,
+                Horario = request.Horario,
+                Cartao = request.Cartao,
+                Pix = request.Pix,
+                Dinheiro = request.Dinheiro,
+                Chuveiro = request.Chuveiro,
+                Estacionamento = request.Estacionamento,
+                Cadeira = request.Cadeira,
+                PetFriendly = request.PetFriendly,
+                Acessibilidade = request.Acessibilidade,
+                Wifi = request.Wifi,
                 Description = string.Empty
             };
 
@@ -190,4 +243,17 @@ public class BusinessService(
         }
         catch (Exception ex) { _logger.LogError(ex, "Erro ao atualizar."); throw; }
     }
+
+    public async Task DeleteAsync(Guid id, Guid userId)
+    {
+        try
+        {
+            var business = await _repository.GetByIdAsync(id);
+            if (business is null) throw new KeyNotFoundException("Não encontrado.");
+
+            await _repository.DeleteAsync(business);
+        }
+        catch (Exception ex) { _logger.LogError(ex, "Erro ao excluir."); throw; }
+    }
+
 }
