@@ -1,4 +1,6 @@
 "use client";
+
+import { API_URL } from "@/lib/config";
 import { useState, ChangeEvent } from "react";
 import { X, Upload, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -46,7 +48,7 @@ export const ModalUpload = ({ isOpen, onClose, tipo = "galeria", businessId, onS
             const formData = new FormData();
             formData.append("File", file);
 
-            const response = await fetch(`http://localhost:5148/api/business/${businessId}/upload?type=${tipo}`, {
+            const response = await fetch(`${API_URL}/api/business/${businessId}/upload?type=${tipo}`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${(session as any)?.accessToken || ""}`

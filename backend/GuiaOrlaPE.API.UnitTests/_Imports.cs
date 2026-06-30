@@ -1,0 +1,15 @@
+global using Xunit;
+global using Moq;
+global using FluentAssertions;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore.Http;
+global using System.Security.Claims;
+global using GuiaOrlaPE.API.Domain.Entities;
+global using GuiaOrlaPE.API.Domain.Enum;
+global using GuiaOrlaPE.API.Models.Requests;
+global using GuiaOrlaPE.API.Models.Responses;
+global using GuiaOrlaPE.API.Repository.Intefaces;
+global using GuiaOrlaPE.API.Service.Interfaces;
+global using GuiaOrlaPE.API.UnitTests.Fixtures;
+global using GuiaOrlaPE.API.Controller;

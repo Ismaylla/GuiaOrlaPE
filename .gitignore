@@ -23,3 +23,7 @@ Thumbs.db
 
 # Ignora qualquer arquivo chamado appsettings.json em qualquer pasta
 **/appsettings.json
+
+# Cobertura de testes
+**/TestResults/
+**/coverage*

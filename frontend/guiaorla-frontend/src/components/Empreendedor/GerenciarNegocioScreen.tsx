@@ -1,4 +1,6 @@
 "use client";
+
+import { API_URL } from "@/lib/config";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -107,11 +109,17 @@ export const GerenciarNegocioScreen = () => {
                 setIsLoading(true);
                 const token = (session as any).accessToken || (session as any).token;
                 
-                const response = await fetch(`http://localhost:5148/api/business/user?t=${new Date().getTime()}`, {
-                    method: "GET",
-                    cache: "no-store",
-                    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
-                });
+                const response = await fetch(
+                    `${API_URL}/api/business/user?t=${new Date().getTime()}`,
+                    {
+                        method: "GET",
+                        cache: "no-store",
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
 
                 if (response.ok) {
                     const d = await response.json();
@@ -158,10 +166,12 @@ export const GerenciarNegocioScreen = () => {
     Address: estadoFinal.address,
     Horario: estadoFinal.horario,
     Description: estadoFinal.description || "",
-    BusinessPhotoUrl: (estadoFinal.businessPhotoUrl || "").replace("http://localhost:5148", ""),
-    CoverPhotoUrl: (estadoFinal.coverPhotoUrl || "").replace("http://localhost:5148", ""),
-    CardImageUrl: (estadoFinal.cardImageUrl || "").replace("http://localhost:5148", ""),
-    GalleryPhotos: (estadoFinal.galleryPhotos || []).map((url: string) => url.replace("http://localhost:5148", "")),
+    BusinessPhotoUrl: (estadoFinal.businessPhotoUrl || "").replace(API_URL, ""),
+    CoverPhotoUrl: (estadoFinal.coverPhotoUrl || "").replace(API_URL, ""),
+    CardImageUrl: (estadoFinal.cardImageUrl || "").replace(API_URL, ""),
+    GalleryPhotos: (estadoFinal.galleryPhotos || []).map(
+        (url: string) => url.replace(API_URL, "")
+    ),
     Cartao: !!estadoFinal.cartao,
     Pix: !!estadoFinal.pix,
     Dinheiro: !!estadoFinal.dinheiro,
@@ -174,11 +184,17 @@ export const GerenciarNegocioScreen = () => {
 };
 
         try {
-            const response = await fetch(`http://localhost:5148/api/business/${business.id}`, { 
-                method: 'PUT',
-                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify(payload) 
-            });
+            const response = await fetch(
+                `${API_URL}/api/business/${business.id}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                }
+            );
 
             if (response.ok) {
                 setBusiness(estadoFinal);

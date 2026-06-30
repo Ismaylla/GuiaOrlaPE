@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { X, AlignLeft, Loader2 } from "lucide-react"; // Adicione Loader2 aqui
 

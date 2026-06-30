@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from "@/lib/config";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -95,7 +96,7 @@ export const MeuPerfilScreen = () => {
     };
 
     const handleImageUpdate = (newUrl: string) => {
-        const fullUrl = newUrl.startsWith("http") ? newUrl : `http://localhost:5148${newUrl}`;
+        const fullUrl = newUrl.startsWith("http") ? newUrl : `${API_URL}${newUrl}`;
         setBusiness(prev => {
             if (!prev) return null;
             if (uploadType === "profile") return { ...prev, businessPhotoUrl: fullUrl };
@@ -139,10 +140,10 @@ export const MeuPerfilScreen = () => {
             latitude: business.latitude,
             longitude: business.longitude,
             // Enviamos sem o domínio
-            coverPhotoUrl: business.coverPhotoUrl.replace("http://localhost:5148", ""),
-            businessPhotoUrl: business.businessPhotoUrl.replace("http://localhost:5148", ""),
-            cardImageUrl: business.cardImageUrl.replace("http://localhost:5148", ""),
-            galleryPhotos: business.galleryPhotos.map(url => url.replace("http://localhost:5148", ""))
+            coverPhotoUrl: business.coverPhotoUrl.replace(API_URL, ""),
+            businessPhotoUrl: business.businessPhotoUrl.replace(API_URL, ""),
+            cardImageUrl: business.cardImageUrl.replace(API_URL, ""),
+            galleryPhotos: business.galleryPhotos.map(url => url.replace(API_URL, ""))
         };
 
         await atualizarNegocio(business.id, payload, token);
@@ -166,12 +167,15 @@ export const MeuPerfilScreen = () => {
             setIsDeleting(true);
             const token = (session as any).accessToken || (session as any).token;
 
-            const response = await fetch(`http://localhost:5148/api/business/${business.id}/photo?type=${deleteType}`, {
-                method: "DELETE",
-                headers: {
-                    "Authorization": `Bearer ${token}`
+            const response = await fetch(
+                `${API_URL}/api/business/${business.id}/photo?type=${deleteType}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
                 }
-            });
+            );
 
             if (response.ok) {
                 setBusiness(prev => {
@@ -199,7 +203,7 @@ export const MeuPerfilScreen = () => {
         if (!business) return;
         try {
             const token = (session as any).accessToken || (session as any).token;
-            const response = await fetch(`http://localhost:5148/api/business/${business.id}/photo/gallery`, {
+            const response = await fetch(`${API_URL}/api/business/${business.id}/photo/gallery`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ urls: urlsToDelete })
@@ -226,7 +230,7 @@ export const MeuPerfilScreen = () => {
                 setIsLoading(true);
                 const token = (session as any).accessToken || (session as any).token;
 
-                const response = await fetch(`http://localhost:5148/api/business/user?t=${new Date().getTime()}`, {
+                const response = await fetch(`${API_URL}/api/business/user?t=${new Date().getTime()}`, {
                     method: "GET", cache: "no-store",
                     headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
                 });
@@ -249,13 +253,13 @@ export const MeuPerfilScreen = () => {
                         acessibilidade: !!(d.acessibilidade ?? d.Acessibilidade),
                         wifi: d.wifi === true || d.Wifi === true,
                         businessPhotoUrl: (d.businessPhotoUrl || d.BusinessPhotoUrl) ? 
-                            ((d.businessPhotoUrl || d.BusinessPhotoUrl).startsWith("http") ? (d.businessPhotoUrl || d.BusinessPhotoUrl) : `http://localhost:5148${d.businessPhotoUrl || d.BusinessPhotoUrl}`) : "",
+                            ((d.businessPhotoUrl || d.BusinessPhotoUrl).startsWith("http") ? (d.businessPhotoUrl || d.BusinessPhotoUrl) : `${API_URL}${d.businessPhotoUrl || d.BusinessPhotoUrl}`) : "",
                         coverPhotoUrl: (d.coverPhotoUrl || d.CoverPhotoUrl) ? 
-                            ((d.coverPhotoUrl || d.CoverPhotoUrl).startsWith("http") ? (d.coverPhotoUrl || d.CoverPhotoUrl) : `http://localhost:5148${d.coverPhotoUrl || d.CoverPhotoUrl}`) : "",
+                            ((d.coverPhotoUrl || d.CoverPhotoUrl).startsWith("http") ? (d.coverPhotoUrl || d.CoverPhotoUrl) : `${API_URL}${d.coverPhotoUrl || d.CoverPhotoUrl}`) : "",
                         cardImageUrl: (d.cardImageUrl || d.CardImageUrl) ? 
-                            ((d.cardImageUrl || d.CardImageUrl).startsWith("http") ? (d.cardImageUrl || d.CardImageUrl) : `http://localhost:5148${d.cardImageUrl || d.CardImageUrl}`) : "",
+                            ((d.cardImageUrl || d.CardImageUrl).startsWith("http") ? (d.cardImageUrl || d.CardImageUrl) : `${API_URL}${d.cardImageUrl || d.CardImageUrl}`) : "",
                         description: d.description ?? d.Description ?? "",
-                        galleryPhotos: (d.galleryPhotos ?? d.GalleryPhotos ?? []).map((p: string) => p.startsWith("http") ? p : `http://localhost:5148${p}`),
+                        galleryPhotos: (d.galleryPhotos ?? d.GalleryPhotos ?? []).map((p: string) => p.startsWith("http") ? p : `${API_URL}${p}`),
                         nota: 5.0,
                         totalAvaliacoes: 0,
                         latitude: d.latitude || d.Latitude || 0,

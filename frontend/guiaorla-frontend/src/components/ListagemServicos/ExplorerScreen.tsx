@@ -1,4 +1,6 @@
 "use client";
+
+import { API_URL } from "@/lib/config";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -27,7 +29,7 @@ interface ExplorerScreenProps {
 const formatarUrlImagem = (url?: string) => {
     if (!url || typeof url !== "string" || url.trim() === "") return null;
     if (url.startsWith("http")) return url;
-    return `http://localhost:5148${url}`;
+    return `${API_URL}${url}`;
 };
 
 export const ExplorerScreen = ({ isEmpreendedor }: ExplorerScreenProps) => {

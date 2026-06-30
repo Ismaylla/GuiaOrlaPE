@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from "@/lib/config";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -18,7 +19,7 @@ export const AvisoPerfil = () => {
 
             try {
                 const token = (session as any).accessToken || (session as any).token;
-                const response = await fetch(`http://localhost:5148/api/business/user?t=${new Date().getTime()}`, {
+                const response = await fetch(`${API_URL}/api/business/user?t=${new Date().getTime()}`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
