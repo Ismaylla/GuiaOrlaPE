@@ -21,7 +21,7 @@ import { Clock, CreditCard, MapPin, Settings, ChevronRight, Store, Loader2, Mail
 interface BusinessData {
     id?: string;
     name: string;
-    serviceType: number; 
+    serviceType: string; 
     address: string;
     latitude: number;
     longitude: number;
@@ -91,13 +91,13 @@ export const GerenciarNegocioScreen = () => {
         return list.length > 0 ? list.join(", ") : "Nenhuma selecionada";
     };
 
-    const getCategoriaTexto = (type: number) => {
-        const map: Record<number, string> = {
-            1: "Barracas e Ambulantes",
-            2: "Passeios e Lazer",
-            3: "Bares e Restaurantes",
-            4: "Artesanato Local",
-            5: "Comércio e Serviços"
+    const getCategoriaTexto = (type: string) => {
+        const map: Record<string, string> = {
+            BarracasEAmbulantes: "Barracas e Ambulantes",
+            PasseiosELazer: "Passeios e Lazer",
+            BaresERestaurantes: "Bares e Restaurantes",
+            ArtesanatoLocal: "Artesanato Local",
+            ComercioEServicos: "Comércio e Serviços"
         };
         return map[type] || "Não Categorizado";
     };
@@ -127,7 +127,7 @@ export const GerenciarNegocioScreen = () => {
                     setBusiness({
     id: d.id ?? d.Id,
     name: d.name ?? d.Name ?? "",
-    serviceType: d.serviceType ?? d.ServiceType ?? 0,
+    serviceType: d.serviceType ?? d.ServiceType ?? "",
     address: d.address ?? d.Address ?? "",
     latitude: d.latitude ?? d.Latitude ?? 0,
     longitude: d.longitude ?? d.Longitude ?? 0,
@@ -266,20 +266,19 @@ export const GerenciarNegocioScreen = () => {
                 </div>
             </div>
 
-            {/* Modais Antigos */}
             <ModalCategoria 
                 isOpen={activeModal === "categoria"} 
                 categoriaAtual={getCategoriaTexto(business.serviceType)} 
                 onClose={() => setActiveModal(null)} 
                 onSave={(v) => {
-                    const map: Record<string, number> = { 
-                        "Barracas e Ambulantes": 1, 
-                        "Passeios e Lazer": 2, 
-                        "Bares e Restaurantes": 3, 
-                        "Artesanato Local": 4, 
-                        "Comércio e Serviços": 5 
+                    const map: Record<string, string> = { 
+                        "Barracas e Ambulantes": "BarracasEAmbulantes", 
+                        "Passeios e Lazer": "PasseiosELazer", 
+                        "Bares e Restaurantes": "BaresERestaurantes", 
+                        "Artesanato Local": "ArtesanatoLocal", 
+                        "Comércio e Serviços": "ComercioEServicos" 
                     };
-                    atualizarEPersistir({ serviceType: map[v] ?? 1 });
+                    atualizarEPersistir({ serviceType: map[v] ?? "BarracasEAmbulantes" });
                 }} 
             />
             <ModalHorario isOpen={activeModal === "horario"} onClose={() => setActiveModal(null)} valorAtual={business.horario} onSave={(v) => atualizarEPersistir({ horario: v })} />
