@@ -65,12 +65,15 @@ export const ModalVerMais = ({ item, onClose, isEmpreendedor = false }: ModalVer
       ? "/images/fundopraia.jpg"
       : obterImagemValida(item.cardImageUrl || item.img || item.businessPhotoUrl);
 
-  const usuarioLogadoId =
-    (session as any)?.user?.id || (session as any)?.id;
+  const usuarioLogadoId = String(
+    (session as any)?.user?.id || (session as any)?.id || ""
+  );
   const isOwner = Boolean(
     usuarioLogadoId &&
-      (item.userId === usuarioLogadoId || item.ownerId === usuarioLogadoId)
+      (String(item.userId) === usuarioLogadoId ||
+        String(item.ownerId) === usuarioLogadoId)
   );
+
 
   const hrefPerfil = isOwner
     ? "/empreendedor/meu-perfil"
