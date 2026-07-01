@@ -40,16 +40,20 @@ export const PerfilPublicoScreen = ({ isEmpreendedor }: PerfilPublicoScreenProps
     const usuarioLogadoId = (session as any)?.user?.id || (session as any)?.id;
     const isOwner = !!(session && negocio && negocio.userId === usuarioLogadoId);
 
-    // CORRIGIDO: Mapeamento EXATO baseado no Enum C#
-    const getCategoriaTexto = (type: number) => {
-        const categories: { [key: number]: string } = {
-            1: "Barracas e Ambulantes",
-            2: "Passeios e Lazer",
-            3: "Bares e Restaurantes",
-            4: "Artesanato Local",
-            5: "Comércio e Serviços"
+     const getCategoriaTexto = (type: any) => {
+        const mapaCategorias: { [key: string]: string } = {
+            "1": "Barracas e Ambulantes",
+            "2": "Passeios e Lazer",
+            "3": "Bares e Restaurantes",
+            "4": "Artesanato Local",
+            "5": "Comércio e Serviços",
+            "BarracasEAmbulantes": "Barracas e Ambulantes",
+            "PasseiosELazer": "Passeios e Lazer",
+            "BaresERestaurantes": "Bares e Restaurantes",
+            "ArtesanatoLocal": "Artesanato Local",
+            "ComercioEServicos": "Comércio e Serviços"
         };
-        return categories[type] || "Não Categorizado";
+        return mapaCategorias[String(type)] || "Não Categorizado";
     };
 
     useEffect(() => {
